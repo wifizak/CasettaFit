@@ -1,0 +1,36 @@
+Final Questions to Get Started:
+Technical Setup:
+Python version for this project? (3.10, 3.11, or 3.12?)
+    #3.10 is installed now I believe
+Use Flask-Migrate for database migrations?
+    #yes, use Flask for any front end to backend DB queries
+How to create the first admin user? (CLI command, seed script, or first-run page?)
+    #we will just manually create that first user, admin / adminpass
+Session timeout duration?
+    #8 hour timeout
+Validation Rules:
+5. Min/max for sets and reps? (suggestion: 1-100 sets, 1-500 reps)
+    #those suggestions are good
+6. Character limits for names (exercises, programs)?
+    #yeah, maybe 50
+Search & UI:
+7. Should exercise lists have search/filter?
+    #yes for sure
+8. Pagination for workout history? (how many per page?)
+    #yes, maybe 20
+
+Program Sharing:
+9. When users receive shared programs, can they edit them or are they read-only?
+    #readonly (so the primary user can make changes, and the shared users can see them), with the option for copying them, so they can then edit it
+10. Do admin shared programs get copied or remain linked?
+    #remain linked, unless the user makes a "local" copy
+Units:
+11. Weight units - lbs, kg, or user preference?
+    #user preference with lbs deafult
+12. Should each user set their preferred units?
+    #yes
+Dashboard:
+13. What should the home/dashboard show? (upcoming workouts, recent activity, goals progress?)
+    #all of the above
+14. Should there be workout reminders/notifications?
+    #give the user the option to download calendar notifications, calendar sync option later on

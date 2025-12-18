@@ -1,0 +1,51 @@
+Key Questions:
+1. User Management & Authentication:
+    Do you need email verification for new users?
+        #No
+    Password reset functionality?
+        #Not by the user, just by the admin
+    Role-based access (admin, regular user, coach, etc.)?
+        #Yes, Just admin and user
+    Social login (Google, etc.) or just username/password?
+        #No
+2. Database Schema & Relationships:
+    Should lifts have categories (e.g., upper body, lower body, cardio)?
+        #That would be one of the many categories, yes
+    How granular should exercise tracking be (just weight/reps or also tempo, rest time, RPE, notes)?
+        #All of the above
+    Should programs support periodization (different phases)?
+        #Yes, different week structures, different day structures, different body patterns
+    Do you want to track body metrics (weight, body fat %, measurements)?
+        #Yes that should be a part of the user profile
+3. Progressive Overload & Programming:
+    What progression schemes do you want built-in (linear, percentage-based, auto-regulation)?
+        #The individual lift would have different and user configurable overload types. That might be, how much weight you added, or how many of which plate did you add, or how much time, or incline or time.
+    Should the system suggest next workout weights based on history?
+        #Dont suggest, it should just show a user what they did last time, at the end of each lift the user should be able to say how they felt about it, like was it doable or not, or heavy or light, or good
+    Do you need deload weeks scheduled automatically?
+        #not automatically no, but that good be a program option
+4. Mobile Experience:
+    Responsive web app or do you also need PWA (Progressive Web App) features for offline use?
+        #Just a web app, dont need anything offline, it will always be online
+    Do you need the "at the gym" UI to work offline and sync later?
+        #no, online only
+5. Deployment & Hosting:
+    Where will this be hosted (VPS, cloud platform, home server)?
+        #we are currently devloping this on a ready to go digital ocean VPS, full ubuntu server.
+    Do you need Docker containerization?
+        #no
+    Expected number of concurrent users?
+        #just a few
+6. Features Priority:
+    Which features are MVP (Minimum Viable Product) vs. nice-to-have?
+        # all features i have mentioned so far are the Minimum
+    What's your timeline preference?
+        #going to do a lot of this today
+7. Data & Reporting:
+    What charts/graphs are essential (1RM progression, volume over time, etc.)?
+        #volume over time, progressivce oveload tracking, and 1rm
+    Export capability (CSV, PDF)?
+        #No
+    Sharing workouts with other users?
+        #No
+

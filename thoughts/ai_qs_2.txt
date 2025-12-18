@@ -1,0 +1,41 @@
+Additional Questions I Have:
+Exercise Database:
+Should I pre-seed a master exercise database with common exercises, or start empty?
+    #Start empty
+Can users add to the master database, or only configure their own gym?
+    #add to master - and assign to their own, and we track who added what, admins can always change anything, users can only edit the ones they created
+What category structure? (Push/Pull/Legs, Compound/Isolation, equipment-based?)
+    #all of those are options, yes, but would be configurable by the user, both for the program type and the lifts/activities
+Program Structure:
+4. Can programs have different exercises in different weeks (true periodization)?
+    #Yes
+5. How do "body patterns" work? (Push/Pull/Legs rotation, Upper/Lower alternating?)
+    #That is completely up to the user, we will not enforce any rotation or work out plan, we wil just label it. But we do need to save them so they can be reused
+6. Can users duplicate programs to create variations?
+    #Yes
+Workout Execution:
+7. What happens if a user misses a scheduled workout?
+    #We prompt them to see if they want to skip or move or move to today
+8. Can users do freestyle workouts outside their program?
+    #Yes that should be an  option where then can freestyle/adhoc and pick lifts as they go
+9. Should there be quick workout templates?
+    #Not by default no, users can just share there own, and share programs between users
+
+Progressive Overload:
+10. Should the system know available plate sizes per gym for calculations?
+    #Yes, users should be able to set what gear they have in the gym, and when a user adds a lift from the master db to their gym, then they can say what type of overload they will be using (Weight plates (and what type) or just adding numerical weight, or time or percentage, etc)
+11. Auto-calculate total volume (sets × reps × weight)?
+    #that would be good, for some of the reports
+12. How should tempo be formatted? (e.g., "3-1-2-1" = 3sec down, 1sec pause, 2sec up, 1sec top)
+    #tempo would be optional for the program setup per lift, with lift time, and rest time only
+
+UI/UX:
+13. Server-side rendering (Jinja templates) or API + JavaScript frontend?
+    #what ever you think would be best
+14. Navigation preference for mobile (bottom nav bar, sidebar, hamburger menu)?
+    #bottom nav bar for mobile, sidebar for desktop
+Admin Features:
+15. Can admin view all user data for support purposes?
+    #yes
+16. Can admin create shared program templates?
+    #yes
