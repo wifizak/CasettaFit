@@ -530,6 +530,27 @@ def sync_gym_exercise_associations(gym_id):
                 db.session.delete(existing)
 
 
+class ProgramInstance(db.Model):
+    """A specific scheduling of a program - tracks when a program was scheduled"""
+    __tablename__ = 'program_instances'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    program_id = db.Column(db.Integer, db.ForeignKey('programs.id'), nullable=False)
+    gym_id = db.Column(db.Integer, db.ForeignKey('user_gyms.id'), nullable=True)
+    scheduled_date = db.Column(db.Date, nullable=False)  # Date the instance was created
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    
+    # Relationships
+    user = db.relationship('User', backref='program_instances')
+    program = db.relationship('Program', backref='instances')
+    gym = db.relationship('UserGym', backref='program_instances')
+    scheduled_days = db.relationship('ScheduledDay', backref='instance', cascade='all, delete-orphan')
+    
+    def __repr__(self):
+        return f'<ProgramInstance {self.program.name} on {self.scheduled_date}>'
+
+
 class ScheduledDay(db.Model):
     """Individual scheduled workout day - can be moved independently"""
     __tablename__ = 'scheduled_days'
@@ -538,6 +559,8 @@ class ScheduledDay(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     program_id = db.Column(db.Integer, db.ForeignKey('programs.id'), nullable=False)
     program_day_id = db.Column(db.Integer, db.ForeignKey('program_days.id'), nullable=False)
+    instance_id = db.Column(db.Integer, db.ForeignKey('program_instances.id'), nullable=True)
+    gym_id = db.Column(db.Integer, db.ForeignKey('user_gyms.id'), nullable=True)
     calendar_date = db.Column(db.Date, nullable=False)
     is_completed = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
@@ -546,6 +569,7 @@ class ScheduledDay(db.Model):
     user = db.relationship('User', backref='scheduled_days')
     program = db.relationship('Program', backref='scheduled_days')
     program_day = db.relationship('ProgramDay', backref='scheduled_instances')
+    gym = db.relationship('UserGym', backref='scheduled_workouts')
     
     # Indexes for efficient queries
     __table_args__ = (

@@ -15,12 +15,14 @@
     }
     .fc-event {
         cursor: move !important;
+        white-space: pre-line;
     }
     .fc-event:hover {
         opacity: 0.9;
     }
     .fc-event-title {
         font-weight: 500;
+        line-height: 1.3;
     }
     /* Different colors for different programs */
     .fc-event.program-1 { background-color: #4f46e5; border-color: #4338ca; }
@@ -53,10 +55,20 @@
     </div>
 
     <div class="row">
-        <div class="col-12">
+        <div class="col-lg-9">
             <div class="card">
                 <div class="card-body" style="min-height: 650px;">
                     <div id='calendar'></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="card">
+                <div class="card-header">
+                    <strong>Unscheduled Days</strong>
+                </div>
+                <div class="card-body" id="missingDaysContainer">
+                    <p class="text-muted text-center" id="noMissingDays">No missing days</p>
                 </div>
             </div>
         </div>
@@ -75,7 +87,7 @@
                 <div id="scheduleFormContainer">
                     <!-- Step 1: Select Program & Start Date -->
                     <div id="step1">
-                        <h6 class="mb-3">Select Program</h6>
+                        <h6 class="mb-3">Select Program and Gym</h6>
                         <div class="mb-3">
                             <label for="programSelect" class="form-label">Program</label>
                             <select class="form-select" id="programSelect" onchange="loadProgramDetails()">
@@ -84,6 +96,16 @@
                                 <option value="{{ program.id }}">{{ program.name }}</option>
                                 {% endfor %}
                             </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="gymSelect" class="form-label">Gym</label>
+                            <select class="form-select" id="gymSelect">
+                                <option value="">-- Select a gym (optional) --</option>
+                                {% for gym in gyms %}
+                                <option value="{{ gym.id }}">{{ gym.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Choose where you'll complete this program</div>
                         </div>
                         <div class="mb-3">
                             <label for="startDate" class="form-label">Start Date</label>
@@ -194,6 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
             droppable: true,
             eventDrop: handleEventDrop,
             eventClick: handleEventClick,
+            drop: handleExternalDrop,
             events: '/calendar/events',
             eventClassNames: function(arg) {
                 // Add program-specific class for coloring
@@ -217,6 +240,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Set today as default start date
     document.getElementById('startDate').valueAsDate = new Date();
+    
+    // Load missing days
+    loadMissingDays();
 });
 
 function showScheduleProgramModal() {
@@ -359,6 +385,7 @@ function updateDayLabel(input, dayId) {
 
 function scheduleProgram() {
     const programId = document.getElementById('programSelect').value;
+    const gymId = document.getElementById('gymSelect').value;
     const dayInputs = document.querySelectorAll('[data-program-day-id]');
     
     const mappings = [];
@@ -374,6 +401,7 @@ function scheduleProgram() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             program_id: parseInt(programId),
+            gym_id: gymId ? parseInt(gymId) : null,
             mappings: mappings
         })
     })
@@ -382,6 +410,7 @@ function scheduleProgram() {
         if (data.success) {
             scheduleProgramModal.hide();
             calendar.refetchEvents();
+            loadMissingDays();
             alert('Program scheduled successfully!');
         } else if (data.conflicts) {
             handleConflicts(data.conflicts, mappings);
@@ -452,6 +481,23 @@ function handleEventDrop(info) {
     });
 }
 
+function handleExternalDrop(info) {
+    try {
+        const data = JSON.parse(info.draggedEl.dataset.instanceId ? 
+            JSON.stringify({
+                instanceId: parseInt(info.draggedEl.dataset.instanceId),
+                programDayId: parseInt(info.draggedEl.dataset.programDayId)
+            }) : 
+            info.jsEvent.dataTransfer.getData('application/json')
+        );
+        
+        const dateStr = info.dateStr;
+        scheduleMissingDay(data.instanceId, data.programDayId, dateStr);
+    } catch (error) {
+        console.error('Error handling drop:', error);
+    }
+}
+
 function handleEventClick(info) {
     selectedEvent = info.event;
     loadScheduledDayDetails(info.event.id);
@@ -474,8 +520,14 @@ function loadScheduledDayDetails(scheduledDayId) {
 function displayScheduledDayDetails(data) {
     let html = `
         <h5>${data.program_name} - ${data.day_name}</h5>
-        <p class="text-muted">Scheduled for: ${data.calendar_date}</p>
+        <p class="text-muted mb-1">Scheduled for: ${data.calendar_date}</p>
     `;
+    
+    if (data.gym_name) {
+        html += `<p class="text-muted mb-3"><i class="cil-location-pin"></i> ${data.gym_name}</p>`;
+    } else {
+        html += `<p class="text-muted mb-3"><i class="cil-location-pin"></i> No gym selected</p>`;
+    }
     
     if (data.series && data.series.length > 0) {
         html += '<h6 class="mt-3">Workout:</h6>';
@@ -648,6 +700,94 @@ function shiftDays() {
         currentDropInfo.revert();
         currentDropInfo = null;
         conflictData = null;
+    });
+}
+
+function loadMissingDays() {
+    fetch('/calendar/missing-days')
+        .then(response => response.json())
+        .then(data => {
+            displayMissingDays(data);
+        })
+        .catch(error => {
+            console.error('Error loading missing days:', error);
+        });
+}
+
+function displayMissingDays(missingDays) {
+    const container = document.getElementById('missingDaysContainer');
+    const noMissingMsg = document.getElementById('noMissingDays');
+    
+    if (missingDays.length === 0) {
+        noMissingMsg.style.display = 'block';
+        return;
+    }
+    
+    noMissingMsg.style.display = 'none';
+    
+    let html = '<div class="list-group list-group-flush">';
+    missingDays.forEach(day => {
+        html += `
+            <div class="list-group-item p-2" style="cursor: move;" 
+                 data-instance-id="${day.instance_id}"
+                 data-program-day-id="${day.program_day_id}"
+                 draggable="true"
+                 ondragstart="handleMissingDayDragStart(event)">
+                <small class="text-muted d-block">Week ${day.week_number}</small>
+                <strong class="d-block">${day.day_name}</strong>
+                <small class="text-primary">${day.program_name}</small>
+                ${day.gym_name ? '<br><small class="text-muted">📍 ' + day.gym_name + '</small>' : ''}
+                <button class="btn btn-sm btn-outline-primary w-100 mt-2" 
+                        onclick="scheduleMissingDayPrompt(${day.instance_id}, ${day.program_day_id}, '${day.day_name}')">
+                    Schedule
+                </button>
+            </div>
+        `;
+    });
+    html += '</div>';
+    
+    container.innerHTML = html;
+}
+
+function handleMissingDayDragStart(event) {
+    event.dataTransfer.effectAllowed = 'copy';
+    event.dataTransfer.setData('application/json', JSON.stringify({
+        instanceId: parseInt(event.target.dataset.instanceId),
+        programDayId: parseInt(event.target.dataset.programDayId)
+    }));
+}
+
+function scheduleMissingDayPrompt(instanceId, programDayId, dayName) {
+    const dateStr = prompt(`Enter date for ${dayName} (YYYY-MM-DD):`, new Date().toISOString().split('T')[0]);
+    if (dateStr) {
+        scheduleMissingDay(instanceId, programDayId, dateStr);
+    }
+}
+
+function scheduleMissingDay(instanceId, programDayId, calendarDate) {
+    fetch('/calendar/schedule-missing-day', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            instance_id: instanceId,
+            program_day_id: programDayId,
+            calendar_date: calendarDate
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            calendar.refetchEvents();
+            loadMissingDays();
+        } else if (data.conflict) {
+            alert(data.message);
+        } else {
+            alert('Error scheduling day: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error scheduling day');
     });
 }
 </script>

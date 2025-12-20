@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, jsonify, redirect, url_fo
 from flask_login import login_required, current_user
 from datetime import datetime, date, timedelta
 from app import db
-from app.models import Program, ProgramWeek, ProgramDay, ProgramSeries, ProgramExercise, ScheduledDay
+from app.models import Program, ProgramWeek, ProgramDay, ProgramSeries, ProgramExercise, ScheduledDay, ProgramInstance
 import json
 
 bp = Blueprint('calendar', __name__, url_prefix='/calendar')
@@ -12,8 +12,10 @@ bp = Blueprint('calendar', __name__, url_prefix='/calendar')
 @login_required
 def index():
     """Main calendar view"""
+    from app.models import UserGym
     programs = Program.query.filter_by(created_by=current_user.id).order_by(Program.name).all()
-    return render_template('calendar/index.html', programs=programs)
+    gyms = UserGym.query.filter_by(user_id=current_user.id).order_by(UserGym.name).all()
+    return render_template('calendar/index.html', programs=programs, gyms=gyms)
 
 
 @bp.route('/events')
@@ -26,14 +28,19 @@ def get_events():
     
     events = []
     for sd in scheduled_days:
+        event_title = f"{sd.program.name} - {sd.program_day.day_name or 'Day ' + str(sd.program_day.day_number)}"
+        if sd.gym:
+            event_title += f"\n📍 {sd.gym.name}"
+        
         events.append({
             'id': sd.id,
-            'title': f"{sd.program.name} - {sd.program_day.day_name or 'Day ' + str(sd.program_day.day_number)}",
+            'title': event_title,
             'start': sd.calendar_date.isoformat(),
             'allDay': True,
             'extendedProps': {
                 'programId': sd.program_id,
                 'programDayId': sd.program_day_id,
+                'gymName': sd.gym.name if sd.gym else None,
                 'isCompleted': sd.is_completed
             },
             'classNames': ['fc-event-completed'] if sd.is_completed else []
@@ -76,6 +83,7 @@ def schedule_program():
     """Schedule a program with day mappings"""
     data = request.get_json()
     program_id = data.get('program_id')
+    gym_id = data.get('gym_id')
     mappings = data.get('mappings', [])
     force = data.get('force', False)
     
@@ -113,6 +121,17 @@ def schedule_program():
             'message': 'Some dates already have workouts from this program'
         })
     
+    # Create program instance
+    first_date = min(datetime.strptime(m['calendar_date'], '%Y-%m-%d').date() for m in mappings)
+    instance = ProgramInstance(
+        user_id=current_user.id,
+        program_id=program_id,
+        gym_id=gym_id if gym_id else None,
+        scheduled_date=first_date
+    )
+    db.session.add(instance)
+    db.session.flush()  # Get the instance ID
+    
     # Create scheduled days
     for mapping in mappings:
         calendar_date = datetime.strptime(mapping['calendar_date'], '%Y-%m-%d').date()
@@ -122,6 +141,8 @@ def schedule_program():
             user_id=current_user.id,
             program_id=program_id,
             program_day_id=program_day_id,
+            instance_id=instance.id,
+            gym_id=gym_id if gym_id else None,
             calendar_date=calendar_date
         )
         db.session.add(scheduled_day)
@@ -266,6 +287,7 @@ def get_scheduled_day(scheduled_day_id):
         'id': scheduled_day.id,
         'program_name': scheduled_day.program.name,
         'day_name': scheduled_day.program_day.day_name or f'Day {scheduled_day.program_day.day_number}',
+        'gym_name': scheduled_day.gym.name if scheduled_day.gym else None,
         'calendar_date': scheduled_day.calendar_date.strftime('%Y-%m-%d'),
         'is_completed': scheduled_day.is_completed,
         'series': series_data
@@ -282,6 +304,94 @@ def delete_scheduled_day(scheduled_day_id):
     ).first_or_404()
     
     db.session.delete(scheduled_day)
+    db.session.commit()
+    
+    return jsonify({'success': True})
+
+
+@bp.route('/missing-days')
+@login_required
+def get_missing_days():
+    """Get all program days that should be scheduled but aren't"""
+    instances = ProgramInstance.query.filter_by(user_id=current_user.id).all()
+    
+    missing_days = []
+    for instance in instances:
+        # Get all days that are scheduled for this instance
+        scheduled_day_ids = set(
+            sd.program_day_id for sd in instance.scheduled_days
+        )
+        
+        # Get all days that should exist in the program
+        program = instance.program
+        all_program_day_ids = set()
+        for week in program.weeks:
+            for day in week.days:
+                all_program_day_ids.add(day.id)
+        
+        # Find missing days
+        missing_day_ids = all_program_day_ids - scheduled_day_ids
+        
+        for day_id in missing_day_ids:
+            day = ProgramDay.query.get(day_id)
+            if day:
+                missing_days.append({
+                    'id': f'missing_{instance.id}_{day.id}',
+                    'instance_id': instance.id,
+                    'program_day_id': day.id,
+                    'program_name': program.name,
+                    'day_name': day.day_name or f'Day {day.day_number}',
+                    'week_number': day.week.week_number,
+                    'gym_name': instance.gym.name if instance.gym else None
+                })
+    
+    return jsonify(missing_days)
+
+
+@bp.route('/schedule-missing-day', methods=['POST'])
+@login_required
+def schedule_missing_day():
+    """Schedule a missing day to a specific date"""
+    data = request.get_json()
+    instance_id = data.get('instance_id')
+    program_day_id = data.get('program_day_id')
+    calendar_date_str = data.get('calendar_date')
+    
+    if not all([instance_id, program_day_id, calendar_date_str]):
+        return jsonify({'success': False, 'error': 'Missing required data'}), 400
+    
+    instance = ProgramInstance.query.filter_by(
+        id=instance_id,
+        user_id=current_user.id
+    ).first_or_404()
+    
+    calendar_date = datetime.strptime(calendar_date_str, '%Y-%m-%d').date()
+    
+    # Check for conflicts
+    conflict = ScheduledDay.query.filter(
+        ScheduledDay.user_id == current_user.id,
+        ScheduledDay.program_id == instance.program_id,
+        ScheduledDay.calendar_date == calendar_date,
+        ScheduledDay.instance_id == instance_id
+    ).first()
+    
+    if conflict:
+        return jsonify({
+            'success': False,
+            'conflict': True,
+            'message': f'This program already has a workout on {calendar_date_str}'
+        })
+    
+    # Create the scheduled day
+    scheduled_day = ScheduledDay(
+        user_id=current_user.id,
+        program_id=instance.program_id,
+        program_day_id=program_day_id,
+        instance_id=instance_id,
+        gym_id=instance.gym_id,
+        calendar_date=calendar_date
+    )
+    db.session.add(scheduled_day)
     db.session.commit()
     
     return jsonify({'success': True})
