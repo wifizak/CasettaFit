@@ -77,6 +77,27 @@
                         <!-- Hidden inputs will be added here by JavaScript -->
                     </div>
                     
+                    <!-- Gym Assignment (optional - overrides auto-assignment) -->
+                    <div class="mb-3">
+                        <label class="form-label">Available at Gyms</label>
+                        {% if gyms %}
+                        <div class="form-check">
+                            {% for gym in gyms %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="gym_ids[]" value="{{ gym.id }}" id="gym_{{ gym.id }}"
+                                    {% if exercise and gym.id in current_gym_ids %}checked{% endif %}>
+                                <label class="form-check-label" for="gym_{{ gym.id }}">
+                                    {{ gym.name }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <small class="text-body-secondary">Optional: Manually select gyms. If left blank, exercise will auto-associate with gyms that have all required equipment.</small>
+                        {% else %}
+                        <p class="text-muted">No gyms found. <a href="{{ url_for('gym.create') }}">Create a gym first</a>.</p>
+                        {% endif %}
+                    </div>
+                    
                     <div class="d-flex gap-2">
                         {{ form.submit(class="btn btn-primary") }}
                         <a href="{{ url_for('exercises.index') }}" class="btn btn-outline-secondary">Cancel</a>

@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from app import db
-from app.models import MasterEquipment, EquipmentVariation, UserGym
+from app.models import MasterEquipment, EquipmentVariation, UserGym, sync_gym_exercise_associations
 from app.forms import MasterEquipmentForm, EquipmentVariationForm
 import json
 
@@ -56,12 +56,19 @@ def create():
         
         # Handle gym associations
         gym_ids = request.form.getlist('gym_ids[]')
+        affected_gym_ids = []
         for gym_id in gym_ids:
             if gym_id:
                 gym = UserGym.query.get(int(gym_id))
                 if gym:
                     equipment.gyms.append(gym)
+                    affected_gym_ids.append(int(gym_id))
         
+        db.session.commit()
+        
+        # Auto-associate exercises with gyms that now have this equipment
+        for gym_id in affected_gym_ids:
+            sync_gym_exercise_associations(gym_id)
         db.session.commit()
         
         flash(f'Equipment "{equipment.name}" created successfully!', 'success')
@@ -90,16 +97,28 @@ def edit(equipment_id):
         equipment.description = form.description.data
         equipment.equipment_type = form.equipment_type.data
         
+        # Track old gym associations
+        old_gym_ids = set([g.id for g in equipment.gyms])
+        
         # Update gym associations
         equipment.gyms.clear()
         gym_ids = request.form.getlist('gym_ids[]')
+        new_gym_ids = set()
         for gym_id in gym_ids:
             if gym_id:
                 gym = UserGym.query.get(int(gym_id))
                 if gym:
                     equipment.gyms.append(gym)
+                    new_gym_ids.add(int(gym_id))
         
         db.session.commit()
+        
+        # Sync exercises for all affected gyms (both added and removed)
+        affected_gym_ids = old_gym_ids.union(new_gym_ids)
+        for gym_id in affected_gym_ids:
+            sync_gym_exercise_associations(gym_id)
+        db.session.commit()
+        
         flash(f'Equipment "{equipment.name}" updated successfully!', 'success')
         return redirect(url_for('equipment.index'))
     

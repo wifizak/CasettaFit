@@ -31,13 +31,7 @@
                                 {% for error in form.exercise_id.errors %}{{ error }}{% endfor %}
                             </div>
                         {% endif %}
-                        <small class="text-body-secondary">Don't see the exercise you want? <a href="{{ url_for('exercises.create') }}" target="_blank">Create a new one</a></small>
-                    </div>
-                    
-                    <div class="mb-3">
-                        {{ form.progression_type.label(class="form-label") }}
-                        {{ form.progression_type(class="form-select") }}
-                        <small class="text-body-secondary">How you'll track progression for this exercise</small>
+                        <small class="text-body-secondary">Exercises are automatically available based on gym equipment. Use this to manually add exercises.</small>
                     </div>
                     
                     <div class="mb-3">

@@ -98,14 +98,13 @@
                             {% if gym_ex.is_favorite %}<i class="cil-star text-warning ms-1"></i>{% endif %}
                             <br>
                             <small class="text-body-secondary">
-                                Progression: {{ gym_ex.progression_type.replace('_', ' ').title() }}
+                                {{ gym_ex.exercise.category }}
+                                {% if gym_ex.exercise.primary_muscle %} - {{ gym_ex.exercise.primary_muscle }}{% endif %}
+                                {% if gym_ex.notes %}<br>{{ gym_ex.notes }}{% endif %}
                             </small>
                         </div>
                         {% if gym.user_id == current_user.id %}
                         <div class="btn-group btn-group-sm">
-                            <a href="{{ url_for('gym.edit_exercise', gym_exercise_id=gym_ex.id) }}" class="btn btn-outline-primary">
-                                <i class="cil-pencil"></i>
-                            </a>
                             <form action="{{ url_for('gym.delete_exercise', gym_exercise_id=gym_ex.id) }}" method="POST" style="display:inline;">
                                 <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Remove?')">
                                     <i class="cil-trash"></i>
@@ -117,7 +116,7 @@
                     {% endfor %}
                 </div>
                 {% else %}
-                <p class="text-body-secondary text-center py-3">No exercises added yet</p>
+                <p class="text-body-secondary text-center py-3">No exercises available. Exercises are automatically added when equipment is assigned to gym.</p>
                 {% endif %}
             </div>
         </div>

@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from app import db
-from app.models import MasterExercise, MasterEquipment, ExerciseEquipmentMapping, UserExercisePreference, ExerciseEquipmentVariation, EquipmentVariation
+from app.models import MasterExercise, MasterEquipment, ExerciseEquipmentMapping, UserExercisePreference, ExerciseEquipmentVariation, EquipmentVariation, UserGym, GymExercise, sync_exercise_gym_associations
 from app.forms import MasterExerciseForm, UserExercisePreferenceForm
 import json
 
@@ -86,13 +86,31 @@ def create():
         
         db.session.commit()
         
+        # Auto-associate with gyms that have the required equipment
+        sync_exercise_gym_associations(exercise.id)
+        
+        # Also handle manual gym assignments (override auto associations)
+        gym_ids = request.form.getlist('gym_ids[]')
+        if gym_ids:
+            # Clear auto-associations and use manual selections
+            GymExercise.query.filter_by(exercise_id=exercise.id).delete()
+            for gym_id in gym_ids:
+                if gym_id:
+                    gym_exercise = GymExercise(gym_id=int(gym_id), exercise_id=exercise.id)
+                    db.session.add(gym_exercise)
+        
+        db.session.commit()
+        
         flash(f'Exercise "{exercise.name}" created successfully!', 'success')
         return redirect(url_for('exercises.index'))
     
     # Get all equipment for modal
     equipment_list = MasterEquipment.query.order_by(MasterEquipment.name).all()
     
-    return render_template('exercises/create.html', form=form, equipment_list=equipment_list)
+    # Get all gyms for current user
+    gyms = UserGym.query.filter_by(user_id=current_user.id).order_by(UserGym.name).all()
+    
+    return render_template('exercises/create.html', form=form, equipment_list=equipment_list, gyms=gyms)
 
 
 @bp.route('/<int:exercise_id>/edit', methods=['GET', 'POST'])
@@ -142,6 +160,22 @@ def edit(exercise_id):
                 db.session.add(var)
         
         db.session.commit()
+        
+        # Auto-associate with gyms that have the required equipment
+        sync_exercise_gym_associations(exercise.id)
+        
+        # Also handle manual gym assignments (override auto associations)
+        gym_ids = request.form.getlist('gym_ids[]')
+        if gym_ids:
+            # Clear auto-associations and use manual selections
+            GymExercise.query.filter_by(exercise_id=exercise.id).delete()
+            for gym_id in gym_ids:
+                if gym_id:
+                    gym_exercise = GymExercise(gym_id=int(gym_id), exercise_id=exercise.id)
+                    db.session.add(gym_exercise)
+        
+        db.session.commit()
+        
         flash(f'Exercise "{exercise.name}" updated successfully!', 'success')
         return redirect(url_for('exercises.index'))
     
@@ -162,12 +196,18 @@ def edit(exercise_id):
     current_equipment_ids = [e.id for e in exercise.equipment]
     current_variations = ExerciseEquipmentVariation.query.filter_by(exercise_id=exercise.id).all()
     
+    # Get all gyms for current user
+    gyms = UserGym.query.filter_by(user_id=current_user.id).order_by(UserGym.name).all()
+    current_gym_ids = [ge.gym_id for ge in GymExercise.query.filter_by(exercise_id=exercise.id).all()]
+    
     return render_template('exercises/edit.html', 
                          form=form, 
                          exercise=exercise,
                          equipment_list=equipment_list,
                          current_equipment_ids=current_equipment_ids,
-                         current_variations=current_variations)
+                         current_variations=current_variations,
+                         gyms=gyms,
+                         current_gym_ids=current_gym_ids)
 
 
 @bp.route('/<int:exercise_id>/delete', methods=['POST'])

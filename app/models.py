@@ -428,3 +428,85 @@ class ProgramExercise(db.Model):
     
     def __repr__(self):
         return f'<ProgramExercise day_id={self.day_id} exercise_id={self.exercise_id}>'
+
+
+# ============================================================================
+# Utility Functions
+# ============================================================================
+
+def sync_exercise_gym_associations(exercise_id):
+    """
+    Automatically associate an exercise with gyms that have all required equipment.
+    Called when:
+    - An exercise is created/updated with equipment
+    - Equipment is added to a gym
+    """
+    exercise = MasterExercise.query.get(exercise_id)
+    if not exercise:
+        return
+    
+    # Get all equipment IDs required for this exercise
+    required_equipment_ids = set([eq.id for eq in exercise.equipment])
+    
+    # If no equipment required, associate with all gyms
+    if not required_equipment_ids:
+        all_gyms = UserGym.query.all()
+        for gym in all_gyms:
+            existing = GymExercise.query.filter_by(gym_id=gym.id, exercise_id=exercise.id).first()
+            if not existing:
+                gym_exercise = GymExercise(gym_id=gym.id, exercise_id=exercise.id)
+                db.session.add(gym_exercise)
+        return
+    
+    # Find all gyms
+    all_gyms = UserGym.query.all()
+    
+    for gym in all_gyms:
+        # Get equipment IDs available at this gym
+        gym_equipment_ids = set([eq.id for eq in gym.available_equipment])
+        
+        # Check if gym has all required equipment
+        if required_equipment_ids.issubset(gym_equipment_ids):
+            # Gym has all required equipment - ensure association exists
+            existing = GymExercise.query.filter_by(gym_id=gym.id, exercise_id=exercise.id).first()
+            if not existing:
+                gym_exercise = GymExercise(gym_id=gym.id, exercise_id=exercise.id)
+                db.session.add(gym_exercise)
+        else:
+            # Gym doesn't have all required equipment - remove association if it exists
+            existing = GymExercise.query.filter_by(gym_id=gym.id, exercise_id=exercise.id).first()
+            if existing:
+                db.session.delete(existing)
+
+
+def sync_gym_exercise_associations(gym_id):
+    """
+    Update exercise associations for a gym based on available equipment.
+    Called when equipment is added/removed from a gym.
+    """
+    gym = UserGym.query.get(gym_id)
+    if not gym:
+        return
+    
+    # Get equipment IDs available at this gym
+    gym_equipment_ids = set([eq.id for eq in gym.available_equipment])
+    
+    # Get all exercises
+    all_exercises = MasterExercise.query.all()
+    
+    for exercise in all_exercises:
+        # Get equipment required for this exercise
+        required_equipment_ids = set([eq.id for eq in exercise.equipment])
+        
+        # If no equipment required or gym has all required equipment
+        if not required_equipment_ids or required_equipment_ids.issubset(gym_equipment_ids):
+            # Ensure association exists
+            existing = GymExercise.query.filter_by(gym_id=gym.id, exercise_id=exercise.id).first()
+            if not existing:
+                gym_exercise = GymExercise(gym_id=gym.id, exercise_id=exercise.id)
+                db.session.add(gym_exercise)
+        else:
+            # Gym doesn't have all required equipment - remove association if it exists
+            existing = GymExercise.query.filter_by(gym_id=gym.id, exercise_id=exercise.id).first()
+            if existing:
+                db.session.delete(existing)
