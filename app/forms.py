@@ -226,7 +226,6 @@ class ProgramDayForm(FlaskForm):
         Length(max=50, message='Day name must be 50 characters or less')
     ], render_kw={"placeholder": "e.g., Push, Pull, Legs, Upper, Lower"})
     is_rest_day = BooleanField('Rest Day')
-    has_superset = BooleanField('Enable Supersetting')
     notes = TextAreaField('Notes', validators=[Optional()])
     submit = SubmitField('Save Day')
 

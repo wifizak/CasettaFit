@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}CasettaFit{% endblock %}</title>
     
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo-white.png') }}">
+    
     <!-- CoreUI CSS -->
     <link href="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.0.0/dist/css/coreui.min.css" rel="stylesheet">
     <!-- CoreUI Icons -->
@@ -78,8 +81,8 @@
     <!-- Sidebar for desktop -->
     <div class="sidebar sidebar-dark sidebar-fixed border-end d-none d-md-flex" id="sidebar">
         <div class="sidebar-header border-bottom">
-            <div class="sidebar-brand">
-                <strong>CasettaFit</strong>
+            <div class="sidebar-brand d-flex align-items-center justify-content-center py-3">
+                <img src="{{ url_for('static', filename='images/logo-white.png') }}" alt="CasettaFit" style="height: 40px; width: auto;">
             </div>
         </div>
         <ul class="sidebar-nav" data-coreui="navigation">
@@ -107,6 +110,11 @@
             <li class="nav-item">
                 <a class="nav-link" href="{{ url_for('programs.index') }}">
                     <i class="nav-icon cil-notes"></i> Programs
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('calendar.index') }}">
+                    <i class="nav-icon cil-calendar"></i> Calendar
                 </a>
             </li>
             <li class="nav-item">

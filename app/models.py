@@ -528,3 +528,30 @@ def sync_gym_exercise_associations(gym_id):
             existing = GymExercise.query.filter_by(gym_id=gym.id, exercise_id=exercise.id).first()
             if existing:
                 db.session.delete(existing)
+
+
+class ScheduledDay(db.Model):
+    """Individual scheduled workout day - can be moved independently"""
+    __tablename__ = 'scheduled_days'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    program_id = db.Column(db.Integer, db.ForeignKey('programs.id'), nullable=False)
+    program_day_id = db.Column(db.Integer, db.ForeignKey('program_days.id'), nullable=False)
+    calendar_date = db.Column(db.Date, nullable=False)
+    is_completed = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    
+    # Relationships
+    user = db.relationship('User', backref='scheduled_days')
+    program = db.relationship('Program', backref='scheduled_days')
+    program_day = db.relationship('ProgramDay', backref='scheduled_instances')
+    
+    # Indexes for efficient queries
+    __table_args__ = (
+        db.Index('idx_user_date', 'user_id', 'calendar_date'),
+        db.Index('idx_user_program_date', 'user_id', 'program_id', 'calendar_date'),
+    )
+    
+    def __repr__(self):
+        return f'<ScheduledDay {self.program_day.name} on {self.calendar_date}>'

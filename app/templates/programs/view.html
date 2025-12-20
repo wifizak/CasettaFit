@@ -91,10 +91,23 @@
                                     <li class="mb-3">
                                         {% if series.series_type == 'superset' %}
                                             <div class="border {{ border_color }} rounded p-2">
-                                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                                    <span class="badge bg-primary">Superset {% if series.time_seconds %}({{ series.time_seconds }}s){% endif %}</span>
+                                                <div class="d-flex justify-content-end mb-2">
                                                     {% if can_edit %}
                                                     <div class="d-flex gap-1">
+                                                        {% if not loop.first %}
+                                                        <form action="{{ url_for('programs.move_series_up', series_id=series.id) }}" method="POST" style="display:inline;">
+                                                            <button type="submit" class="btn btn-sm btn-outline-secondary" title="Move up">
+                                                                <i class="cil-arrow-top"></i>
+                                                            </button>
+                                                        </form>
+                                                        {% endif %}
+                                                        {% if not loop.last %}
+                                                        <form action="{{ url_for('programs.move_series_down', series_id=series.id) }}" method="POST" style="display:inline;">
+                                                            <button type="submit" class="btn btn-sm btn-outline-secondary" title="Move down">
+                                                                <i class="cil-arrow-bottom"></i>
+                                                            </button>
+                                                        </form>
+                                                        {% endif %}
                                                         <a href="{{ url_for('programs.edit_series', series_id=series.id) }}" class="btn btn-sm btn-outline-secondary">
                                                             <i class="cil-pencil"></i>
                                                         </a>
@@ -106,16 +119,21 @@
                                                     </div>
                                                     {% endif %}
                                                 </div>
-                                                <div class="d-flex align-items-center gap-2">
-                                                    {% for ex in series.exercises %}
-                                                    <div class="flex-fill">
-                                                        <strong>{{ loop.index }}.</strong> {{ ex.exercise.name }} - {{ ex.sets }} x {{ ex.reps }}
-                                                        {% if ex.rest_time_seconds %} ({{ ex.rest_time_seconds }}s rest){% endif %}
+                                                <div class="d-flex align-items-center justify-content-between gap-2">
+                                                    <div class="d-flex align-items-center gap-2 flex-fill">
+                                                        {% for ex in series.exercises %}
+                                                        <div class="flex-fill">
+                                                            <strong>{{ loop.index }}. {{ ex.exercise.name }}</strong> - {{ ex.sets }} x {{ ex.reps }}
+                                                            {% if ex.rest_time_seconds %} ({{ ex.rest_time_seconds }}s rest){% endif %}
+                                                        </div>
+                                                        {% if not loop.last %}
+                                                        <div style="width: 2px; height: 30px; background-color: rgba(0, 0, 0, 0.2);"></div>
+                                                        {% endif %}
+                                                        {% endfor %}
                                                     </div>
-                                                    {% if not loop.last %}
-                                                    <div style="width: 2px; height: 30px; background-color: rgba(0, 0, 0, 0.2);"></div>
-                                                    {% endif %}
-                                                    {% endfor %}
+                                                    <div>
+                                                        <span class="badge bg-primary">Superset {% if series.time_seconds %}({{ series.time_seconds }}s){% endif %}</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         {% else %}
@@ -130,6 +148,20 @@
                                                     </div>
                                                     {% if can_edit %}
                                                     <div class="d-flex gap-1">
+                                                        {% if not loop.first %}
+                                                        <form action="{{ url_for('programs.move_series_up', series_id=series.id) }}" method="POST" style="display:inline;">
+                                                            <button type="submit" class="btn btn-sm btn-outline-secondary" title="Move up">
+                                                                <i class="cil-arrow-top"></i>
+                                                            </button>
+                                                        </form>
+                                                        {% endif %}
+                                                        {% if not loop.last %}
+                                                        <form action="{{ url_for('programs.move_series_down', series_id=series.id) }}" method="POST" style="display:inline;">
+                                                            <button type="submit" class="btn btn-sm btn-outline-secondary" title="Move down">
+                                                                <i class="cil-arrow-bottom"></i>
+                                                            </button>
+                                                        </form>
+                                                        {% endif %}
                                                         <a href="{{ url_for('programs.edit_series', series_id=series.id) }}" class="btn btn-sm btn-outline-secondary">
                                                             <i class="cil-pencil"></i>
                                                         </a>

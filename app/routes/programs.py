@@ -282,7 +282,6 @@ def edit_day(day_id):
     if form.validate_on_submit():
         day.day_name = form.day_name.data
         day.is_rest_day = form.is_rest_day.data
-        day.has_superset = form.has_superset.data
         day.notes = form.notes.data
         db.session.commit()
         
@@ -292,7 +291,6 @@ def edit_day(day_id):
     elif request.method == 'GET':
         form.day_name.data = day.day_name
         form.is_rest_day.data = day.is_rest_day
-        form.has_superset.data = day.has_superset
         form.notes.data = day.notes
     
     return render_template('programs/edit_day.html', form=form, day=day, week=week, program=program)
@@ -528,6 +526,60 @@ def edit_series(series_id):
             form.target_rpe2.data = ex2.target_rpe
     
     return render_template('programs/edit_series.html', form=form, series=series, day=day, week=week, program=program)
+
+
+@bp.route('/series/<int:series_id>/move-up', methods=['POST'])
+@login_required
+def move_series_up(series_id):
+    """Move series up in the order"""
+    series = ProgramSeries.query.get_or_404(series_id)
+    day = series.day
+    program = day.week.program
+    
+    # Check permissions
+    if program.created_by != current_user.id:
+        flash('You do not have permission to edit this program.', 'danger')
+        return redirect(url_for('programs.index'))
+    
+    # Get the series above this one
+    series_above = ProgramSeries.query.filter_by(day_id=day.id).filter(
+        ProgramSeries.order_index < series.order_index
+    ).order_by(ProgramSeries.order_index.desc()).first()
+    
+    if series_above:
+        # Swap order indices
+        series.order_index, series_above.order_index = series_above.order_index, series.order_index
+        db.session.commit()
+        flash('Series moved up.', 'success')
+    
+    return redirect(url_for('programs.view', program_id=program.id))
+
+
+@bp.route('/series/<int:series_id>/move-down', methods=['POST'])
+@login_required
+def move_series_down(series_id):
+    """Move series down in the order"""
+    series = ProgramSeries.query.get_or_404(series_id)
+    day = series.day
+    program = day.week.program
+    
+    # Check permissions
+    if program.created_by != current_user.id:
+        flash('You do not have permission to edit this program.', 'danger')
+        return redirect(url_for('programs.index'))
+    
+    # Get the series below this one
+    series_below = ProgramSeries.query.filter_by(day_id=day.id).filter(
+        ProgramSeries.order_index > series.order_index
+    ).order_by(ProgramSeries.order_index.asc()).first()
+    
+    if series_below:
+        # Swap order indices
+        series.order_index, series_below.order_index = series_below.order_index, series.order_index
+        db.session.commit()
+        flash('Series moved down.', 'success')
+    
+    return redirect(url_for('programs.view', program_id=program.id))
 
 
 @bp.route('/series/<int:series_id>/delete', methods=['POST'])

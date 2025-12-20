@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ 'Edit Week' if week else 'Edit Day' if day else 'Add Exercise' }} - CasettaFit{% endblock %}
+{% block title %}{{ 'Edit Day' if day and request.endpoint == 'programs.edit_day' else 'Edit Week' if week else 'Add Exercise' }} - CasettaFit{% endblock %}
 {% block content %}
 <div class="row">
     <div class="col-12">
@@ -7,10 +7,10 @@
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="{{ url_for('programs.index') }}">Programs</a></li>
                 <li class="breadcrumb-item"><a href="{{ url_for('programs.view', program_id=program.id) }}">{{ program.name }}</a></li>
-                <li class="breadcrumb-item active">{{ 'Week ' ~ week.week_number if week else 'Day ' ~ day.day_number if day else 'Add Exercise' }}</li>
+                <li class="breadcrumb-item active">{{ 'Day ' ~ day.day_number if day and request.endpoint == 'programs.edit_day' else 'Week ' ~ week.week_number if week else 'Add Exercise' }}</li>
             </ol>
         </nav>
-        <h2 class="mb-4">{{ 'Edit Week ' ~ week.week_number if week else 'Edit Day ' ~ day.day_number if day else 'Add Exercise' }}</h2>
+        <h2 class="mb-4">{% if day and request.endpoint == 'programs.edit_day' %}Edit Day {{ day.day_number }} (Week {{ day.week.week_number }}){% elif week %}Edit Week {{ week.week_number }}{% else %}Add Exercise{% endif %}</h2>
     </div>
 </div>
 <div class="row">
