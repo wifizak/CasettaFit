@@ -1,0 +1,36 @@
+Technical Details
+Python version: Which version should we target? (Recommend 3.11 or 3.12 for latest features and performance)
+    #3.10 is running now i believe
+Database migrations: Should we use Flask-Migrate (Alembic wrapper)? This is standard practice.
+    #why would we migrate? i thought we would just initialize all DBs, and use the flask api for the frontend
+Initial admin user: CLI command, seed script, or first-run setup page?
+    #just manually create the first user - admin / adminpass
+Session management: Flask-Login for auth? What session timeout duration?    
+    #Yes use flask-login
+    #8 hour timeout
+Validation & Rules
+Field constraints: Any specific min/max for sets (1-20?), reps (1-100?), weight values?
+    #Yes those values are good
+Name length limits: Exercise names, program names, etc.?
+    #maybe 50 characters
+Required fields: For exercises, what's mandatory vs optional beyond just the name?
+    #name is the only mandatory item
+Search & Filtering
+Exercise selection: With potentially hundreds of user-created exercises, how should users select them? Searchable dropdown? Modal with search?
+    #modal search, when adding things to their programs, or editing the default progressive overload and settings for the excercises for their gym
+Pagination: Should workout history have pagination? How many items per page?
+    #20
+Program Sharing
+Shared programs: When a user receives/uses a shared program, do they get a personal copy they can modify, or is it read-only?
+    #read only, so the primary user can make changes and the shared users will see them, but the shared user can have the option to make a local copy they can edit
+Admin templates: Same question - can users edit admin-shared templates or must they duplicate first?
+    #they woul dhave to duplicate first
+Units & Measurements
+Weight units: Hardcode to lbs/kg, or let users choose their preference?
+    #they can choose but lbs is the default
+User preferences: Should each user be able to set their preferred unit system?
+UI/UX
+Dashboard: What should the home/dashboard page show after login? (Today's workout, recent activity, upcoming schedule?)
+    #all of the above
+Rest days: Should these be explicitly tracked in the calendar or just days without scheduled workouts?
+    #just workout dasys

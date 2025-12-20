@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Add Equipment - CasettaFit{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('gym.index') }}">Gyms</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('gym.view', gym_id=gym.id) }}">{{ gym.name }}</a></li>
+                <li class="breadcrumb-item active">Add Equipment</li>
+            </ol>
+        </nav>
+        <h2 class="mb-4">Add Equipment to {{ gym.name }}</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.equipment_id.label(class="form-label") }}
+                        {{ form.equipment_id(class="form-select" + (" is-invalid" if form.equipment_id.errors else "")) }}
+                        {% if form.equipment_id.errors %}
+                            <div class="invalid-feedback">{% for error in form.equipment_id.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                        <small class="text-body-secondary">Don't see your equipment? <a href="{{ url_for('equipment.create') }}" target="_blank">Create it first</a></small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.quantity.label(class="form-label") }}
+                        {{ form.quantity(class="form-control") }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.progression_type.label(class="form-label") }}
+                        {{ form.progression_type(class="form-select") }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.weight_value.label(class="form-label") }}
+                        {{ form.weight_value(class="form-control") }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.plate_sizes.label(class="form-label") }}
+                        {{ form.plate_sizes(class="form-control") }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.stack_increment.label(class="form-label") }}
+                        {{ form.stack_increment(class="form-control") }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.notes.label(class="form-label") }}
+                        {{ form.notes(class="form-control", rows=2) }}
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        {{ form.submit(class="btn btn-primary") }}
+                        <a href="{{ url_for('gym.view', gym_id=gym.id) }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header"><strong>Common Plate Sizes</strong></div>
+            <div class="card-body">
+                <p class="small text-body-secondary">Quick reference for standard barbell plates:</p>
+                <ul class="small">
+                    <li>2.5 lbs</li>
+                    <li>5 lbs</li>
+                    <li>10 lbs</li>
+                    <li>25 lbs</li>
+                    <li>35 lbs</li>
+                    <li>45 lbs</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

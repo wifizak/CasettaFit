@@ -1,0 +1,30 @@
+For Gym Setup
+    - Add Address for Gym
+    - Optional Gym Picture
+    - Note who owns or created the gym
+    - Note how many people use, and how many workouts have been completed in that gym
+
+For Equipment Setup
+    - I would like equipment to be a more global table.
+    - Equipment can be setup like excercises then assigned to the Gym
+    - Once in the gym a user can then make their gym specific edits for what type of progressive overload would be used
+    - For the progressive overload section of the equipmentm we wont actually put the weight or the time
+    we will just assigned an overload type [Plates, Stack, Increments, Percentage, Time, Reps, ]
+    - Equipment Type - Really just like, Strength or Cardio or Body or Resistance
+    - The each equipment needs a quantity, like if i have multiple dumbells of the same weight.
+    - need to be able to add "adjustments" maybe multiple - like rack postition, or handle orientation, etc
+
+For Exersise Setup
+    - we need to have both muscle and sub-muscle groupings
+    - need to be able to select multiple pieces of equipment
+    - need a per-user value ranking if you like it or not
+    - need to see the available equipment adjustments
+    - once equipment is selected we need to show what gym this excersise is available in
+    - need to have suggestings for how many sets and how many reps per set, and if a drop set is a good idea
+
+For program setup
+    - need the option for a user to superset to exercises at the same time (this will help when we do the phase 4 execution stage)
+    - when adding an exercise to a program to a day
+     - Target weight should really be like starting weight maybe
+    - also when creating the program we need to say how many weeks and how many days per week. 
+

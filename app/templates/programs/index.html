@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Programs - CasettaFit{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Training Programs</h2>
+            <div class="btn-group">
+                <a href="{{ url_for('body_patterns.index') }}" class="btn btn-outline-primary">
+                    <i class="cil-layers me-2"></i>Body Patterns
+                </a>
+                <a href="{{ url_for('programs.create') }}" class="btn btn-primary">
+                    <i class="cil-plus me-2"></i>Create Program
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- My Programs -->
+<div class="row mb-4">
+    <div class="col-12">
+        <h4>My Programs</h4>
+    </div>
+    {% if my_programs %}
+        {% for program in my_programs %}
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        {{ program.name }}
+                        {% if program.is_template %}<span class="badge bg-info ms-2">Template</span>{% endif %}
+                        {% if program.is_active %}<span class="badge bg-success ms-2">Active</span>{% endif %}
+                    </h5>
+                    <p class="card-text text-body-secondary small">
+                        {{ program.description or 'No description' }}<br>
+                        <i class="cil-calendar me-1"></i>{{ program.duration_weeks }} weeks
+                    </p>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('programs.view', program_id=program.id) }}" class="btn btn-primary btn-sm">View Program</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            No programs yet. <a href="{{ url_for('programs.create') }}">Create your first program</a> or duplicate a template below.
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Shared Programs -->
+{% if shared_programs %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h4>Shared With Me</h4>
+    </div>
+    {% for program in shared_programs %}
+    <div class="col-md-6 col-lg-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    {{ program.name }}
+                    <span class="badge bg-warning ms-2">Shared</span>
+                </h5>
+                <p class="card-text text-body-secondary small">
+                    {{ program.description or 'No description' }}<br>
+                    <small>By {{ program.creator.username }}</small>
+                </p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('programs.view', program_id=program.id) }}" class="btn btn-outline-primary btn-sm">View</a>
+                    <form action="{{ url_for('programs.duplicate', program_id=program.id) }}" method="POST">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary w-100">
+                            <i class="cil-copy me-1"></i>Make a Copy
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Templates -->
+{% if templates %}
+<div class="row">
+    <div class="col-12">
+        <h4>Program Templates</h4>
+    </div>
+    {% for program in templates %}
+    <div class="col-md-6 col-lg-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    {{ program.name }}
+                    <span class="badge bg-info ms-2">Template</span>
+                </h5>
+                <p class="card-text text-body-secondary small">
+                    {{ program.description or 'No description' }}<br>
+                    <small>By {{ program.creator.username }}</small>
+                </p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('programs.view', program_id=program.id) }}" class="btn btn-outline-primary btn-sm">Preview</a>
+                    <form action="{{ url_for('programs.duplicate', program_id=program.id) }}" method="POST">
+                        <button type="submit" class="btn btn-sm btn-primary w-100">
+                            <i class="cil-copy me-1"></i>Use This Template
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

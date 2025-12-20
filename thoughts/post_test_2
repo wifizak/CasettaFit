@@ -1,0 +1,16 @@
+On Exercise Creation
+ - Remove "Sub-Muscle Groups" we only need Primary and Secodary
+ - Let's change category to a dropdown, with options like, (Strength, Cardio, Stretch, Resistance, Bodyweight)
+ - For Equipment Reequired that should be more in a modal, to "add" then the modal is a table where you can filter, sort, search, and add equipment
+
+One Equipment Creation 
+ - Equipment does not need "Suggested Sets" Or Suggested Reps
+ - we do need to a "Variations" where a user can give possible varitions, like handle or like rack postition and others. 
+
+On Exercise Creation - additional
+ - Users need to be able to see what variations are availabe for that piece of gear, and set what they would want for that exercise, like rack postiion or handle type.
+
+On Progam add
+ - We need to be able to set how many days per week as well as how many weeks
+ - Superset Group (optional) is confusing lets remove the logic for adding a super set
+ - Lets have "Supersetting" be a per day option, where if you add supersetting to the day another column is added to the UI table where you can add the new and different workout to the super set. 

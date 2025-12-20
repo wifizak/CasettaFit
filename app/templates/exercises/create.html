@@ -1,0 +1,495 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if exercise else 'Create' }} Exercise - CasettaFit{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('exercises.index') }}">Exercises</a></li>
+                <li class="breadcrumb-item active">{{ 'Edit' if exercise else 'Create' }}</li>
+            </ol>
+        </nav>
+        <h2 class="mb-4">{{ 'Edit Exercise' if exercise else 'Create New Exercise' }}</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" id="exerciseForm">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.name.label(class="form-label") }}
+                        {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+                        {% if form.name.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.name.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                        <small class="text-body-secondary">Required</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control", rows=3) }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.category.label(class="form-label") }}
+                        {{ form.category(class="form-select" + (" is-invalid" if form.category.errors else "")) }}
+                        {% if form.category.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.category.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                        <small class="text-body-secondary">Required</small>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.primary_muscle.label(class="form-label") }}
+                            {{ form.primary_muscle(class="form-select") }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.secondary_muscles.label(class="form-label") }}
+                            {{ form.secondary_muscles(class="form-control", id="secondary_muscles_input", autocomplete="off") }}
+                            <datalist id="musclesSuggestions"></datalist>
+                            <div id="muscleTagsContainer" class="mt-2"></div>
+                            <small class="text-body-secondary">Type and select from suggestions, press comma or Enter to add</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.difficulty_level.label(class="form-label") }}
+                        {{ form.difficulty_level(class="form-select") }}
+                    </div>
+                    
+                    <!-- Equipment Section -->
+                    <div class="mb-3">
+                        <label class="form-label">Equipment Required</label>
+                        <button type="button" class="btn btn-outline-primary btn-sm d-block" onclick="openEquipmentModal()">
+                            <i class="bi bi-plus-circle"></i> Add Equipment
+                        </button>
+                        <div id="selectedEquipment" class="mt-2"></div>
+                        <!-- Hidden inputs will be added here by JavaScript -->
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        {{ form.submit(class="btn btn-primary") }}
+                        <a href="{{ url_for('exercises.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Equipment Modal -->
+<div class="modal fade" id="equipmentModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Select Equipment</h5>
+                <button type="button" class="btn-close" onclick="closeEquipmentModal()"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <input type="text" id="equipmentSearch" class="form-control" placeholder="Search equipment...">
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Equipment</th>
+                                <th>Type</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="equipmentTableBody">
+                            {% for equip in equipment_list %}
+                            <tr class="equipment-row" data-id="{{ equip.id }}" data-name="{{ equip.name }}" data-type="{{ equip.equipment_type }}">
+                                <td>{{ equip.name }}</td>
+                                <td><span class="badge bg-secondary">{{ equip.equipment_type }}</span></td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-primary add-equipment" 
+                                            data-id="{{ equip.id }}" 
+                                            data-name="{{ equip.name }}"
+                                            data-variations="{{ equip.variations|length }}">
+                                        <i class="bi bi-plus"></i> Add
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeEquipmentModal()">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Store equipment variations data in a script tag for JavaScript access -->
+<script type="application/json" id="equipmentVariationsData">
+{
+    {% for equip in equipment_list %}
+    "{{ equip.id }}": [
+        {% for v in equip.variations %}
+        {
+            "id": {{ v.id }},
+            "name": {{ v.name|tojson }},
+            "options": {{ v.options|from_json|tojson }}
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ]{% if not loop.last %},{% endif %}
+    {% endfor %}
+}
+</script>
+
+<script>
+function openEquipmentModal() {
+    const modal = document.getElementById('equipmentModal');
+    modal.classList.add('show');
+    modal.style.display = 'block';
+    document.body.classList.add('modal-open');
+    
+    // Add backdrop
+    const backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop fade show';
+    backdrop.id = 'modalBackdrop';
+    document.body.appendChild(backdrop);
+}
+
+function closeEquipmentModal() {
+    const modal = document.getElementById('equipmentModal');
+    modal.classList.remove('show');
+    modal.style.display = 'none';
+    document.body.classList.remove('modal-open');
+    
+    // Remove backdrop
+    const backdrop = document.getElementById('modalBackdrop');
+    if (backdrop) backdrop.remove();
+}
+
+// Secondary Muscles Autocomplete
+let availableMuscles = [];
+let selectedMuscles = [];
+
+// Fetch available muscle suggestions
+fetch('{{ url_for("exercises.get_secondary_muscles") }}')
+    .then(response => response.json())
+    .then(data => {
+        availableMuscles = data;
+    });
+
+// Initialize selected muscles from form value on load
+const musclesInput = document.getElementById('secondary_muscles_input');
+const initialValue = musclesInput.value.trim();
+if (initialValue) {
+    selectedMuscles = initialValue.split(',').map(m => m.trim()).filter(m => m);
+    updateMuscleDisplay();
+}
+
+// Handle input with autocomplete
+musclesInput.addEventListener('input', function(e) {
+    const value = this.value;
+    const lastComma = value.lastIndexOf(',');
+    const currentWord = lastComma >= 0 ? value.substring(lastComma + 1).trim() : value.trim();
+    
+    if (currentWord.length > 0) {
+        showMuscleSuggestions(currentWord, lastComma >= 0 ? value.substring(0, lastComma + 1) : '');
+    } else {
+        hideMuscleSuggestions();
+    }
+});
+
+// Handle comma or Enter to add muscle
+musclesInput.addEventListener('keydown', function(e) {
+    if (e.key === ',' || e.key === 'Enter') {
+        e.preventDefault();
+        const value = this.value.trim();
+        if (value && !value.endsWith(',')) {
+            addMuscle(value);
+            this.value = '';
+            hideMuscleSuggestions();
+        }
+    }
+});
+
+// Handle blur to add remaining text
+musclesInput.addEventListener('blur', function(e) {
+    setTimeout(() => {
+        const value = this.value.trim();
+        if (value) {
+            addMuscle(value);
+            this.value = '';
+        }
+        hideMuscleSuggestions();
+    }, 200);
+});
+
+function showMuscleSuggestions(search, prefix) {
+    const suggestions = availableMuscles.filter(m => 
+        m.toLowerCase().includes(search.toLowerCase()) && 
+        !selectedMuscles.includes(m)
+    ).slice(0, 5);
+    
+    if (suggestions.length === 0) {
+        hideMuscleSuggestions();
+        return;
+    }
+    
+    let dropdown = document.getElementById('muscleSuggestionsDropdown');
+    if (!dropdown) {
+        dropdown = document.createElement('div');
+        dropdown.id = 'muscleSuggestionsDropdown';
+        dropdown.className = 'list-group position-absolute w-100';
+        dropdown.style.zIndex = '1000';
+        dropdown.style.maxHeight = '200px';
+        dropdown.style.overflowY = 'auto';
+        musclesInput.parentElement.style.position = 'relative';
+        musclesInput.parentElement.appendChild(dropdown);
+    }
+    
+    dropdown.innerHTML = suggestions.map(muscle => 
+        `<button type="button" class="list-group-item list-group-item-action" onclick="selectMuscle('${muscle.replace(/'/g, "\\'")}', '${prefix.replace(/'/g, "\\'")}')">
+            ${muscle}
+        </button>`
+    ).join('');
+}
+
+function hideMuscleSuggestions() {
+    const dropdown = document.getElementById('muscleSuggestionsDropdown');
+    if (dropdown) dropdown.remove();
+}
+
+function selectMuscle(muscle, prefix) {
+    addMuscle(muscle);
+    musclesInput.value = '';
+    musclesInput.focus();
+    hideMuscleSuggestions();
+}
+
+function addMuscle(muscle) {
+    muscle = muscle.trim();
+    if (muscle && !selectedMuscles.includes(muscle)) {
+        selectedMuscles.push(muscle);
+        updateMuscleDisplay();
+        updateHiddenInput();
+    }
+}
+
+function removeMuscle(muscle) {
+    selectedMuscles = selectedMuscles.filter(m => m !== muscle);
+    updateMuscleDisplay();
+    updateHiddenInput();
+}
+
+function updateMuscleDisplay() {
+    const container = document.getElementById('muscleTagsContainer');
+    container.innerHTML = selectedMuscles.map(muscle => 
+        `<span class="badge bg-secondary me-1 mb-1">
+            ${muscle}
+            <button type="button" class="btn-close btn-close-white ms-1" style="font-size: 0.6rem; padding: 0;" onclick="removeMuscle('${muscle.replace(/'/g, "\\'")}')"></button>
+        </span>`
+    ).join('');
+}
+
+function updateHiddenInput() {
+    musclesInput.value = selectedMuscles.join(', ');
+}
+
+// Load equipment variations data from JSON script tag
+const equipmentVariationsData = JSON.parse(document.getElementById('equipmentVariationsData').textContent);
+
+let selectedEquipmentIds = new Set();
+let selectedEquipmentData = {}; // Store equipment with their variations
+
+{% if exercise %}
+    {% for eq in exercise.equipment %}
+        selectedEquipmentIds.add({{ eq.id }});
+    {% endfor %}
+{% endif %}
+
+// Equipment search functionality
+document.getElementById('equipmentSearch').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    document.querySelectorAll('.equipment-row').forEach(row => {
+        const name = row.dataset.name.toLowerCase();
+        const type = row.dataset.type.toLowerCase();
+        if (name.includes(searchTerm) || type.includes(searchTerm)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+
+// Add equipment handler
+document.querySelectorAll('.add-equipment').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const equipId = parseInt(this.dataset.id);
+        const equipName = this.dataset.name;
+        const variationsCount = parseInt(this.dataset.variations || 0);
+        
+        if (!selectedEquipmentIds.has(equipId)) {
+            // Get variations data from our loaded JSON
+            const variations = equipmentVariationsData[equipId] || [];
+            
+            // If has variations, show variation selector
+            if (variations.length > 0) {
+                showVariationSelector(equipId, equipName, variations);
+            } else {
+                // No variations, just add it
+                selectedEquipmentIds.add(equipId);
+                selectedEquipmentData[equipId] = { name: equipName, variations: {} };
+                addEquipmentBadge(equipId, equipName, {});
+            }
+        }
+    });
+});
+
+function showVariationSelector(equipId, equipName, variations) {
+    // Create variation selection UI
+    const modalBody = document.querySelector('#equipmentModal .modal-body');
+    const existingSelector = document.getElementById('variationSelector');
+    if (existingSelector) existingSelector.remove();
+    
+    const selectorDiv = document.createElement('div');
+    selectorDiv.id = 'variationSelector';
+    selectorDiv.className = 'card mt-3 bg-light';
+    selectorDiv.innerHTML = `
+        <div class="card-header">
+            <h6 class="mb-0">Configure: ${equipName}</h6>
+        </div>
+        <div class="card-body">
+            ${variations.map(v => {
+                // v.options is already an array from the loaded JSON data
+                const options = Array.isArray(v.options) ? v.options : [];
+                return `
+                    <div class="mb-2">
+                        <label class="form-label fw-bold">${v.name}</label>
+                        <select class="form-select form-select-sm" data-variation-id="${v.id}" data-variation-name="${v.name}">
+                            <option value="">-- Select ${v.name} --</option>
+                            ${options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+                        </select>
+                    </div>
+                `;
+            }).join('')}
+            <div class="d-flex gap-2 mt-3">
+                <button type="button" class="btn btn-sm btn-success" onclick="confirmVariations(${equipId}, '${equipName}')">
+                    <i class="bi bi-check"></i> Add Equipment
+                </button>
+                <button type="button" class="btn btn-sm btn-secondary" onclick="cancelVariations()">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    `;
+    modalBody.appendChild(selectorDiv);
+    selectorDiv.scrollIntoView({ behavior: 'smooth' });
+}
+
+function confirmVariations(equipId, equipName) {
+    const selector = document.getElementById('variationSelector');
+    const selects = selector.querySelectorAll('select');
+    const variations = {};
+    
+    // Collect all variation selections
+    selects.forEach(select => {
+        if (select.value) {
+            variations[select.dataset.variationId] = {
+                name: select.dataset.variationName,
+                option: select.value
+            };
+        }
+    });
+    
+    selectedEquipmentIds.add(equipId);
+    selectedEquipmentData[equipId] = { name: equipName, variations: variations };
+    addEquipmentBadge(equipId, equipName, variations);
+    cancelVariations();
+}
+
+function cancelVariations() {
+    const selector = document.getElementById('variationSelector');
+    if (selector) selector.remove();
+}
+
+function addEquipmentBadge(equipId, equipName, variations) {
+    const container = document.getElementById('selectedEquipment');
+    const badge = document.createElement('div');
+    badge.className = 'alert alert-info d-flex justify-content-between align-items-start mb-2';
+    badge.id = `equip-${equipId}`;
+    
+    let variationText = '';
+    if (Object.keys(variations).length > 0) {
+        variationText = '<br><small class="text-muted">' + 
+            Object.values(variations).map(v => `${v.name}: ${v.option}`).join(', ') + 
+            '</small>';
+    }
+    
+    badge.innerHTML = `
+        <div>
+            <strong>${equipName}</strong>${variationText}
+            <input type="hidden" name="equipment_ids[]" value="${equipId}">
+            ${Object.entries(variations).map(([varId, varData]) => 
+                `<input type="hidden" name="variations[]" value='${JSON.stringify({
+                    equipment_id: equipId,
+                    variation_id: varId,
+                    selected_option: varData.option
+                })}'>`
+            ).join('')}
+        </div>
+        <button type="button" class="btn-close" onclick="removeEquipment(${equipId})"></button>
+    `;
+    container.appendChild(badge);
+}
+
+function removeEquipment(equipId) {
+    selectedEquipmentIds.delete(parseInt(equipId));
+    delete selectedEquipmentData[equipId];
+    const badge = document.getElementById(`equip-${equipId}`);
+    if (badge) badge.remove();
+}
+
+// Initialize existing equipment on edit
+{% if exercise %}
+    {% for eq in exercise.equipment %}
+        // Build variations object for this equipment
+        const variations_{{ eq.id }} = {};
+        {% if current_variations %}
+            {% for var in current_variations %}
+                {% if var.equipment_id == eq.id %}
+                    variations_{{ eq.id }}[{{ var.variation_id }}] = {
+                        name: '{{ var.variation.name }}',
+                        option: '{{ var.selected_option }}'
+                    };
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+        
+        selectedEquipmentIds.add({{ eq.id }});
+        selectedEquipmentData[{{ eq.id }}] = { name: '{{ eq.name }}', variations: variations_{{ eq.id }} };
+        addEquipmentBadge({{ eq.id }}, '{{ eq.name }}', variations_{{ eq.id }});
+    {% endfor %}
+{% endif %}
+
+// Debug form submission
+document.getElementById('exerciseForm').addEventListener('submit', function(e) {
+    const equipIds = document.querySelectorAll('input[name="equipment_ids[]"]');
+    const variations = document.querySelectorAll('input[name="variations[]"]');
+    console.log('Submitting form with:', {
+        equipmentCount: equipIds.length,
+        equipmentIds: Array.from(equipIds).map(i => i.value),
+        variationsCount: variations.length,
+        variations: Array.from(variations).map(v => v.value)
+    });
+});
+</script>
+{% endblock %}

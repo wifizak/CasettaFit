@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Create Body Pattern - CasettaFit{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('body_patterns.index') }}">Body Patterns</a></li>
+                <li class="breadcrumb-item active">Create</li>
+            </ol>
+        </nav>
+        <h2 class="mb-4">Create Body Pattern</h2>
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.name.label(class="form-label") }}
+                        {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+                        {% if form.name.errors %}
+                            <div class="invalid-feedback">{% for error in form.name.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.pattern_days.label(class="form-label") }}
+                        {{ form.pattern_days(class="form-control" + (" is-invalid" if form.pattern_days.errors else "")) }}
+                        {% if form.pattern_days.errors %}
+                            <div class="invalid-feedback">{% for error in form.pattern_days.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                        <small class="text-body-secondary">Enter one day label per line</small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        {{ form.submit(class="btn btn-primary") }}
+                        <a href="{{ url_for('body_patterns.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header"><strong>Examples</strong></div>
+            <div class="card-body">
+                <p class="small"><strong>Push/Pull/Legs:</strong></p>
+                <pre class="bg-light p-2 small">Push
+Pull
+Legs
+Rest</pre>
+                <p class="small mt-3"><strong>Upper/Lower:</strong></p>
+                <pre class="bg-light p-2 small">Upper
+Lower
+Rest</pre>
+                <p class="small mt-3"><strong>Custom:</strong></p>
+                <pre class="bg-light p-2 small">Chest & Triceps
+Back & Biceps
+Legs
+Shoulders & Abs
+Rest</pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

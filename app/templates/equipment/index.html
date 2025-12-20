@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Equipment Library - CasettaFit{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Equipment Library</h2>
+            <a href="{{ url_for('equipment.create') }}" class="btn btn-primary">
+                <i class="cil-plus me-2"></i>Create Equipment
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <form method="GET" action="{{ url_for('equipment.index') }}" class="input-group">
+            <input type="text" name="search" class="form-control" placeholder="Search equipment..." value="{{ search }}">
+            <button class="btn btn-outline-secondary" type="submit"><i class="cil-search"></i></button>
+        </form>
+    </div>
+    <div class="col-md-3">
+        <select name="type" class="form-select" onchange="window.location.href='{{ url_for('equipment.index') }}?type=' + this.value">
+            <option value="">All Types</option>
+            <option value="Strength" {% if selected_type == 'Strength' %}selected{% endif %}>Strength</option>
+            <option value="Cardio" {% if selected_type == 'Cardio' %}selected{% endif %}>Cardio</option>
+            <option value="Body" {% if selected_type == 'Body' %}selected{% endif %}>Body Weight</option>
+            <option value="Resistance" {% if selected_type == 'Resistance' %}selected{% endif %}>Resistance</option>
+        </select>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        {% if equipment_list %}
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Gyms</th>
+                                <th>Variations</th>
+                                <th>Created By</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for eq in equipment_list %}
+                            <tr>
+                                <td><strong>{{ eq.name }}</strong><br><small class="text-muted">{{ eq.description }}</small></td>
+                                <td><span class="badge bg-info">{{ eq.equipment_type }}</span></td>
+                                <td>
+                                    {% if eq.gyms %}
+                                        {% for gym in eq.gyms[:2] %}
+                                            <span class="badge bg-success">{{ gym.name }}</span>
+                                        {% endfor %}
+                                        {% if eq.gyms|length > 2 %}
+                                            <span class="badge bg-success">+{{ eq.gyms|length - 2 }}</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">None</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if eq.variations %}
+                                        {% for var in eq.variations[:2] %}
+                                            <span class="badge bg-secondary">{{ var.name }}</span>
+                                        {% endfor %}
+                                        {% if eq.variations|length > 2 %}
+                                            <span class="badge bg-secondary">+{{ eq.variations|length - 2 }}</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ eq.creator.username }}</td>
+                                <td>
+                                    <a href="{{ url_for('equipment.edit', equipment_id=eq.id) }}" class="btn btn-sm btn-outline-primary"><i class="cil-pencil"></i></a>
+                                    {% if current_user.is_admin or eq.created_by == current_user.id %}
+                                    <form action="{{ url_for('equipment.delete', equipment_id=eq.id) }}" method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete?')"><i class="cil-trash"></i></button>
+                                    </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        {% if pagination.pages > 1 %}
+        <nav class="mt-3">
+            <ul class="pagination justify-content-center">
+                {% if pagination.has_prev %}
+                <li class="page-item"><a class="page-link" href="{{ url_for('equipment.index', page=pagination.prev_num, search=search, type=selected_type) }}">Previous</a></li>
+                {% endif %}
+                {% for p in pagination.iter_pages() %}
+                    {% if p %}
+                    <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('equipment.index', page=p, search=search, type=selected_type) }}">{{ p }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                {% if pagination.has_next %}
+                <li class="page-item"><a class="page-link" href="{{ url_for('equipment.index', page=pagination.next_num, search=search, type=selected_type) }}">Next</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+        {% else %}
+        <div class="alert alert-info">No equipment found. Create your first piece of equipment!</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

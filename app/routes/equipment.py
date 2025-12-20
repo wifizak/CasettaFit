@@ -1,0 +1,213 @@
+from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask_login import login_required, current_user
+from app import db
+from app.models import MasterEquipment, EquipmentVariation, UserGym
+from app.forms import MasterEquipmentForm, EquipmentVariationForm
+import json
+
+bp = Blueprint('equipment', __name__, url_prefix='/equipment')
+
+
+@bp.route('/')
+@login_required
+def index():
+    """Equipment library page"""
+    page = request.args.get('page', 1, type=int)
+    search = request.args.get('search', '', type=str)
+    equipment_type = request.args.get('type', '', type=str)
+    per_page = 20
+    
+    query = MasterEquipment.query
+    
+    # Search filter
+    if search:
+        query = query.filter(MasterEquipment.name.ilike(f'%{search}%'))
+    
+    # Type filter
+    if equipment_type:
+        query = query.filter_by(equipment_type=equipment_type)
+    
+    query = query.order_by(MasterEquipment.name)
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    
+    return render_template('equipment/index.html', 
+                         equipment_list=pagination.items, 
+                         pagination=pagination,
+                         search=search,
+                         selected_type=equipment_type)
+
+
+@bp.route('/create', methods=['GET', 'POST'])
+@login_required
+def create():
+    """Create new equipment"""
+    form = MasterEquipmentForm()
+    
+    if form.validate_on_submit():
+        equipment = MasterEquipment(
+            name=form.name.data,
+            description=form.description.data,
+            equipment_type=form.equipment_type.data,
+            created_by=current_user.id
+        )
+        
+        db.session.add(equipment)
+        db.session.flush()
+        
+        # Handle gym associations
+        gym_ids = request.form.getlist('gym_ids[]')
+        for gym_id in gym_ids:
+            if gym_id:
+                gym = UserGym.query.get(int(gym_id))
+                if gym:
+                    equipment.gyms.append(gym)
+        
+        db.session.commit()
+        
+        flash(f'Equipment "{equipment.name}" created successfully!', 'success')
+        return redirect(url_for('equipment.index'))
+    
+    # Get all gyms for current user
+    gyms = UserGym.query.filter_by(user_id=current_user.id).order_by(UserGym.name).all()
+    return render_template('equipment/create.html', form=form, gyms=gyms)
+
+
+@bp.route('/<int:equipment_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit(equipment_id):
+    """Edit equipment"""
+    equipment = MasterEquipment.query.get_or_404(equipment_id)
+    
+    # Check permissions
+    if not current_user.is_admin and equipment.created_by != current_user.id:
+        flash('You do not have permission to edit this equipment.', 'danger')
+        return redirect(url_for('equipment.index'))
+    
+    form = MasterEquipmentForm()
+    
+    if form.validate_on_submit():
+        equipment.name = form.name.data
+        equipment.description = form.description.data
+        equipment.equipment_type = form.equipment_type.data
+        
+        # Update gym associations
+        equipment.gyms.clear()
+        gym_ids = request.form.getlist('gym_ids[]')
+        for gym_id in gym_ids:
+            if gym_id:
+                gym = UserGym.query.get(int(gym_id))
+                if gym:
+                    equipment.gyms.append(gym)
+        
+        db.session.commit()
+        flash(f'Equipment "{equipment.name}" updated successfully!', 'success')
+        return redirect(url_for('equipment.index'))
+    
+    elif request.method == 'GET':
+        form.name.data = equipment.name
+        form.description.data = equipment.description
+        form.equipment_type.data = equipment.equipment_type
+    
+    # Get all unique variation types from database for suggestions
+    from app.models import EquipmentVariation
+    existing_variations = db.session.query(
+        EquipmentVariation.name,
+        EquipmentVariation.options
+    ).distinct().all()
+    
+    # Convert to list of dicts for template
+    variation_templates = []
+    seen = set()
+    for var in existing_variations:
+        if var.name not in seen:
+            variation_templates.append({
+                'name': var.name,
+                'options': var.options
+            })
+            seen.add(var.name)
+    
+    # Get all gyms for current user
+    gyms = UserGym.query.filter_by(user_id=current_user.id).order_by(UserGym.name).all()
+    current_gym_ids = [g.id for g in equipment.gyms]
+    
+    return render_template('equipment/edit.html', form=form, equipment=equipment, 
+                         variation_templates=variation_templates, gyms=gyms, current_gym_ids=current_gym_ids)
+
+
+@bp.route('/<int:equipment_id>/delete', methods=['POST'])
+@login_required
+def delete(equipment_id):
+    """Delete equipment"""
+    equipment = MasterEquipment.query.get_or_404(equipment_id)
+    
+    # Check permissions
+    if not current_user.is_admin and equipment.created_by != current_user.id:
+        flash('You do not have permission to delete this equipment.', 'danger')
+        return redirect(url_for('equipment.index'))
+    
+    name = equipment.name
+    db.session.delete(equipment)
+    db.session.commit()
+    
+    flash(f'Equipment "{name}" deleted successfully.', 'success')
+    return redirect(url_for('equipment.index'))
+
+
+# Variation management
+@bp.route('/<int:equipment_id>/variations/add', methods=['GET', 'POST'])
+@login_required
+def add_variation(equipment_id):
+    """Add variation to equipment"""
+    equipment = MasterEquipment.query.get_or_404(equipment_id)
+    
+    # Check permissions
+    if not current_user.is_admin and equipment.created_by != current_user.id:
+        flash('You do not have permission to edit this equipment.', 'danger')
+        return redirect(url_for('equipment.index'))
+    
+    if request.method == 'POST':
+        # Handle direct POST from modal
+        name = request.form.get('name', '').strip()
+        options_text = request.form.get('options', '').strip()
+        
+        if name and options_text:
+            # Parse options from textarea (one per line) to JSON
+            options = [opt.strip() for opt in options_text.split('\n') if opt.strip()]
+            
+            variation = EquipmentVariation(
+                equipment_id=equipment.id,
+                name=name,
+                options=json.dumps(options)
+            )
+            
+            db.session.add(variation)
+            db.session.commit()
+            
+            flash(f'Variation "{variation.name}" added successfully!', 'success')
+            return redirect(url_for('equipment.edit', equipment_id=equipment.id))
+        else:
+            flash('Please provide both variation name and options.', 'danger')
+            return redirect(url_for('equipment.edit', equipment_id=equipment.id))
+    
+    # GET request - render standalone form (optional)
+    form = EquipmentVariationForm()
+    return render_template('equipment/add_variation.html', form=form, equipment=equipment)
+
+
+@bp.route('/variations/<int:variation_id>/delete', methods=['POST'])
+@login_required
+def delete_variation(variation_id):
+    """Delete variation"""
+    variation = EquipmentVariation.query.get_or_404(variation_id)
+    equipment = variation.equipment
+    
+    # Check permissions
+    if not current_user.is_admin and equipment.created_by != current_user.id:
+        flash('You do not have permission to edit this equipment.', 'danger')
+        return redirect(url_for('equipment.index'))
+    
+    db.session.delete(variation)
+    db.session.commit()
+    
+    flash('Variation deleted successfully.', 'success')
+    return redirect(url_for('equipment.edit', equipment_id=equipment.id))

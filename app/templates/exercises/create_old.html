@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Edit' if exercise else 'Create' }} Exercise - CasettaFit{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('exercises.index') }}">Exercises</a></li>
+                <li class="breadcrumb-item active">{{ 'Edit' if exercise else 'Create' }}</li>
+            </ol>
+        </nav>
+        <h2 class="mb-4">{{ 'Edit Exercise' if exercise else 'Create New Exercise' }}</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.name.label(class="form-label") }}
+                        {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+                        {% if form.name.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.name.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                        <small class="text-body-secondary">Only field required</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control", rows=3) }}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            {{ form.primary_muscle.label(class="form-label") }}
+                            {{ form.primary_muscle(class="form-select") }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            {{ form.secondary_muscles.label(class="form-label") }}
+                            {{ form.secondary_muscles(class="form-control") }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            {{ form.sub_muscle_groups.label(class="form-label") }}
+                            {{ form.sub_muscle_groups(class="form-control") }}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.difficulty_level.label(class="form-label") }}
+                            {{ form.difficulty_level(class="form-select") }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.categories.label(class="form-label") }}
+                            {{ form.categories(class="form-select", multiple=true, size=3) }}
+                            <small class="text-body-secondary">Hold Ctrl/Cmd to select multiple</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.equipment.label(class="form-label") }}
+                        {{ form.equipment(class="form-select", multiple=true, size=3) }}
+                        <small class="text-body-secondary">Hold Ctrl/Cmd to select multiple</small>
+                    </div>
+                    
+                    <h5 class="mt-4 mb-3">Suggested Settings</h5>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            {{ form.suggested_sets.label(class="form-label") }}
+                            {{ form.suggested_sets(class="form-control") }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            {{ form.suggested_reps.label(class="form-label") }}
+                            {{ form.suggested_reps(class="form-control") }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="form-check">
+                                {{ form.suggested_dropset(class="form-check-input") }}
+                                {{ form.suggested_dropset.label(class="form-check-label") }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        {{ form.submit(class="btn btn-primary") }}
+                        <a href="{{ url_for('exercises.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

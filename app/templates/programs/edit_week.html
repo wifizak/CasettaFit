@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit Week' if week else 'Edit Day' if day else 'Add Exercise' }} - CasettaFit{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('programs.index') }}">Programs</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('programs.view', program_id=program.id) }}">{{ program.name }}</a></li>
+                <li class="breadcrumb-item active">{{ 'Week ' ~ week.week_number if week else 'Day ' ~ day.day_number if day else 'Add Exercise' }}</li>
+            </ol>
+        </nav>
+        <h2 class="mb-4">{{ 'Edit Week ' ~ week.week_number if week else 'Edit Day ' ~ day.day_number if day else 'Add Exercise' }}</h2>
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    {% for field in form if field.widget.input_type != 'hidden' and field.name != 'submit' %}
+                    <div class="mb-3">
+                        {{ field.label(class="form-label") }}
+                        {% if field.type == 'BooleanField' %}
+                            <div class="form-check">
+                                {{ field(class="form-check-input") }}
+                                {{ field.label(class="form-check-label") }}
+                            </div>
+                        {% elif field.type == 'TextAreaField' %}
+                            {{ field(class="form-control") }}
+                        {% elif field.type == 'SelectField' %}
+                            {{ field(class="form-select" + (" is-invalid" if field.errors else "")) }}
+                        {% else %}
+                            {{ field(class="form-control" + (" is-invalid" if field.errors else "")) }}
+                        {% endif %}
+                        {% if field.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in field.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    <div class="d-flex gap-2">
+                        {{ form.submit(class="btn btn-primary") }}
+                        <a href="{{ url_for('programs.view', program_id=program.id) }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

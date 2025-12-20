@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CasettaFit{% endblock %}</title>
+    
+    <!-- CoreUI CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.0.0/dist/css/coreui.min.css" rel="stylesheet">
+    <!-- CoreUI Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/@coreui/icons@3.0.1/css/all.min.css" rel="stylesheet">
+    
+    {% block extra_css %}{% endblock %}
+    
+    <style>
+        /* Mobile-first responsive design */
+        body {
+            padding-bottom: 70px; /* Space for bottom nav on mobile */
+        }
+        
+        @media (min-width: 768px) {
+            body {
+                padding-bottom: 0;
+            }
+        }
+        
+        /* Bottom navigation for mobile */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border-top: 1px solid #d8dbe0;
+            display: flex;
+            justify-content: space-around;
+            padding: 0.5rem 0;
+            z-index: 1000;
+        }
+        
+        .bottom-nav-item {
+            flex: 1;
+            text-align: center;
+            padding: 0.5rem;
+            color: #768192;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.75rem;
+        }
+        
+        .bottom-nav-item.active {
+            color: #321fdb;
+        }
+        
+        .bottom-nav-item i {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        @media (min-width: 768px) {
+            .bottom-nav {
+                display: none;
+            }
+        }
+        
+        /* Hide sidebar on mobile */
+        @media (max-width: 767px) {
+            .sidebar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    {% if current_user.is_authenticated %}
+    <!-- Sidebar for desktop -->
+    <div class="sidebar sidebar-dark sidebar-fixed border-end d-none d-md-flex" id="sidebar">
+        <div class="sidebar-header border-bottom">
+            <div class="sidebar-brand">
+                <strong>CasettaFit</strong>
+            </div>
+        </div>
+        <ul class="sidebar-nav" data-coreui="navigation">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('main.index') }}">
+                    <i class="nav-icon cil-speedometer"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-title">Training</li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('gym.index') }}">
+                    <i class="nav-icon cil-dumbbell"></i> My Gym
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('exercises.index') }}">
+                    <i class="nav-icon cil-list"></i> Exercises
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('equipment.index') }}">
+                    <i class="nav-icon cil-building"></i> Equipment
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('programs.index') }}">
+                    <i class="nav-icon cil-notes"></i> Programs
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('body_patterns.index') }}">
+                    <i class="nav-icon cil-layers"></i> Body Patterns
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="nav-icon cil-calendar"></i> Calendar
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="nav-icon cil-history"></i> History
+                </a>
+            </li>
+            <li class="nav-title">Progress</li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="nav-icon cil-chart-line"></i> Reports
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="nav-icon cil-target"></i> Goals
+                </a>
+            </li>
+            {% if current_user.is_admin %}
+            <li class="nav-title">Admin</li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.users') }}">
+                    <i class="nav-icon cil-people"></i> Users
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+        <div class="sidebar-footer border-top d-flex">
+            <button class="sidebar-toggler" type="button"></button>
+        </div>
+    </div>
+    
+    <!-- Main content wrapper -->
+    <div class="wrapper d-flex flex-column min-vh-100">
+        <!-- Header for desktop -->
+        <header class="header header-sticky p-0 mb-4 d-none d-md-block">
+            <div class="container-fluid border-bottom px-4">
+                <button class="header-toggler" type="button" onclick="coreui.Sidebar.getInstance(document.querySelector('#sidebar')).toggle()">
+                    <i class="icon cil-menu"></i>
+                </button>
+                <ul class="header-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link py-0" href="#" role="button" data-coreui-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <div class="avatar avatar-md">
+                                <span class="avatar-initial rounded-circle bg-primary">
+                                    {{ current_user.username[0].upper() }}
+                                </span>
+                            </div>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end pt-0">
+                            <div class="dropdown-header bg-body-tertiary text-body-secondary fw-semibold rounded-top mb-2">
+                                {{ current_user.username }}
+                            </div>
+                            <a class="dropdown-item" href="#">
+                                <i class="icon cil-user me-2"></i> Profile
+                            </a>
+                            <a class="dropdown-item" href="#">
+                                <i class="icon cil-settings me-2"></i> Settings
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                                <i class="icon cil-account-logout me-2"></i> Logout
+                            </a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </header>
+        
+        <!-- Page content -->
+        <div class="body flex-grow-1">
+            <div class="container-lg px-4">
+                <!-- Flash messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-coreui-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+        
+        <!-- Bottom navigation for mobile -->
+        <nav class="bottom-nav d-md-none">
+            <a href="{{ url_for('main.index') }}" class="bottom-nav-item {% if request.endpoint == 'main.index' %}active{% endif %}">
+                <i class="cil-speedometer"></i>
+                <span>Home</span>
+            </a>
+            <a href="{{ url_for('gym.index') }}" class="bottom-nav-item {% if request.endpoint and request.endpoint.startswith('gym') %}active{% endif %}">
+                <i class="cil-dumbbell"></i>
+                <span>Gym</span>
+            </a>
+            <a href="{{ url_for('exercises.index') }}" class="bottom-nav-item {% if request.endpoint and request.endpoint.startswith('exercises') %}active{% endif %}">
+                <i class="cil-list"></i>
+                <span>Exercises</span>
+            </a>
+            <a href="{{ url_for('programs.index') }}" class="bottom-nav-item {% if request.endpoint and request.endpoint.startswith('programs') %}active{% endif %}">
+                <i class="cil-notes"></i>
+                <span>Programs</span>
+            </a>
+            {% if current_user.is_admin %}
+            <a href="{{ url_for('admin.users') }}" class="bottom-nav-item {% if request.endpoint and request.endpoint.startswith('admin') %}active{% endif %}">
+                <i class="cil-settings"></i>
+                <span>Admin</span>
+            </a>
+            {% else %}
+            <a href="#" class="bottom-nav-item">
+                <i class="cil-user"></i>
+                <span>Profile</span>
+            </a>
+            {% endif %}
+        </nav>
+    </div>
+    {% else %}
+    <!-- Non-authenticated layout -->
+    <div class="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">
+        <div class="container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-coreui-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            {% block auth_content %}{% endblock %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- CoreUI and Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.0.0/dist/js/coreui.bundle.min.js"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

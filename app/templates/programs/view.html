@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}{{ program.name }} - CasettaFit{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('programs.index') }}">Programs</a></li>
+                <li class="breadcrumb-item active">{{ program.name }}</li>
+            </ol>
+        </nav>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2>{{ program.name }}</h2>
+                {% if program.is_template %}<span class="badge bg-info">Template</span>{% endif %}
+                {% if program.is_active %}<span class="badge bg-success">Active</span>{% endif %}
+            </div>
+            <div class="btn-group">
+                <form action="{{ url_for('programs.duplicate', program_id=program.id) }}" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="cil-copy me-2"></i>Duplicate
+                    </button>
+                </form>
+                {% if can_edit %}
+                <a href="{{ url_for('programs.share', program_id=program.id) }}" class="btn btn-outline-primary">
+                    <i class="cil-people me-2"></i>Share
+                </a>
+                <a href="{{ url_for('programs.edit', program_id=program.id) }}" class="btn btn-outline-primary">
+                    <i class="cil-pencil me-2"></i>Edit
+                </a>
+                <button type="button" class="btn btn-outline-danger" 
+                        onclick="if(confirm('Delete this program?')) { document.getElementById('delete-program').submit(); }">
+                    <i class="cil-trash me-2"></i>Delete
+                </button>
+                <form id="delete-program" action="{{ url_for('programs.delete', program_id=program.id) }}" method="POST" style="display:none;"></form>
+                {% endif %}
+            </div>
+        </div>
+        
+        {% if program.description %}
+        <div class="alert alert-info">
+            {{ program.description }}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Program weeks and days -->
+{% for week in program.weeks %}
+<div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <strong>
+            Week {{ week.week_number }}
+            {% if week.week_name %} - {{ week.week_name }}{% endif %}
+            {% if week.is_deload %}<span class="badge bg-warning ms-2">Deload</span>{% endif %}
+        </strong>
+        {% if can_edit %}
+        <a href="{{ url_for('programs.edit_week', week_id=week.id) }}" class="btn btn-sm btn-outline-primary">
+            <i class="cil-pencil"></i> Edit Week
+        </a>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th style="width: 100px;">Day</th>
+                        <th>Exercises</th>
+                        <th style="width: 100px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for day in week.days %}
+                    <tr {% if day.is_rest_day %}class="table-secondary"{% endif %}>
+                        <td>
+                            <strong>Day {{ day.day_number }}</strong><br>
+                            <small class="text-body-secondary">
+                                {% if day.day_name %}{{ day.day_name }}{% endif %}
+                                {% if day.is_rest_day %}<br><em>Rest</em>{% endif %}
+                            </small>
+                        </td>
+                        <td>
+                            {% if day.exercises %}
+                                <ul class="list-unstyled mb-0">
+                                    {% for ex in day.exercises %}
+                                    <li class="mb-2">
+                                        <strong>{{ ex.exercise.name }}</strong> - {{ ex.sets }} x {{ ex.reps }}
+                                        {% if ex.rest_time_seconds %} ({{ ex.rest_time_seconds }}s rest){% endif %}
+                                        {% if can_edit %}
+                                        <form action="{{ url_for('programs.delete_exercise', exercise_id=ex.id) }}" method="POST" style="display:inline;">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove exercise?')">
+                                                <i class="cil-trash"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <span class="text-body-secondary">No exercises</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if can_edit %}
+                            <div class="d-grid gap-1">
+                                <a href="{{ url_for('programs.add_exercise', day_id=day.id) }}" class="btn btn-sm btn-primary">
+                                    <i class="cil-plus"></i> Add
+                                </a>
+                                <a href="{{ url_for('programs.edit_day', day_id=day.id) }}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="cil-pencil"></i> Edit
+                                </a>
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - CasettaFit{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">Dashboard</h2>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Today's Workout Card -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="avatar avatar-lg bg-primary text-white me-3">
+                        <i class="cil-dumbbell"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">Today's Workout</h5>
+                        <small class="text-body-secondary">{{ "Today" }}</small>
+                    </div>
+                </div>
+                <p class="card-text text-body-secondary">No workout scheduled for today</p>
+                <a href="#" class="btn btn-primary">Start Freestyle Workout</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Activity Card -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="avatar avatar-lg bg-success text-white me-3">
+                        <i class="cil-history"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">Recent Activity</h5>
+                        <small class="text-body-secondary">Last 7 days</small>
+                    </div>
+                </div>
+                <p class="card-text text-body-secondary">No recent workouts</p>
+                <a href="#" class="btn btn-outline-success">View History</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Upcoming Schedule Card -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="avatar avatar-lg bg-info text-white me-3">
+                        <i class="cil-calendar"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">Upcoming</h5>
+                        <small class="text-body-secondary">Next 7 days</small>
+                    </div>
+                </div>
+                <p class="card-text text-body-secondary">No workouts scheduled</p>
+                <a href="#" class="btn btn-outline-info">View Calendar</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Quick Stats -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <strong>Quick Stats</strong>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 col-md-3 mb-3 mb-md-0">
+                        <div class="text-body-secondary small">Workouts This Week</div>
+                        <div class="h3 mb-0">0</div>
+                    </div>
+                    <div class="col-6 col-md-3 mb-3 mb-md-0">
+                        <div class="text-body-secondary small">Total Workouts</div>
+                        <div class="h3 mb-0">0</div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="text-body-secondary small">Active Programs</div>
+                        <div class="h3 mb-0">0</div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="text-body-secondary small">Current Streak</div>
+                        <div class="h3 mb-0">0 days</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <strong>Quick Actions</strong>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="#" class="btn btn-primary">
+                        <i class="cil-plus me-2"></i>Start Workout
+                    </a>
+                    <a href="#" class="btn btn-outline-primary">
+                        <i class="cil-notes me-2"></i>Manage Programs
+                    </a>
+                    <a href="#" class="btn btn-outline-primary">
+                        <i class="cil-dumbbell me-2"></i>Configure Gym
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

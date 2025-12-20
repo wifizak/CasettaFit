@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Edit' if gym else 'Create' }} Gym - CasettaFit{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('gym.index') }}">Gyms</a></li>
+                <li class="breadcrumb-item active">{{ 'Edit' if gym else 'Create' }}</li>
+            </ol>
+        </nav>
+        <h2 class="mb-4">{{ 'Edit Gym' if gym else 'Create New Gym' }}</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.name.label(class="form-label") }}
+                        {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+                        {% if form.name.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.name.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            {{ form.is_shared(class="form-check-input") }}
+                            {{ form.is_shared.label(class="form-check-label") }}
+                        </div>
+                        <small class="text-body-secondary">Other users can view and use this gym configuration</small>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        {{ form.submit(class="btn btn-primary") }}
+                        <a href="{{ url_for('gym.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

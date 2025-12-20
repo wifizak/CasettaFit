@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Login - CasettaFit{% endblock %}
+
+{% block auth_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-5 col-md-7">
+        <div class="card-group">
+            <div class="card p-4">
+                <div class="card-body">
+                    <h1 class="mb-4">CasettaFit</h1>
+                    <p class="text-body-secondary">Sign in to your account</p>
+                    
+                    <form method="POST" action="{{ url_for('auth.login') }}">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">
+                                <i class="icon cil-user"></i>
+                            </span>
+                            {{ form.username(class="form-control", placeholder="Username") }}
+                        </div>
+                        {% if form.username.errors %}
+                            <div class="text-danger mb-3">
+                                {% for error in form.username.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="input-group mb-4">
+                            <span class="input-group-text">
+                                <i class="icon cil-lock-locked"></i>
+                            </span>
+                            {{ form.password(class="form-control", placeholder="Password") }}
+                        </div>
+                        {% if form.password.errors %}
+                            <div class="text-danger mb-3">
+                                {% for error in form.password.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="form-check mb-3">
+                            {{ form.remember_me(class="form-check-input") }}
+                            {{ form.remember_me.label(class="form-check-label") }}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-12">
+                                {{ form.submit(class="btn btn-primary px-4 w-100") }}
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

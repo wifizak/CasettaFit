@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}{{ gym.name }} - CasettaFit{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('gym.index') }}">Gyms</a></li>
+                <li class="breadcrumb-item active">{{ gym.name }}</li>
+            </ol>
+        </nav>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2>{{ gym.name }}</h2>
+                {% if gym.is_shared %}<span class="badge bg-info">Shared</span>{% endif %}
+            </div>
+            {% if gym.user_id == current_user.id %}
+            <div class="btn-group">
+                <a href="{{ url_for('gym.edit', gym_id=gym.id) }}" class="btn btn-outline-primary">
+                    <i class="cil-pencil me-2"></i>Edit
+                </a>
+                <button type="button" class="btn btn-outline-danger" 
+                        onclick="if(confirm('Delete this gym?')) { document.getElementById('delete-gym').submit(); }">
+                    <i class="cil-trash me-2"></i>Delete
+                </button>
+                <form id="delete-gym" action="{{ url_for('gym.delete', gym_id=gym.id) }}" method="POST" style="display:none;"></form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong>Equipment</strong>
+            </div>
+            <div class="card-body">
+                {% if gym.available_equipment %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Variations</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for equip in gym.available_equipment %}
+                            <tr>
+                                <td><strong>{{ equip.name }}</strong></td>
+                                <td><span class="badge bg-secondary">{{ equip.equipment_type }}</span></td>
+                                <td>
+                                    {% if equip.variations %}
+                                        {% for var in equip.variations[:2] %}
+                                            <span class="badge bg-info">{{ var.name }}</span>
+                                        {% endfor %}
+                                        {% if equip.variations|length > 2 %}
+                                            <span class="badge bg-info">+{{ equip.variations|length - 2 }}</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-body-secondary text-center py-3">No equipment added yet. Equipment can be assigned from the <a href="{{ url_for('equipment.index') }}">Equipment Library</a>.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong>Available Exercises</strong>
+                {% if gym.user_id == current_user.id %}
+                <a href="{{ url_for('gym.add_exercise', gym_id=gym.id) }}" class="btn btn-sm btn-primary">
+                    <i class="cil-plus"></i> Add
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if gym.exercises %}
+                <div class="list-group list-group-flush">
+                    {% for gym_ex in gym.exercises %}
+                    <div class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <strong>{{ gym_ex.exercise.name }}</strong>
+                            {% if gym_ex.is_favorite %}<i class="cil-star text-warning ms-1"></i>{% endif %}
+                            <br>
+                            <small class="text-body-secondary">
+                                Progression: {{ gym_ex.progression_type.replace('_', ' ').title() }}
+                            </small>
+                        </div>
+                        {% if gym.user_id == current_user.id %}
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ url_for('gym.edit_exercise', gym_exercise_id=gym_ex.id) }}" class="btn btn-outline-primary">
+                                <i class="cil-pencil"></i>
+                            </a>
+                            <form action="{{ url_for('gym.delete_exercise', gym_exercise_id=gym_ex.id) }}" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Remove?')">
+                                    <i class="cil-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-body-secondary text-center py-3">No exercises added yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

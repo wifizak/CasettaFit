@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Exercise Categories - CasettaFit{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Exercise Categories</h2>
+            <a href="{{ url_for('exercises.create_category') }}" class="btn btn-primary">
+                <i class="cil-plus me-2"></i>Create Category
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <strong>Your Categories</strong>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for category in user_categories %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ category.name }}
+                        <form action="{{ url_for('exercises.delete_category', category_id=category.id) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this category?')">
+                                <i class="cil-trash"></i>
+                            </button>
+                        </form>
+                    </li>
+                    {% else %}
+                    <li class="list-group-item text-body-secondary">No custom categories yet</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <strong>Shared Categories</strong>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for category in shared_categories %}
+                    <li class="list-group-item">{{ category.name }}</li>
+                    {% else %}
+                    <li class="list-group-item text-body-secondary">No shared categories</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Edit' if program else 'Create' }} Program - CasettaFit{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('programs.index') }}">Programs</a></li>
+                <li class="breadcrumb-item active">{{ 'Edit' if program else 'Create' }}</li>
+            </ol>
+        </nav>
+        <h2 class="mb-4">{{ 'Edit Program' if program else 'Create New Program' }}</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.name.label(class="form-label") }}
+                        {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+                        {% if form.name.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.name.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control", rows=3) }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.duration_weeks.label(class="form-label") }}
+                        {{ form.duration_weeks(class="form-control" + (" is-invalid" if form.duration_weeks.errors else "")) }}
+                        {% if form.duration_weeks.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.duration_weeks.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                        <small class="text-body-secondary">This will create {{ form.duration_weeks.data or 4 }} weeks with 7 days each</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.notes.label(class="form-label") }}
+                        {{ form.notes(class="form-control", rows=3) }}
+                    </div>
+                    
+                    {% if current_user.is_admin %}
+                    <div class="mb-3">
+                        <div class="form-check">
+                            {{ form.is_template(class="form-check-input") }}
+                            {{ form.is_template.label(class="form-check-label") }}
+                        </div>
+                        <small class="text-body-secondary">Templates are visible to all users</small>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-flex gap-2">
+                        {{ form.submit(class="btn btn-primary") }}
+                        <a href="{{ url_for('programs.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

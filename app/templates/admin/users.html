@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - CasettaFit{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>User Management</h2>
+            <a href="{{ url_for('admin.create_user') }}" class="btn btn-primary">
+                <i class="cil-plus me-2"></i>Create User
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Last Login</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar avatar-sm me-2">
+                                            <span class="avatar-initial rounded-circle bg-secondary">
+                                                {{ user.username[0].upper() }}
+                                            </span>
+                                        </div>
+                                        {{ user.username }}
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if user.is_admin %}
+                                        <span class="badge bg-danger">Admin</span>
+                                    {% else %}
+                                        <span class="badge bg-primary">User</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    {% if user.last_login %}
+                                        {{ user.last_login.strftime('%Y-%m-%d %H:%M') }}
+                                    {% else %}
+                                        <span class="text-body-secondary">Never</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" class="btn btn-outline-primary" title="Edit">
+                                            <i class="cil-pencil"></i>
+                                        </a>
+                                        {% if user.id != current_user.id %}
+                                        <button type="button" class="btn btn-outline-danger" title="Delete" 
+                                                onclick="if(confirm('Are you sure you want to delete {{ user.username }}?')) { document.getElementById('delete-form-{{ user.id }}').submit(); }">
+                                            <i class="cil-trash"></i>
+                                        </button>
+                                        <form id="delete-form-{{ user.id }}" action="{{ url_for('admin.delete_user', user_id=user.id) }}" method="POST" style="display: none;">
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center text-body-secondary">No users found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                {% if pagination.pages > 1 %}
+                <nav aria-label="User pagination">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                            <a class="page-link" href="{{ url_for('admin.users', page=pagination.prev_num) if pagination.has_prev else '#' }}">Previous</a>
+                        </li>
+                        {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                            {% if page_num %}
+                                <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                                    <a class="page-link" href="{{ url_for('admin.users', page=page_num) }}">{{ page_num }}</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled"><span class="page-link">...</span></li>
+                            {% endif %}
+                        {% endfor %}
+                        <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                            <a class="page-link" href="{{ url_for('admin.users', page=pagination.next_num) if pagination.has_next else '#' }}">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

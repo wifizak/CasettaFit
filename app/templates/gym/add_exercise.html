@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Edit' if gym_exercise else 'Add' }} Exercise - CasettaFit{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('gym.index') }}">Gyms</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('gym.view', gym_id=gym.id) }}">{{ gym.name }}</a></li>
+                <li class="breadcrumb-item active">{{ 'Edit' if gym_exercise else 'Add' }} Exercise</li>
+            </ol>
+        </nav>
+        <h2 class="mb-4">{{ 'Edit Exercise Configuration' if gym_exercise else 'Add Exercise to Gym' }}</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.exercise_id.label(class="form-label") }}
+                        {{ form.exercise_id(class="form-select" + (" is-invalid" if form.exercise_id.errors else "")) }}
+                        {% if form.exercise_id.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.exercise_id.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                        <small class="text-body-secondary">Don't see the exercise you want? <a href="{{ url_for('exercises.create') }}" target="_blank">Create a new one</a></small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.progression_type.label(class="form-label") }}
+                        {{ form.progression_type(class="form-select") }}
+                        <small class="text-body-secondary">How you'll track progression for this exercise</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.notes.label(class="form-label") }}
+                        {{ form.notes(class="form-control", rows=3) }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            {{ form.is_favorite(class="form-check-input") }}
+                            {{ form.is_favorite.label(class="form-check-label") }}
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        {{ form.submit(class="btn btn-primary") }}
+                        <a href="{{ url_for('gym.view', gym_id=gym.id) }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

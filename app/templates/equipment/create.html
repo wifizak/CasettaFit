@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if equipment else 'Create' }} Equipment - CasettaFit{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('equipment.index') }}">Equipment</a></li>
+                <li class="breadcrumb-item active">{{ 'Edit' if equipment else 'Create' }}</li>
+            </ol>
+        </nav>
+        <h2 class="mb-4">{{ 'Edit' if equipment else 'Create' }} Equipment</h2>
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.name.label(class="form-label") }}
+                        {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+                        {% if form.name.errors %}
+                            <div class="invalid-feedback">{% for error in form.name.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control", rows="3") }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.equipment_type.label(class="form-label") }}
+                        {{ form.equipment_type(class="form-select" + (" is-invalid" if form.equipment_type.errors else "")) }}
+                        {% if form.equipment_type.errors %}
+                            <div class="invalid-feedback">{% for error in form.equipment_type.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Gym Assignment -->
+                    <div class="mb-3">
+                        <label class="form-label">Available at Gyms</label>
+                        {% if gyms %}
+                        <div class="form-check">
+                            {% for gym in gyms %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="gym_ids[]" value="{{ gym.id }}" id="gym_{{ gym.id }}"
+                                    {% if equipment and gym.id in current_gym_ids %}checked{% endif %}>
+                                <label class="form-check-label" for="gym_{{ gym.id }}">
+                                    {{ gym.name }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <small class="text-body-secondary">Select which gyms have this equipment</small>
+                        {% else %}
+                        <p class="text-muted">No gyms found. <a href="{{ url_for('gym.create') }}">Create a gym first</a>.</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        {{ form.submit(class="btn btn-primary") }}
+                        <a href="{{ url_for('equipment.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Variations Section (Edit only) -->
+        {% if equipment %}
+        <div class="card mt-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Equipment Variations</h5>
+                <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('addVariationModal').classList.add('show'); document.getElementById('addVariationModal').style.display='block';">
+                    <i class="bi bi-plus-circle"></i> Add Variation
+                </button>
+            </div>
+            <div class="card-body">
+                {% if equipment.variations %}
+                <div class="list-group">
+                    {% for variation in equipment.variations %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ variation.name }}</h6>
+                                <p class="mb-1 text-muted small">
+                                    Options: {{ variation.options|from_json|join(', ') }}
+                                </p>
+                            </div>
+                            <form method="POST" action="{{ url_for('equipment.delete_variation', variation_id=variation.id) }}" class="d-inline" onsubmit="return confirm('Delete this variation?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No variations defined. Add variations like "Rack Position" or "Handle Orientation" to track different equipment settings.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Add Variation Modal -->
+        <div class="modal fade" id="addVariationModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add Equipment Variation</h5>
+                        <button type="button" class="btn-close" onclick="document.getElementById('addVariationModal').classList.remove('show'); document.getElementById('addVariationModal').style.display='none';"></button>
+                    </div>
+                    <form method="POST" action="{{ url_for('equipment.add_variation', equipment_id=equipment.id) }}">
+                        {{ form.hidden_tag() }}
+                        <div class="modal-body">
+                            {% if variation_templates %}
+                            <div class="mb-3">
+                                <label class="form-label">Use Existing Variation Template</label>
+                                <select id="variationTemplate" class="form-select" onchange="fillVariationTemplate(this.value)">
+                                    <option value="">-- Select a template or create new --</option>
+                                    {% for template in variation_templates %}
+                                    <option value="{{ loop.index0 }}" data-name="{{ template.name }}" data-options="{{ template.options }}">
+                                        {{ template.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-muted">Select an existing variation type to maintain consistency</small>
+                            </div>
+                            <hr>
+                            {% endif %}
+                            <div class="mb-3">
+                                <label class="form-label">Variation Name</label>
+                                <input type="text" id="variationName" name="name" class="form-control" placeholder="e.g., Rack Position, Handle Orientation" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Options (one per line)</label>
+                                <textarea id="variationOptions" name="options" class="form-control" rows="4" placeholder="High&#10;Mid&#10;Low" required></textarea>
+                                <small class="text-muted">Enter each option on a new line</small>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="document.getElementById('addVariationModal').classList.remove('show'); document.getElementById('addVariationModal').style.display='none';">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Add Variation</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <script>
+        function fillVariationTemplate(index) {
+            if (!index) {
+                // Clear fields if "create new" is selected
+                document.getElementById('variationName').value = '';
+                document.getElementById('variationOptions').value = '';
+                return;
+            }
+            
+            const select = document.getElementById('variationTemplate');
+            const option = select.options[select.selectedIndex];
+            const name = option.dataset.name;
+            const options = option.dataset.options;
+            
+            // Fill in the fields
+            document.getElementById('variationName').value = name;
+            
+            // Parse JSON and convert to newline-separated
+            try {
+                const optionsArray = JSON.parse(options);
+                document.getElementById('variationOptions').value = optionsArray.join('\n');
+            } catch (e) {
+                document.getElementById('variationOptions').value = options;
+            }
+        }
+        </script>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

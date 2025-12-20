@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Exercise Library - CasettaFit{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Exercise Library</h2>
+            <a href="{{ url_for('exercises.create') }}" class="btn btn-primary">
+                <i class="cil-plus me-2"></i>Create Exercise
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('exercises.index') }}" class="row g-3">
+                    <div class="col-md-6">
+                        <input type="text" name="search" class="form-control" placeholder="Search exercises..." value="{{ search }}">
+                    </div>
+                    <div class="col-md-4">
+                        <select name="category" class="form-select">
+                            <option value="">All Categories</option>
+                            {% for category in categories %}
+                            <option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>
+                                {{ category }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Exercise Name</th>
+                                <th>Category</th>
+                                <th>Primary Muscle</th>
+                                <th>Equipment</th>
+                                <th>Difficulty</th>
+                                <th>Created By</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for exercise in exercises %}
+                            <tr>
+                                <td><strong>{{ exercise.name }}</strong></td>
+                                <td>
+                                    {% if exercise.category %}
+                                        <span class="badge bg-info">{{ exercise.category }}</span>
+                                    {% else %}
+                                        <span class="text-body-secondary">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ exercise.primary_muscle or '-' }}</td>
+                                <td>
+                                    {% if exercise.equipment %}
+                                        {% for eq in exercise.equipment[:2] %}
+                                            <span class="badge bg-secondary">{{ eq.name }}</span>
+                                        {% endfor %}
+                                        {% if exercise.equipment|length > 2 %}
+                                            <span class="badge bg-secondary">+{{ exercise.equipment|length - 2 }} more</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-body-secondary">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if exercise.difficulty_level %}
+                                        <span class="badge bg-{{ 'success' if exercise.difficulty_level == 'beginner' else 'warning' if exercise.difficulty_level == 'intermediate' else 'danger' }}">
+                                            {{ exercise.difficulty_level.title() }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-body-secondary">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ exercise.creator.username }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        {% if current_user.is_admin or exercise.created_by == current_user.id %}
+                                        <a href="{{ url_for('exercises.edit', exercise_id=exercise.id) }}" class="btn btn-outline-primary">
+                                            <i class="cil-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-outline-danger" 
+                                                onclick="if(confirm('Delete {{ exercise.name }}?')) { document.getElementById('delete-{{ exercise.id }}').submit(); }">
+                                            <i class="cil-trash"></i>
+                                        </button>
+                                        <form id="delete-{{ exercise.id }}" action="{{ url_for('exercises.delete', exercise_id=exercise.id) }}" method="POST" style="display:none;"></form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center text-body-secondary">
+                                    No exercises found. <a href="{{ url_for('exercises.create') }}">Create your first exercise</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                {% if pagination.pages > 1 %}
+                <nav>
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                            <a class="page-link" href="{{ url_for('exercises.index', page=pagination.prev_num, search=search, category=selected_category) if pagination.has_prev else '#' }}">Previous</a>
+                        </li>
+                        {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                            {% if page_num %}
+                                <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                                    <a class="page-link" href="{{ url_for('exercises.index', page=page_num, search=search, category=selected_category) }}">{{ page_num }}</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled"><span class="page-link">...</span></li>
+                            {% endif %}
+                        {% endfor %}
+                        <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                            <a class="page-link" href="{{ url_for('exercises.index', page=pagination.next_num, search=search, category=selected_category) if pagination.has_next else '#' }}">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
