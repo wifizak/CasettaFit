@@ -63,8 +63,8 @@ def create():
             db.session.add(week)
             db.session.flush()
             
-            # Create 7 days for each week (initially all empty)
-            for day_num in range(1, 8):
+            # Create days based on days_per_week setting
+            for day_num in range(1, form.days_per_week.data + 1):
                 day = ProgramDay(
                     week_id=week.id,
                     day_number=day_num

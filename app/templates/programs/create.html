@@ -45,7 +45,18 @@
                                 {% for error in form.duration_weeks.errors %}{{ error }}{% endfor %}
                             </div>
                         {% endif %}
-                        <small class="text-body-secondary">This will create {{ form.duration_weeks.data or 4 }} weeks with 7 days each</small>
+                        <small class="text-body-secondary">How many weeks will this program run? (e.g., 12)</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.days_per_week.label(class="form-label") }}
+                        {{ form.days_per_week(class="form-control" + (" is-invalid" if form.days_per_week.errors else "")) }}
+                        {% if form.days_per_week.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.days_per_week.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                        <small class="text-body-secondary">How many training days in each week? (e.g., 3 for Mon/Wed/Fri, 5 for Mon-Fri, 7 for every day)</small>
                     </div>
                     
                     <div class="mb-3">
