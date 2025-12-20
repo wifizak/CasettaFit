@@ -248,6 +248,37 @@ class ProgramExerciseForm(FlaskForm):
     submit = SubmitField('Add Exercise')
 
 
+class ProgramSeriesForm(FlaskForm):
+    """Form for adding a series (single or superset) to a program day"""
+    series_type = SelectField('Series Type', 
+                             choices=[('single', 'Single Exercise'), ('superset', 'Superset (2 exercises)')],
+                             validators=[DataRequired()])
+    time_seconds = IntegerField('Time Limit (seconds)', validators=[Optional()],
+                               render_kw={"placeholder": "Optional time limit for superset"})
+    
+    # Exercise 1 fields
+    exercise1_id = SelectField('Exercise 1', coerce=int, validators=[DataRequired()])
+    sets = IntegerField('Sets', validators=[DataRequired()], default=3)
+    reps1 = StringField('Reps (Ex 1)', validators=[DataRequired()], 
+                       render_kw={"placeholder": "e.g., 10, 8-12, AMRAP"})
+    rest1_time_seconds = IntegerField('Rest (Ex 1, seconds)', validators=[Optional()], default=90)
+    starting_weights1 = StringField('Starting Weights (Ex 1)', validators=[Optional()],
+                                   render_kw={"placeholder": "e.g., 135, 185, 225 (one per set)"})
+    target_rpe1 = FloatField('Target RPE (Ex 1)', validators=[Optional()])
+    
+    # Exercise 2 fields (for superset)
+    exercise2_id = SelectField('Exercise 2', coerce=int, validators=[Optional()])
+    reps2 = StringField('Reps (Ex 2)', validators=[Optional()],
+                       render_kw={"placeholder": "e.g., 10, 8-12, AMRAP"})
+    rest2_time_seconds = IntegerField('Rest (Ex 2, seconds)', validators=[Optional()], default=90)
+    starting_weights2 = StringField('Starting Weights (Ex 2)', validators=[Optional()],
+                                   render_kw={"placeholder": "e.g., 135, 185, 225 (one per set)"})
+    target_rpe2 = FloatField('Target RPE (Ex 2)', validators=[Optional()])
+    
+    notes = TextAreaField('Notes', validators=[Optional()])
+    submit = SubmitField('Save Series')
+
+
 class BodyPatternForm(FlaskForm):
     """Form for creating/editing body patterns"""
     name = StringField('Pattern Name', validators=[

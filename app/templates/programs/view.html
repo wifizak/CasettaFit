@@ -83,18 +83,65 @@
                             </small>
                         </td>
                         <td>
-                            {% if day.exercises %}
+                            {% if day.series %}
                                 <ul class="list-unstyled mb-0">
-                                    {% for ex in day.exercises %}
-                                    <li class="mb-2">
-                                        <strong>{{ ex.exercise.name }}</strong> - {{ ex.sets }} x {{ ex.reps }}
-                                        {% if ex.rest_time_seconds %} ({{ ex.rest_time_seconds }}s rest){% endif %}
-                                        {% if can_edit %}
-                                        <form action="{{ url_for('programs.delete_exercise', exercise_id=ex.id) }}" method="POST" style="display:inline;">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove exercise?')">
-                                                <i class="cil-trash"></i>
-                                            </button>
-                                        </form>
+                                    {% for series in day.series %}
+                                    {% set color_classes = ['border-primary', 'border-success', 'border-info', 'border-warning', 'border-danger'] %}
+                                    {% set border_color = color_classes[loop.index0 % 5] %}
+                                    <li class="mb-3">
+                                        {% if series.series_type == 'superset' %}
+                                            <div class="border {{ border_color }} rounded p-2">
+                                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                                    <span class="badge bg-primary">Superset {% if series.time_seconds %}({{ series.time_seconds }}s){% endif %}</span>
+                                                    {% if can_edit %}
+                                                    <div class="d-flex gap-1">
+                                                        <a href="{{ url_for('programs.edit_series', series_id=series.id) }}" class="btn btn-sm btn-outline-secondary">
+                                                            <i class="cil-pencil"></i>
+                                                        </a>
+                                                        <form action="{{ url_for('programs.delete_series', series_id=series.id) }}" method="POST" style="display:inline;">
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove series?')">
+                                                                <i class="cil-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    {% for ex in series.exercises %}
+                                                    <div class="flex-fill">
+                                                        <strong>{{ loop.index }}.</strong> {{ ex.exercise.name }} - {{ ex.sets }} x {{ ex.reps }}
+                                                        {% if ex.rest_time_seconds %} ({{ ex.rest_time_seconds }}s rest){% endif %}
+                                                    </div>
+                                                    {% if not loop.last %}
+                                                    <div style="width: 2px; height: 30px; background-color: rgba(0, 0, 0, 0.2);"></div>
+                                                    {% endif %}
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        {% else %}
+                                            <div class="border {{ border_color }} rounded p-2">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        {% if series.exercises %}
+                                                            {% set ex = series.exercises[0] %}
+                                                            <strong>{{ ex.exercise.name }}</strong> - {{ ex.sets }} x {{ ex.reps }}
+                                                            {% if ex.rest_time_seconds %} ({{ ex.rest_time_seconds }}s rest){% endif %}
+                                                        {% endif %}
+                                                    </div>
+                                                    {% if can_edit %}
+                                                    <div class="d-flex gap-1">
+                                                        <a href="{{ url_for('programs.edit_series', series_id=series.id) }}" class="btn btn-sm btn-outline-secondary">
+                                                            <i class="cil-pencil"></i>
+                                                        </a>
+                                                        <form action="{{ url_for('programs.delete_series', series_id=series.id) }}" method="POST" style="display:inline;">
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove series?')">
+                                                                <i class="cil-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
                                         {% endif %}
                                     </li>
                                     {% endfor %}
@@ -106,11 +153,11 @@
                         <td>
                             {% if can_edit %}
                             <div class="d-grid gap-1">
-                                <a href="{{ url_for('programs.add_exercise', day_id=day.id) }}" class="btn btn-sm btn-primary">
-                                    <i class="cil-plus"></i> Add
+                                <a href="{{ url_for('programs.add_series', day_id=day.id) }}" class="btn btn-sm btn-primary">
+                                    <i class="cil-plus"></i> Add Series
                                 </a>
                                 <a href="{{ url_for('programs.edit_day', day_id=day.id) }}" class="btn btn-sm btn-outline-secondary">
-                                    <i class="cil-pencil"></i> Edit
+                                    <i class="cil-pencil"></i> Edit Day
                                 </a>
                             </div>
                             {% endif %}

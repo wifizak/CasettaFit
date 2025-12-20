@@ -396,19 +396,37 @@ class ProgramDay(db.Model):
     notes = db.Column(db.Text)
     
     # Relationships
-    exercises = db.relationship('ProgramExercise', backref='day', cascade='all, delete-orphan', order_by='ProgramExercise.order_index')
+    series = db.relationship('ProgramSeries', backref='day', cascade='all, delete-orphan', order_by='ProgramSeries.order_index')
     
     def __repr__(self):
         return f'<ProgramDay week_id={self.week_id} day={self.day_number}>'
+
+
+class ProgramSeries(db.Model):
+    """A series within a program day - can be single exercise or superset"""
+    __tablename__ = 'program_series'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    day_id = db.Column(db.Integer, db.ForeignKey('program_days.id'), nullable=False)
+    order_index = db.Column(db.Integer, nullable=False, default=0)  # Order within the day
+    series_type = db.Column(db.String(20), nullable=False, default='single')  # 'single' or 'superset'
+    time_seconds = db.Column(db.Integer)  # For supersets - time to complete the superset
+    notes = db.Column(db.Text)
+    
+    # Relationships
+    exercises = db.relationship('ProgramExercise', backref='series', cascade='all, delete-orphan', order_by='ProgramExercise.superset_position')
+    
+    def __repr__(self):
+        return f'<ProgramSeries day_id={self.day_id} type={self.series_type}>'
 
 
 class ProgramExercise(db.Model):
     __tablename__ = 'program_exercises'
     
     id = db.Column(db.Integer, primary_key=True)
-    day_id = db.Column(db.Integer, db.ForeignKey('program_days.id'), nullable=False)
+    series_id = db.Column(db.Integer, db.ForeignKey('program_series.id'), nullable=False)
     exercise_id = db.Column(db.Integer, db.ForeignKey('master_exercises.id'), nullable=False)
-    order_index = db.Column(db.Integer, nullable=False, default=0)  # Order within the day
+    superset_position = db.Column(db.Integer, nullable=False, default=1)  # 1 for single/first exercise, 2 for second in superset
     
     # Sets and reps configuration
     sets = db.Column(db.Integer, nullable=False)
@@ -419,7 +437,7 @@ class ProgramExercise(db.Model):
     rest_time_seconds = db.Column(db.Integer)  # Rest between sets
     
     # Optional fields
-    starting_weight = db.Column(db.Float)  # Starting/suggested weight for this exercise
+    starting_weights = db.Column(db.Text)  # JSON array of weights per set, e.g., "[135, 185, 225]"
     target_rpe = db.Column(db.Float)  # Target RPE (Rate of Perceived Exertion)
     notes = db.Column(db.Text)
     
@@ -427,7 +445,7 @@ class ProgramExercise(db.Model):
     exercise = db.relationship('MasterExercise', backref='program_assignments')
     
     def __repr__(self):
-        return f'<ProgramExercise day_id={self.day_id} exercise_id={self.exercise_id}>'
+        return f'<ProgramExercise series_id={self.series_id} exercise_id={self.exercise_id}>'
 
 
 # ============================================================================

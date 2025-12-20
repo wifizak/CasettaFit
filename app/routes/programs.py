@@ -4,9 +4,9 @@ from sqlalchemy import or_
 import json
 from app import db
 from app.models import (Program, ProgramWeek, ProgramDay, ProgramExercise, 
-                        ProgramShare, BodyPattern, MasterExercise, User)
+                        ProgramSeries, ProgramShare, BodyPattern, MasterExercise, User)
 from app.forms import (ProgramForm, ProgramWeekForm, ProgramDayForm, 
-                       ProgramExerciseForm, BodyPatternForm, ProgramShareForm)
+                       ProgramExerciseForm, ProgramSeriesForm, BodyPatternForm, ProgramShareForm)
 
 bp = Blueprint('programs', __name__, url_prefix='/programs')
 
@@ -298,11 +298,11 @@ def edit_day(day_id):
     return render_template('programs/edit_day.html', form=form, day=day, week=week, program=program)
 
 
-# Exercise management
-@bp.route('/day/<int:day_id>/exercises/add', methods=['GET', 'POST'])
+# Series management
+@bp.route('/day/<int:day_id>/series/add', methods=['GET', 'POST'])
 @login_required
-def add_exercise(day_id):
-    """Add exercise to program day"""
+def add_series(day_id):
+    """Add series (single or superset) to program day"""
     day = ProgramDay.query.get_or_404(day_id)
     week = day.week
     program = week.program
@@ -312,43 +312,230 @@ def add_exercise(day_id):
         flash('You do not have permission to edit this program.', 'danger')
         return redirect(url_for('programs.index'))
     
-    form = ProgramExerciseForm()
+    form = ProgramSeriesForm()
     
     # Populate exercises
     exercises = MasterExercise.query.order_by(MasterExercise.name).all()
-    form.exercise_id.choices = [(e.id, e.name) for e in exercises]
+    form.exercise1_id.choices = [(e.id, e.name) for e in exercises]
+    form.exercise2_id.choices = [(0, '-- Select Exercise 2 --')] + [(e.id, e.name) for e in exercises]
     
     if form.validate_on_submit():
         # Get max order index
-        max_order = db.session.query(db.func.max(ProgramExercise.order_index)).filter_by(day_id=day.id).scalar() or -1
+        max_order = db.session.query(db.func.max(ProgramSeries.order_index)).filter_by(day_id=day.id).scalar() or -1
         
-        program_exercise = ProgramExercise(
+        # Create series
+        series = ProgramSeries(
             day_id=day.id,
-            exercise_id=form.exercise_id.data,
             order_index=max_order + 1,
-            sets=form.sets.data,
-            reps=form.reps.data,
-            lift_time_seconds=form.lift_time_seconds.data,
-            rest_time_seconds=form.rest_time_seconds.data,
-            starting_weight=form.starting_weight.data,
-            target_rpe=form.target_rpe.data,
+            series_type=form.series_type.data,
+            time_seconds=form.time_seconds.data if form.time_seconds.data else None,
             notes=form.notes.data
         )
-        db.session.add(program_exercise)
+        db.session.add(series)
+        db.session.flush()
+        
+        # Add first exercise
+        # Collect weights from individual set inputs
+        weights1 = []
+        for i in range(1, form.sets.data + 1):
+            weight_key = f'weight1_set{i}'
+            if weight_key in request.form and request.form[weight_key]:
+                weights1.append(float(request.form[weight_key]))
+        weights1_json = json.dumps(weights1)
+        
+        ex1 = ProgramExercise(
+            series_id=series.id,
+            exercise_id=form.exercise1_id.data,
+            superset_position=1,
+            sets=form.sets.data,
+            reps=form.reps1.data,
+            rest_time_seconds=form.rest1_time_seconds.data,
+            starting_weights=weights1_json,
+            target_rpe=form.target_rpe1.data
+        )
+        db.session.add(ex1)
+        
+        # Add second exercise if superset
+        if form.series_type.data == 'superset' and form.exercise2_id.data:
+            # Collect weights from individual set inputs
+            weights2 = []
+            for i in range(1, form.sets.data + 1):
+                weight_key = f'weight2_set{i}'
+                if weight_key in request.form and request.form[weight_key]:
+                    weights2.append(float(request.form[weight_key]))
+            weights2_json = json.dumps(weights2)
+            
+            ex2 = ProgramExercise(
+                series_id=series.id,
+                exercise_id=form.exercise2_id.data,
+                superset_position=2,
+                sets=form.sets.data,  # Same sets as ex1
+                reps=form.reps2.data,
+                rest_time_seconds=form.rest2_time_seconds.data,
+                starting_weights=weights2_json,
+                target_rpe=form.target_rpe2.data
+            )
+            db.session.add(ex2)
+        
         db.session.commit()
         
-        flash('Exercise added to program day!', 'success')
+        flash(f'{"Superset" if form.series_type.data == "superset" else "Exercise"} added to program day!', 'success')
         return redirect(url_for('programs.view', program_id=program.id))
     
-    return render_template('programs/add_exercise.html', form=form, day=day, week=week, program=program)
+    return render_template('programs/add_series.html', form=form, day=day, week=week, program=program)
 
 
-@bp.route('/exercise/<int:exercise_id>/delete', methods=['POST'])
+@bp.route('/series/<int:series_id>/edit', methods=['GET', 'POST'])
 @login_required
-def delete_exercise(exercise_id):
-    """Delete exercise from program day"""
-    program_exercise = ProgramExercise.query.get_or_404(exercise_id)
-    day = program_exercise.day
+def edit_series(series_id):
+    """Edit existing series"""
+    series = ProgramSeries.query.get_or_404(series_id)
+    day = series.day
+    week = day.week
+    program = week.program
+    
+    # Check permissions
+    if program.created_by != current_user.id:
+        flash('You do not have permission to edit this program.', 'danger')
+        return redirect(url_for('programs.index'))
+    
+    form = ProgramSeriesForm()
+    
+    # Populate exercises
+    exercises = MasterExercise.query.order_by(MasterExercise.name).all()
+    form.exercise1_id.choices = [(e.id, e.name) for e in exercises]
+    form.exercise2_id.choices = [(0, '-- Select Exercise 2 --')] + [(e.id, e.name) for e in exercises]
+    
+    if form.validate_on_submit():
+        # Update series
+        series.series_type = form.series_type.data
+        series.time_seconds = form.time_seconds.data if form.time_seconds.data else None
+        series.notes = form.notes.data
+        
+        # Get existing exercises
+        ex1 = series.exercises[0] if len(series.exercises) > 0 else None
+        ex2 = series.exercises[1] if len(series.exercises) > 1 else None
+        
+        # Update first exercise
+        if ex1:
+            # Collect weights from individual set inputs
+            weights1 = []
+            for i in range(1, form.sets.data + 1):
+                weight_key = f'weight1_set{i}'
+                if weight_key in request.form and request.form[weight_key]:
+                    weights1.append(float(request.form[weight_key]))
+            weights1_json = json.dumps(weights1)
+            
+            ex1.exercise_id = form.exercise1_id.data
+            ex1.sets = form.sets.data
+            ex1.reps = form.reps1.data
+            ex1.rest_time_seconds = form.rest1_time_seconds.data
+            ex1.starting_weights = weights1_json
+            ex1.target_rpe = form.target_rpe1.data
+        else:
+            # Collect weights from individual set inputs
+            weights1 = []
+            for i in range(1, form.sets.data + 1):
+                weight_key = f'weight1_set{i}'
+                if weight_key in request.form and request.form[weight_key]:
+                    weights1.append(float(request.form[weight_key]))
+            weights1_json = json.dumps(weights1)
+            
+            ex1 = ProgramExercise(
+                series_id=series.id,
+                exercise_id=form.exercise1_id.data,
+                superset_position=1,
+                sets=form.sets.data,
+                reps=form.reps1.data,
+                rest_time_seconds=form.rest1_time_seconds.data,
+                starting_weights=weights1_json,
+                target_rpe=form.target_rpe1.data
+            )
+            db.session.add(ex1)
+        
+        # Handle second exercise for supersets
+        if form.series_type.data == 'superset' and form.exercise2_id.data:
+            if ex2:
+                # Collect weights from individual set inputs
+                weights2 = []
+                for i in range(1, form.sets.data + 1):
+                    weight_key = f'weight2_set{i}'
+                    if weight_key in request.form and request.form[weight_key]:
+                        weights2.append(float(request.form[weight_key]))
+                weights2_json = json.dumps(weights2)
+                
+                ex2.exercise_id = form.exercise2_id.data
+                ex2.sets = form.sets.data
+                ex2.reps = form.reps2.data
+                ex2.rest_time_seconds = form.rest2_time_seconds.data
+                ex2.starting_weights = weights2_json
+                ex2.target_rpe = form.target_rpe2.data
+            else:
+                # Collect weights from individual set inputs
+                weights2 = []
+                for i in range(1, form.sets.data + 1):
+                    weight_key = f'weight2_set{i}'
+                    if weight_key in request.form and request.form[weight_key]:
+                        weights2.append(float(request.form[weight_key]))
+                weights2_json = json.dumps(weights2)
+                
+                ex2 = ProgramExercise(
+                    series_id=series.id,
+                    exercise_id=form.exercise2_id.data,
+                    superset_position=2,
+                    sets=form.sets.data,
+                    reps=form.reps2.data,
+                    rest_time_seconds=form.rest2_time_seconds.data,
+                    starting_weights=weights2_json,
+                    target_rpe=form.target_rpe2.data
+                )
+                db.session.add(ex2)
+        else:
+            # If changed from superset to single, delete second exercise
+            if ex2:
+                db.session.delete(ex2)
+        
+        db.session.commit()
+        
+        flash('Series updated successfully!', 'success')
+        return redirect(url_for('programs.view', program_id=program.id))
+    
+    # Pre-populate form with existing data
+    if request.method == 'GET':
+        form.series_type.data = series.series_type
+        form.time_seconds.data = series.time_seconds
+        form.notes.data = series.notes
+        
+        if len(series.exercises) > 0:
+            ex1 = series.exercises[0]
+            form.exercise1_id.data = ex1.exercise_id
+            form.sets.data = ex1.sets
+            form.reps1.data = ex1.reps
+            form.rest1_time_seconds.data = ex1.rest_time_seconds
+            # Pass weights as parsed JSON array, not comma-separated string
+            if ex1.starting_weights:
+                form.starting_weights1.data = ex1.starting_weights  # Keep as JSON string for JS to parse
+            form.target_rpe1.data = ex1.target_rpe
+        
+        if len(series.exercises) > 1:
+            ex2 = series.exercises[1]
+            form.exercise2_id.data = ex2.exercise_id
+            form.reps2.data = ex2.reps
+            form.rest2_time_seconds.data = ex2.rest_time_seconds
+            # Pass weights as parsed JSON array, not comma-separated string
+            if ex2.starting_weights:
+                form.starting_weights2.data = ex2.starting_weights  # Keep as JSON string for JS to parse
+            form.target_rpe2.data = ex2.target_rpe
+    
+    return render_template('programs/edit_series.html', form=form, series=series, day=day, week=week, program=program)
+
+
+@bp.route('/series/<int:series_id>/delete', methods=['POST'])
+@login_required
+def delete_series(series_id):
+    """Delete series from program day"""
+    series = ProgramSeries.query.get_or_404(series_id)
+    day = series.day
     program = day.week.program
     
     # Check permissions
@@ -356,7 +543,40 @@ def delete_exercise(exercise_id):
         flash('You do not have permission to edit this program.', 'danger')
         return redirect(url_for('programs.index'))
     
-    db.session.delete(program_exercise)
+    db.session.delete(series)
+    db.session.commit()
+    
+    flash('Series removed from program.', 'success')
+    return redirect(url_for('programs.view', program_id=program.id))
+
+
+# Legacy exercise routes (deprecated but kept for compatibility)
+@bp.route('/day/<int:day_id>/exercises/add', methods=['GET', 'POST'])
+@login_required
+def add_exercise(day_id):
+    """Add exercise to program day (legacy - redirects to add_series)"""
+    return redirect(url_for('programs.add_series', day_id=day_id))
+
+
+@bp.route('/exercise/<int:exercise_id>/delete', methods=['POST'])
+@login_required
+def delete_exercise(exercise_id):
+    """Delete exercise from program day (legacy)"""
+    program_exercise = ProgramExercise.query.get_or_404(exercise_id)
+    series = program_exercise.series
+    program = series.day.week.program
+    
+    # Check permissions
+    if program.created_by != current_user.id:
+        flash('You do not have permission to edit this program.', 'danger')
+        return redirect(url_for('programs.index'))
+    
+    # If this is the only exercise in the series, delete the series
+    if len(series.exercises) == 1:
+        db.session.delete(series)
+    else:
+        db.session.delete(program_exercise)
+    
     db.session.commit()
     
     flash('Exercise removed from program.', 'success')
