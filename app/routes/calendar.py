@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, jsonify, redirect, url_fo
 from flask_login import login_required, current_user
 from datetime import datetime, date, timedelta
 from app import db
-from app.models import Program, ProgramWeek, ProgramDay, ProgramSeries, ProgramExercise, ScheduledDay, ProgramInstance
+from app.models import Program, ProgramWeek, ProgramDay, ProgramSeries, ProgramExercise, ScheduledDay, ProgramInstance, InstanceExerciseWeight
 import json
 
 bp = Blueprint('calendar', __name__, url_prefix='/calendar')
@@ -15,7 +15,8 @@ def index():
     from app.models import UserGym
     programs = Program.query.filter_by(created_by=current_user.id).order_by(Program.name).all()
     gyms = UserGym.query.filter_by(user_id=current_user.id).order_by(UserGym.name).all()
-    return render_template('calendar/index.html', programs=programs, gyms=gyms)
+    instances = ProgramInstance.query.filter_by(user_id=current_user.id).order_by(ProgramInstance.scheduled_date.desc()).all()
+    return render_template('calendar/index.html', programs=programs, gyms=gyms, instances=instances)
 
 
 @bp.route('/events')
@@ -256,23 +257,42 @@ def get_scheduled_day(scheduled_day_id):
         user_id=current_user.id
     ).first_or_404()
     
+    # Get custom weights for this instance if it exists
+    custom_weights_map = {}
+    if scheduled_day.instance:
+        for cw in scheduled_day.instance.custom_weights:
+            custom_weights_map[cw.program_exercise_id] = {
+                'weights': json.loads(cw.custom_weights) if cw.custom_weights else [],
+                'notes': cw.notes
+            }
+    
     # Get series and exercises for this day
     series_data = []
     for series in scheduled_day.program_day.series:
         exercises_data = []
         for prog_ex in series.exercises:
-            starting_weights = []
+            # Get default weights from program
+            default_weights = []
             if prog_ex.starting_weights:
                 try:
-                    starting_weights = json.loads(prog_ex.starting_weights)
+                    default_weights = json.loads(prog_ex.starting_weights)
                 except:
                     pass
+            
+            # Get custom weights if they exist
+            custom_weights = None
+            custom_notes = None
+            if prog_ex.id in custom_weights_map:
+                custom_weights = custom_weights_map[prog_ex.id]['weights']
+                custom_notes = custom_weights_map[prog_ex.id]['notes']
             
             exercises_data.append({
                 'exercise_name': prog_ex.exercise.name,
                 'sets': prog_ex.sets,
                 'reps': prog_ex.reps,
-                'starting_weights': starting_weights,
+                'default_weights': default_weights,
+                'custom_weights': custom_weights,
+                'custom_notes': custom_notes,
                 'rest_time_seconds': prog_ex.rest_time_seconds
             })
         
@@ -290,6 +310,7 @@ def get_scheduled_day(scheduled_day_id):
         'gym_name': scheduled_day.gym.name if scheduled_day.gym else None,
         'calendar_date': scheduled_day.calendar_date.strftime('%Y-%m-%d'),
         'is_completed': scheduled_day.is_completed,
+        'instance_id': scheduled_day.instance_id,
         'series': series_data
     })
 
@@ -395,3 +416,127 @@ def schedule_missing_day():
     db.session.commit()
     
     return jsonify({'success': True})
+
+
+@bp.route('/instance/<int:instance_id>/workout-plan')
+@login_required
+def instance_workout_plan(instance_id):
+    """View and edit workout plan for a specific program instance"""
+    instance = ProgramInstance.query.filter_by(
+        id=instance_id,
+        user_id=current_user.id
+    ).first_or_404()
+    
+    return render_template('calendar/instance_workout_plan.html', instance=instance)
+
+
+@bp.route('/instance/<int:instance_id>/workout-data')
+@login_required
+def get_instance_workout_data(instance_id):
+    """Get workout data for instance with custom weights"""
+    instance = ProgramInstance.query.filter_by(
+        id=instance_id,
+        user_id=current_user.id
+    ).first_or_404()
+    
+    # Get existing custom weights
+    custom_weights_map = {}
+    for cw in instance.custom_weights:
+        custom_weights_map[cw.program_exercise_id] = {
+            'weights': json.loads(cw.custom_weights) if cw.custom_weights else [],
+            'notes': cw.notes
+        }
+    
+    # Build workout structure
+    weeks_data = []
+    for week in instance.program.weeks:
+        days_data = []
+        for day in week.days:
+            series_data = []
+            for series in day.series:
+                exercises_data = []
+                for prog_ex in series.exercises:
+                    # Get custom weights if exist, otherwise use defaults
+                    if prog_ex.id in custom_weights_map:
+                        weights = custom_weights_map[prog_ex.id]['weights']
+                        notes = custom_weights_map[prog_ex.id]['notes']
+                    else:
+                        # Use default weights from program
+                        weights = json.loads(prog_ex.starting_weights) if prog_ex.starting_weights else []
+                        notes = None
+                    
+                    exercises_data.append({
+                        'id': prog_ex.id,
+                        'exercise_name': prog_ex.exercise.name,
+                        'sets': prog_ex.sets,
+                        'reps': prog_ex.reps,
+                        'weights': weights,
+                        'notes': notes,
+                        'superset_position': prog_ex.superset_position
+                    })
+                
+                series_data.append({
+                    'id': series.id,
+                    'series_type': series.series_type,
+                    'exercises': exercises_data
+                })
+            
+            days_data.append({
+                'id': day.id,
+                'name': day.day_name or f'Day {day.day_number}',
+                'series': series_data
+            })
+        
+        weeks_data.append({
+            'week_number': week.week_number,
+            'days': days_data
+        })
+    
+    return jsonify({
+        'program_name': instance.program.name,
+        'gym_name': instance.gym.name if instance.gym else None,
+        'scheduled_date': instance.scheduled_date.strftime('%Y-%m-%d'),
+        'weeks': weeks_data
+    })
+
+
+@bp.route('/instance/<int:instance_id>/update-weights', methods=['POST'])
+@login_required
+def update_instance_weights(instance_id):
+    """Update custom weights for a program exercise in this instance"""
+    instance = ProgramInstance.query.filter_by(
+        id=instance_id,
+        user_id=current_user.id
+    ).first_or_404()
+    
+    data = request.get_json()
+    program_exercise_id = data.get('program_exercise_id')
+    custom_weights = data.get('weights', [])
+    notes = data.get('notes', '')
+    
+    if not program_exercise_id:
+        return jsonify({'success': False, 'error': 'Missing program_exercise_id'}), 400
+    
+    # Check if custom weight record exists
+    custom_weight = InstanceExerciseWeight.query.filter_by(
+        instance_id=instance_id,
+        program_exercise_id=program_exercise_id
+    ).first()
+    
+    if custom_weight:
+        # Update existing
+        custom_weight.custom_weights = json.dumps(custom_weights)
+        custom_weight.notes = notes
+    else:
+        # Create new
+        custom_weight = InstanceExerciseWeight(
+            instance_id=instance_id,
+            program_exercise_id=program_exercise_id,
+            custom_weights=json.dumps(custom_weights),
+            notes=notes
+        )
+        db.session.add(custom_weight)
+    
+    db.session.commit()
+    return jsonify({'success': True})
+

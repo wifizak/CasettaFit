@@ -546,9 +546,89 @@ class ProgramInstance(db.Model):
     program = db.relationship('Program', backref='instances')
     gym = db.relationship('UserGym', backref='program_instances')
     scheduled_days = db.relationship('ScheduledDay', backref='instance', cascade='all, delete-orphan')
+    custom_weights = db.relationship('InstanceExerciseWeight', backref='instance', cascade='all, delete-orphan')
     
     def __repr__(self):
         return f'<ProgramInstance {self.program.name} on {self.scheduled_date}>'
+
+
+class InstanceExerciseWeight(db.Model):
+    """User-specific weight overrides for a program instance"""
+    __tablename__ = 'instance_exercise_weights'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    instance_id = db.Column(db.Integer, db.ForeignKey('program_instances.id'), nullable=False)
+    program_exercise_id = db.Column(db.Integer, db.ForeignKey('program_exercises.id'), nullable=False)
+    custom_weights = db.Column(db.Text)  # JSON array of custom weights per set
+    notes = db.Column(db.Text)  # User notes for this specific exercise in this instance
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    program_exercise = db.relationship('ProgramExercise', backref='instance_overrides')
+    
+    def __repr__(self):
+        return f'<InstanceExerciseWeight instance={self.instance_id} exercise={self.program_exercise_id}>'
+
+
+class WorkoutSession(db.Model):
+    """Represents an actual workout session - can be tied to a scheduled day or standalone"""
+    __tablename__ = 'workout_sessions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    scheduled_day_id = db.Column(db.Integer, db.ForeignKey('scheduled_days.id'), nullable=True)  # Nullable for standalone workouts
+    gym_id = db.Column(db.Integer, db.ForeignKey('user_gyms.id'), nullable=True)
+    started_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    completed_at = db.Column(db.DateTime, nullable=True)
+    is_completed = db.Column(db.Boolean, default=False, nullable=False)
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    
+    # Relationships
+    user = db.relationship('User', backref='workout_sessions')
+    scheduled_day = db.relationship('ScheduledDay', backref='workout_sessions')
+    gym = db.relationship('UserGym', backref='workout_sessions')
+    sets = db.relationship('WorkoutSet', back_populates='workout_session', cascade='all, delete-orphan', lazy='dynamic')
+    
+    # Indexes
+    __table_args__ = (
+        db.Index('idx_user_started', 'user_id', 'started_at'),
+        db.Index('idx_scheduled_day', 'scheduled_day_id'),
+    )
+    
+    def __repr__(self):
+        return f'<WorkoutSession {self.id} user={self.user_id} started={self.started_at}>'
+
+
+class WorkoutSet(db.Model):
+    """Individual set performed during a workout - tracks actual weights/reps"""
+    __tablename__ = 'workout_sets'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    workout_session_id = db.Column(db.Integer, db.ForeignKey('workout_sessions.id'), nullable=False)
+    exercise_id = db.Column(db.Integer, db.ForeignKey('master_exercises.id'), nullable=False)
+    set_number = db.Column(db.Integer, nullable=False)  # 1, 2, 3, etc.
+    reps = db.Column(db.Integer, nullable=True)  # Actual reps performed
+    weight = db.Column(db.Float, nullable=True)  # Actual weight used
+    rpe = db.Column(db.String(1), nullable=True)  # Per-set RPE: '-' (too heavy), '=' (good), '+' (could do more)
+    overall_rpe = db.Column(db.String(1), nullable=True)  # Overall exercise completion RPE (required after all sets)
+    notes = db.Column(db.Text)
+    completed_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    
+    # Relationships
+    workout_session = db.relationship('WorkoutSession', back_populates='sets')
+    exercise = db.relationship('MasterExercise', backref='workout_sets')
+    
+    # Indexes for efficient history queries
+    __table_args__ = (
+        db.Index('idx_session_exercise', 'workout_session_id', 'exercise_id'),
+        db.Index('idx_exercise_completed', 'exercise_id', 'completed_at'),
+    )
+    
+    def __repr__(self):
+        return f'<WorkoutSet {self.exercise.name if self.exercise else "Unknown"} set={self.set_number} {self.weight}x{self.reps}>'
 
 
 class ScheduledDay(db.Model):

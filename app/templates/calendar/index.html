@@ -63,6 +63,30 @@
             </div>
         </div>
         <div class="col-lg-3">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <strong>Scheduled Programs</strong>
+                </div>
+                <div class="card-body p-2">
+                    {% if instances %}
+                        <div class="list-group list-group-flush">
+                            {% for instance in instances %}
+                            <a href="{{ url_for('calendar.instance_workout_plan', instance_id=instance.id) }}" 
+                               class="list-group-item list-group-item-action p-2">
+                                <strong class="d-block">{{ instance.program.name }}</strong>
+                                <small class="text-muted d-block">Started: {{ instance.scheduled_date.strftime('%b %d, %Y') }}</small>
+                                {% if instance.gym %}
+                                <small class="text-muted">📍 {{ instance.gym.name }}</small>
+                                {% endif %}
+                            </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center mb-0">No scheduled programs</p>
+                    {% endif %}
+                </div>
+            </div>
+            
             <div class="card">
                 <div class="card-header">
                     <strong>Unscheduled Days</strong>
@@ -542,21 +566,59 @@ function displayScheduledDayDetails(data) {
                 series.exercises.forEach((ex, exIndex) => {
                     html += `<strong>${String.fromCharCode(65 + exIndex)}. ${ex.exercise_name}</strong>: `;
                     html += `${ex.sets} × ${ex.reps}`;
-                    if (ex.starting_weights && ex.starting_weights.length > 0) {
-                        html += ` @ ${ex.starting_weights.join('/')} lbs`;
+                    
+                    // Display weights: custom (green) with default in parentheses, or just default
+                    if (ex.custom_weights && ex.custom_weights.length > 0) {
+                        html += ` @ <span class="text-success fw-bold">${ex.custom_weights.join('/')}</span>`;
+                        if (ex.default_weights && ex.default_weights.length > 0) {
+                            html += ` <span class="text-muted">(default: ${ex.default_weights.join('/')})</span>`;
+                        }
+                        html += ' lbs';
+                    } else if (ex.default_weights && ex.default_weights.length > 0) {
+                        html += ` @ ${ex.default_weights.join('/')} lbs`;
                     }
+                    
                     html += '<br>';
+                    
+                    // Show custom notes if they exist
+                    if (ex.custom_notes) {
+                        html += `<small class="text-muted fst-italic">Notes: ${ex.custom_notes}</small><br>`;
+                    }
                 });
             } else {
                 const ex = series.exercises[0];
                 html += `<strong>${ex.exercise_name}</strong>: ${ex.sets} × ${ex.reps}`;
-                if (ex.starting_weights && ex.starting_weights.length > 0) {
-                    html += ` @ ${ex.starting_weights.join('/')} lbs`;
+                
+                // Display weights: custom (green) with default in parentheses, or just default
+                if (ex.custom_weights && ex.custom_weights.length > 0) {
+                    html += ` @ <span class="text-success fw-bold">${ex.custom_weights.join('/')}</span>`;
+                    if (ex.default_weights && ex.default_weights.length > 0) {
+                        html += ` <span class="text-muted">(default: ${ex.default_weights.join('/')})</span>`;
+                    }
+                    html += ' lbs';
+                } else if (ex.default_weights && ex.default_weights.length > 0) {
+                    html += ` @ ${ex.default_weights.join('/')} lbs`;
+                }
+                
+                // Show custom notes if they exist
+                if (ex.custom_notes) {
+                    html += `<br><small class="text-muted fst-italic">Notes: ${ex.custom_notes}</small>`;
                 }
             }
             
             html += '</div>';
         });
+        
+        // Add link to workout plan editor if instance exists
+        if (data.instance_id) {
+            html += `
+                <div class="mt-3">
+                    <a href="/calendar/instance/${data.instance_id}/workout-plan" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-pencil-square"></i> Edit Program Instance Weights
+                    </a>
+                </div>
+            `;
+        }
     } else {
         html += '<p class="text-muted">No exercises scheduled for this day.</p>';
     }
@@ -588,7 +650,7 @@ function deleteScheduledDay() {
 function startWorkout() {
     if (!selectedEvent) return;
     
-    // TODO: Navigate to workout execution page
+    // Navigate to workout execution page
     window.location.href = `/workout/start/${selectedEvent.id}`;
 }
 

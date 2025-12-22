@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}Workout Plan - {{ instance.program.name }} - CasettaFit{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('calendar.index') }}">Calendar</a></li>
+                    <li class="breadcrumb-item active">Workout Plan</li>
+                </ol>
+            </nav>
+            <h2 class="mb-0">{{ instance.program.name }}</h2>
+            <p class="text-muted mb-0">
+                Started: {{ instance.scheduled_date.strftime('%B %d, %Y') }}
+                {% if instance.gym %}
+                | <i class="cil-location-pin"></i> {{ instance.gym.name }}
+                {% endif %}
+            </p>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary" onclick="saveAllChanges()">
+                <i class="cil-save"></i> Save All Changes
+            </button>
+            <a href="{{ url_for('calendar.index') }}" class="btn btn-secondary">
+                <i class="cil-arrow-left"></i> Back to Calendar
+            </a>
+        </div>
+    </div>
+
+    <div id="workoutPlanContainer">
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let workoutData = null;
+let instanceId = {{ instance.id }};
+let pendingChanges = {};
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadWorkoutPlan();
+});
+
+function loadWorkoutPlan() {
+    fetch(`/calendar/instance/${instanceId}/workout-data`)
+        .then(response => response.json())
+        .then(data => {
+            workoutData = data;
+            displayWorkoutPlan(data);
+        })
+        .catch(error => {
+            console.error('Error loading workout plan:', error);
+            document.getElementById('workoutPlanContainer').innerHTML = 
+                '<div class="alert alert-danger">Error loading workout plan</div>';
+        });
+}
+
+function displayWorkoutPlan(data) {
+    const container = document.getElementById('workoutPlanContainer');
+    let html = '';
+    
+    data.weeks.forEach(week => {
+        html += `<div class="card mb-4">`;
+        html += `<div class="card-header bg-primary text-white">`;
+        html += `<h4 class="mb-0">Week ${week.week_number}</h4>`;
+        html += `</div>`;
+        html += `<div class="card-body">`;
+        
+        week.days.forEach(day => {
+            html += `<h5 class="border-bottom pb-2 mb-3">${day.name}</h5>`;
+            
+            if (day.series.length === 0) {
+                html += `<p class="text-muted">No exercises scheduled</p>`;
+            }
+            
+            day.series.forEach((series, seriesIndex) => {
+                const colors = ['primary', 'success', 'danger', 'warning', 'info'];
+                const color = colors[seriesIndex % 5];
+                
+                html += `<div class="border-start border-${color} border-4 ps-3 mb-4">`;
+                
+                if (series.series_type === 'superset') {
+                    html += `<span class="badge bg-warning text-dark mb-2">SUPERSET</span>`;
+                }
+                
+                // Table for exercises
+                html += `<table class="table table-sm">`;
+                html += `<thead><tr>`;
+                html += `<th>Exercise</th><th>Sets</th><th>Reps</th>`;
+                html += `<th>Weights (per set)</th><th>Notes</th><th></th>`;
+                html += `</tr></thead><tbody>`;
+                
+                series.exercises.forEach(exercise => {
+                    html += `<tr>`;
+                    html += `<td><strong>${exercise.exercise_name}</strong></td>`;
+                    html += `<td>${exercise.sets}</td>`;
+                    html += `<td>${exercise.reps}</td>`;
+                    html += `<td>`;
+                    
+                    // Weight inputs
+                    for (let i = 0; i < exercise.sets; i++) {
+                        const weight = exercise.weights[i] || '';
+                        html += `<input type="number" class="form-control form-control-sm d-inline-block mb-1" 
+                                 style="width: 80px;" 
+                                 placeholder="Set ${i + 1}"
+                                 value="${weight}"
+                                 data-exercise-id="${exercise.id}"
+                                 data-set-number="${i}"
+                                 onchange="markWeightChanged(${exercise.id})"> `;
+                    }
+                    
+                    html += `</td>`;
+                    html += `<td>`;
+                    html += `<input type="text" class="form-control form-control-sm" 
+                             placeholder="Notes" 
+                             value="${exercise.notes || ''}"
+                             data-exercise-id="${exercise.id}"
+                             data-notes="true"
+                             onchange="markNotesChanged(${exercise.id})">`;
+                    html += `</td>`;
+                    html += `<td>`;
+                    html += `<button class="btn btn-sm btn-outline-primary" 
+                             onclick="saveExercise(${exercise.id})"
+                             id="save-btn-${exercise.id}" style="display: none;">
+                             Save
+                             </button>`;
+                    html += `</td>`;
+                    html += `</tr>`;
+                });
+                
+                html += `</tbody></table>`;
+                html += `</div>`;
+            });
+        });
+        
+        html += `</div></div>`;
+    });
+    
+    container.innerHTML = html;
+}
+
+function markWeightChanged(exerciseId) {
+    pendingChanges[exerciseId] = true;
+    document.getElementById(`save-btn-${exerciseId}`).style.display = 'inline-block';
+}
+
+function markNotesChanged(exerciseId) {
+    pendingChanges[exerciseId] = true;
+    document.getElementById(`save-btn-${exerciseId}`).style.display = 'inline-block';
+}
+
+function saveExercise(exerciseId) {
+    // Collect all weights for this exercise
+    const weightInputs = document.querySelectorAll(`input[data-exercise-id="${exerciseId}"][data-set-number]`);
+    const weights = [];
+    weightInputs.forEach(input => {
+        weights.push(parseFloat(input.value) || 0);
+    });
+    
+    // Get notes
+    const notesInput = document.querySelector(`input[data-exercise-id="${exerciseId}"][data-notes="true"]`);
+    const notes = notesInput ? notesInput.value : '';
+    
+    fetch(`/calendar/instance/${instanceId}/update-weights`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            program_exercise_id: exerciseId,
+            weights: weights,
+            notes: notes
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            delete pendingChanges[exerciseId];
+            document.getElementById(`save-btn-${exerciseId}`).style.display = 'none';
+            
+            // Show success feedback
+            const btn = document.getElementById(`save-btn-${exerciseId}`);
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '✓ Saved';
+            btn.classList.remove('btn-outline-primary');
+            btn.classList.add('btn-success');
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-primary');
+            }, 2000);
+        } else {
+            alert('Error saving: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error saving changes');
+    });
+}
+
+function saveAllChanges() {
+    const exerciseIds = Object.keys(pendingChanges);
+    
+    if (exerciseIds.length === 0) {
+        alert('No changes to save');
+        return;
+    }
+    
+    let saved = 0;
+    let errors = 0;
+    
+    exerciseIds.forEach(exerciseId => {
+        saveExercise(parseInt(exerciseId));
+        saved++;
+    });
+    
+    if (saved > 0) {
+        setTimeout(() => {
+            if (Object.keys(pendingChanges).length === 0) {
+                alert(`Saved ${saved} exercise(s) successfully!`);
+            }
+        }, 1000);
+    }
+}
+</script>
+{% endblock %}

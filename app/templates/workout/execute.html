@@ -1,0 +1,707 @@
+{% extends "base.html" %}
+
+{% block title %}Workout{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-2 py-3" id="workoutApp">
+    <!-- Header -->
+    <div class="row mb-3">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="mb-0" id="workoutTitle">Loading...</h4>
+                    <small class="text-muted" id="workoutSubtitle"></small>
+                </div>
+                <div>
+                    <span id="timerDisplay" class="badge bg-secondary fs-6 me-2">0:00</span>
+                    <button class="btn btn-sm btn-danger" onclick="finishWorkout()">
+                        <i class="bi bi-check-circle"></i> Finish
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rest Timer Modal -->
+    <div class="modal fade" id="restTimerModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Rest Timer</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="display-1 fw-bold mb-3" id="restTimerCountdown">0:00</div>
+                    <div class="progress mb-3" style="height: 30px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                             id="restTimerProgress" 
+                             role="progressbar" 
+                             style="width: 100%"></div>
+                    </div>
+                    <button class="btn btn-primary btn-lg" onclick="skipRestTimer()">
+                        <i class="bi bi-skip-forward"></i> Skip Rest
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Workout Content -->
+    <div id="workoutContent">
+        <!-- Will be populated by JavaScript -->
+    </div>
+
+    <!-- Add Exercise (for standalone workouts) -->
+    <div class="card mt-3" id="addExerciseCard" style="display: none;">
+        <div class="card-body">
+            <h5 class="card-title">Add Exercise</h5>
+            <div class="input-group mb-3">
+                <input type="text" class="form-control" id="exerciseSearchInput" 
+                       placeholder="Search exercises...">
+                <button class="btn btn-outline-secondary" onclick="searchExercises()">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+            <div id="exerciseSearchResults"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Previous Sets Modal -->
+<div class="modal fade" id="previousSetsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Previous Sets</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="previousSetsContent">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.exercise-card {
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.set-row {
+    padding: 0.75rem;
+    border-bottom: 1px solid #dee2e6;
+    background-color: #fff;
+}
+
+.set-row:last-child {
+    border-bottom: none;
+}
+
+.set-row.completed {
+    background-color: #d1e7dd;
+}
+
+.set-input {
+    width: 70px;
+    padding: 0.375rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    text-align: center;
+}
+
+.set-number {
+    font-weight: bold;
+    font-size: 1.1rem;
+    min-width: 40px;
+}
+
+.btn-log-set {
+    min-width: 80px;
+}
+
+.previous-indicator {
+    font-size: 0.85rem;
+    color: #6c757d;
+    font-style: italic;
+}
+
+.superset-badge {
+    background-color: #ffc107;
+    color: #000;
+}
+</style>
+
+<script>
+const sessionId = {{ session.id }};
+let workoutData = null;
+let loggedSets = {};
+let workoutStartTime = new Date();
+let timerInterval = null;
+let restTimerInterval = null;
+let restTimerModal = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    restTimerModal = new coreui.Modal(document.getElementById('restTimerModal'));
+    loadWorkoutData();
+    startWorkoutTimer();
+});
+
+function startWorkoutTimer() {
+    timerInterval = setInterval(() => {
+        const elapsed = Math.floor((new Date() - workoutStartTime) / 1000);
+        const minutes = Math.floor(elapsed / 60);
+        const seconds = elapsed % 60;
+        document.getElementById('timerDisplay').textContent = 
+            `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }, 1000);
+}
+
+async function loadWorkoutData() {
+    try {
+        const response = await fetch(`/workout/api/session/${sessionId}/data`);
+        workoutData = await response.json();
+        loggedSets = workoutData.logged_sets || {};
+        
+        // Update header
+        if (workoutData.is_standalone) {
+            document.getElementById('workoutTitle').textContent = 'Standalone Workout';
+            document.getElementById('workoutSubtitle').textContent = 
+                workoutData.gym_name || 'No gym selected';
+            document.getElementById('addExerciseCard').style.display = 'block';
+        } else {
+            document.getElementById('workoutTitle').textContent = 
+                `${workoutData.program_name} - ${workoutData.day_name}`;
+            document.getElementById('workoutSubtitle').textContent = 
+                `${workoutData.calendar_date} • ${workoutData.gym_name || 'No gym'}`;
+            renderWorkout();
+        }
+    } catch (error) {
+        console.error('Error loading workout data:', error);
+        alert('Error loading workout. Please try again.');
+    }
+}
+
+function renderWorkout() {
+    const container = document.getElementById('workoutContent');
+    let html = '';
+    
+    workoutData.series.forEach((series, seriesIndex) => {
+        const isSuperset = series.series_type === 'superset';
+        const colors = ['primary', 'success', 'danger', 'warning', 'info'];
+        const color = colors[seriesIndex % 5];
+        
+        if (isSuperset) {
+            // Superset - render exercises side by side
+            html += `<div class="mb-3"><div class="badge superset-badge mb-2">SUPERSET</div></div>`;
+            html += `<div class="row mb-3">`;
+            
+            series.exercises.forEach((exercise, exIndex) => {
+                const exerciseLabel = String.fromCharCode(65 + exIndex);
+                html += `<div class="col-md-6 mb-2">`;
+                html += renderExerciseCard(exercise, exerciseLabel, color, seriesIndex);
+                html += `</div>`;
+            });
+            
+            html += `</div>`;
+        } else {
+            // Regular exercise
+            const exercise = series.exercises[0];
+            html += renderExerciseCard(exercise, null, color, seriesIndex);
+        }
+    });
+    
+    container.innerHTML = html;
+}
+
+function renderExerciseCard(exercise, label, color, seriesIndex) {
+    const numSets = exercise.sets;
+    const logged = loggedSets[exercise.exercise_id] || [];
+    
+    let html = `<div class="card exercise-card border-${color} border-3 mb-3">`;
+    
+    // Header
+    html += `<div class="card-header bg-${color} text-white d-flex justify-content-between align-items-center">`;
+    html += `<span>${label ? label + '. ' : ''}${exercise.exercise_name}</span>`;
+    html += `<div>`;
+    if (logged.length > 0) {
+        html += `<span class="badge bg-success me-2" id="logged-badge-${exercise.exercise_id}">✓ Logged</span>`;
+    }
+    if (exercise.previous_sets && exercise.previous_sets.length > 0) {
+        html += `<button class="btn btn-sm btn-light" onclick="showPreviousSets(${exercise.exercise_id})">`;
+        html += `<i class="bi bi-clock-history"></i></button>`;
+    }
+    html += `</div>`;
+    html += `</div>`;
+    
+    // Show previous set info if available
+    if (exercise.previous_sets && exercise.previous_sets.length > 0) {
+        const prev = exercise.previous_sets[0];
+        html += `<div class="card-body py-2 px-3 bg-light border-bottom">`;
+        html += `<small class="previous-indicator">Last: ${prev.weight}lbs × ${prev.reps} reps`;
+        if (prev.rpe) html += ` @ RPE ${prev.rpe}`;
+        html += ` (${prev.date})</small>`;
+        html += `</div>`;
+    }
+    
+    // Body with column-based sets
+    html += `<div class="card-body p-3">`;
+    html += `<div class="table-responsive">`;
+    html += `<table class="table table-sm table-borderless mb-0">`;
+    
+    // Header row with set numbers
+    html += `<thead><tr><th></th>`;
+    for (let setNum = 1; setNum <= numSets; setNum++) {
+        const isCompleted = logged.find(s => s.set_number === setNum) !== undefined;
+        html += `<th class="text-center ${isCompleted ? 'text-success' : ''}">`;
+        html += `<strong>Set ${setNum}</strong>`;
+        if (isCompleted) html += ` <i class="bi bi-check-circle-fill"></i>`;
+        html += `</th>`;
+    }
+    html += `</tr></thead><tbody>`;
+    
+    // Weight row
+    html += `<tr><td class="align-middle"><strong>Weight</strong><br><small class="text-muted">lbs</small></td>`;
+    for (let setNum = 1; setNum <= numSets; setNum++) {
+        const suggestedWeight = exercise.suggested_weights[setNum - 1] || exercise.suggested_weights[0] || '';
+        const loggedSet = logged.find(s => s.set_number === setNum);
+        html += `<td class="text-center">`;
+        html += `<div class="d-flex align-items-center justify-content-center gap-1">`;
+        html += `<input type="number" class="form-control form-control-sm text-center" `;
+        html += `id="weight-${exercise.exercise_id}-${setNum}" `;
+        html += `placeholder="${suggestedWeight}" `;
+        html += `value="${loggedSet?.weight || ''}" step="0.5" style="width: 80px;">`;
+        if (suggestedWeight) {
+            html += `<button type="button" class="btn btn-sm btn-outline-secondary" `;
+            html += `onclick="applySuggestedWeight(${exercise.exercise_id}, ${setNum}, ${suggestedWeight})" `;
+            html += `title="Use suggested weight" style="padding: 0.25rem 0.4rem;">`;
+            html += `<i class="bi bi-check2"></i></button>`;
+        }
+        html += `</div>`;
+        html += `</td>`;
+    }
+    html += `</tr>`;
+    
+    // Reps row
+    html += `<tr><td class="align-middle"><strong>Reps</strong></td>`;
+    for (let setNum = 1; setNum <= numSets; setNum++) {
+        const suggestedReps = exercise.reps || '';
+        const loggedSet = logged.find(s => s.set_number === setNum);
+        html += `<td class="text-center">`;
+        html += `<input type="number" class="form-control form-control-sm text-center" `;
+        html += `id="reps-${exercise.exercise_id}-${setNum}" `;
+        html += `value="${loggedSet?.reps || suggestedReps}" style="width: 80px; margin: 0 auto;">`;
+        html += `</td>`;
+    }
+    html += `</tr>`;
+    
+    // RPE row
+    html += `<tr><td class="align-middle"><strong>RPE</strong><br><small class="text-muted">optional</small></td>`;
+    for (let setNum = 1; setNum <= numSets; setNum++) {
+        const loggedSet = logged.find(s => s.set_number === setNum);
+        const currentRpe = loggedSet?.rpe || '';
+        html += `<td class="text-center">`;
+        html += `<div class="btn-group btn-group-sm" role="group" style="width: 100px; margin: 0 auto;">`;
+        html += `<button type="button" class="btn ${currentRpe === '-' ? 'btn-danger' : 'btn-outline-danger'}" `;
+        html += `onclick="setRpe(${exercise.exercise_id}, ${setNum}, '-')" title="Too Heavy">-</button>`;
+        html += `<button type="button" class="btn ${currentRpe === '=' ? 'btn-success' : 'btn-outline-success'}" `;
+        html += `onclick="setRpe(${exercise.exercise_id}, ${setNum}, '=')" title="Good Weight">=</button>`;
+        html += `<button type="button" class="btn ${currentRpe === '+' ? 'btn-primary' : 'btn-outline-primary'}" `;
+        html += `onclick="setRpe(${exercise.exercise_id}, ${setNum}, '+')" title="Could Do More">+</button>`;
+        html += `</div>`;
+        html += `<input type="hidden" id="rpe-${exercise.exercise_id}-${setNum}" value="${currentRpe}">`;
+        html += `</td>`;
+    }
+    html += `</tr>`;
+    
+    html += `</tbody></table></div>`;
+    
+    // Overall exercise RPE section
+    const anySetLogged = logged.length > 0;
+    const overallRpe = logged.find(s => s.overall_rpe)?.overall_rpe || '';
+    
+    html += `<div class="border-top pt-3 px-3 pb-2">`;
+    html += `<div class="row align-items-center">`;
+    html += `<div class="col-auto">`;
+    html += `<strong>Overall Exercise Feeling:</strong> <span class="text-danger">*required</span>`;
+    html += `</div>`;
+    html += `<div class="col-auto">`;
+    html += `<div class="btn-group" role="group">`;
+    html += `<button type="button" class="btn ${overallRpe === '-' ? 'btn-danger' : 'btn-outline-danger'}" `;
+    html += `onclick="setOverallRpe(${exercise.exercise_id}, '-')" `;
+    html += `id="overall-rpe-btn-${exercise.exercise_id}--" title="Too Heavy" style="min-width: 50px;">-</button>`;
+    html += `<button type="button" class="btn ${overallRpe === '=' ? 'btn-success' : 'btn-outline-success'}" `;
+    html += `onclick="setOverallRpe(${exercise.exercise_id}, '=')" `;
+    html += `id="overall-rpe-btn-${exercise.exercise_id}-=" title="Good Weight" style="min-width: 50px;">=</button>`;
+    html += `<button type="button" class="btn ${overallRpe === '+' ? 'btn-primary' : 'btn-outline-primary'}" `;
+    html += `onclick="setOverallRpe(${exercise.exercise_id}, '+')" `;
+    html += `id="overall-rpe-btn-${exercise.exercise_id}-+" title="Could Do More" style="min-width: 50px;">+</button>`;
+    html += `</div>`;
+    html += `<input type="hidden" id="overall-rpe-${exercise.exercise_id}" value="${overallRpe}">`;
+    html += `</div>`;
+    html += `</div>`;
+    html += `</div>`;
+    html += `</div>`;
+    html += `</div>`;
+    
+    html += `</div></div>`;
+    
+    return html;
+}
+function setRpe(exerciseId, setNumber, rpeValue) {
+    // Update hidden input
+    const rpeInput = document.getElementById(`rpe-${exerciseId}-${setNumber}`);
+    if (rpeInput) {
+        rpeInput.value = rpeValue;
+    }
+    
+    // Update button styles - find all buttons in this set's RPE group
+    const buttonGroup = rpeInput?.parentElement;
+    if (buttonGroup) {
+        const buttons = buttonGroup.querySelectorAll('button');
+        buttons.forEach(btn => {
+            const btnValue = btn.textContent.trim();
+            
+            // Handle each button's specific color
+            if (btnValue === '-') {
+                if (rpeValue === '-') {
+                    btn.classList.remove('btn-outline-danger');
+                    btn.classList.add('btn-danger');
+                } else {
+                    btn.classList.remove('btn-danger');
+                    btn.classList.add('btn-outline-danger');
+                }
+            } else if (btnValue === '=') {
+                if (rpeValue === '=') {
+                    btn.classList.remove('btn-outline-success');
+                    btn.classList.add('btn-success');
+                } else {
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-outline-success');
+                }
+            } else if (btnValue === '+') {
+                if (rpeValue === '+') {
+                    btn.classList.remove('btn-outline-primary');
+                    btn.classList.add('btn-primary');
+                } else {
+                    btn.classList.remove('btn-primary');
+                    btn.classList.add('btn-outline-primary');
+                }
+            }
+        });
+    }
+}
+
+function applySuggestedWeight(exerciseId, setNumber, suggestedWeight) {
+    const weightInput = document.getElementById(`weight-${exerciseId}-${setNumber}`);
+    if (weightInput) {
+        weightInput.value = suggestedWeight;
+        // Brief visual feedback
+        weightInput.classList.add('border-success');
+        setTimeout(() => {
+            weightInput.classList.remove('border-success');
+        }, 500);
+    }
+}
+
+function setOverallRpe(exerciseId, rpeValue) {
+    // First, log all sets for this exercise
+    const exercise = workoutData.series.flatMap(s => s.exercises).find(ex => ex.exercise_id === exerciseId);
+    if (!exercise) return;
+    
+    const numSets = exercise.sets;
+    const setsToLog = [];
+    
+    // Collect all set data
+    for (let setNum = 1; setNum <= numSets; setNum++) {
+        const weight = parseFloat(document.getElementById(`weight-${exerciseId}-${setNum}`)?.value);
+        const reps = parseInt(document.getElementById(`reps-${exerciseId}-${setNum}`)?.value);
+        const rpeInput = document.getElementById(`rpe-${exerciseId}-${setNum}`);
+        const rpe = rpeInput?.value || null;
+        
+        if (!weight || !reps) {
+            alert(`Please enter weight and reps for all sets before selecting overall feeling.\n\nMissing data for Set ${setNum}.`);
+            return;
+        }
+        
+        setsToLog.push({
+            set_number: setNum,
+            weight: weight,
+            reps: reps,
+            rpe: rpe
+        });
+    }
+    
+    // Update hidden input
+    const overallRpeInput = document.getElementById(`overall-rpe-${exerciseId}`);
+    if (overallRpeInput) {
+        overallRpeInput.value = rpeValue;
+    }
+    
+    // Log all sets then save overall RPE
+    logAllSetsForExercise(exerciseId, setsToLog, rpeValue, exercise.rest_time_seconds || 0);
+}
+
+async function logAllSetsForExercise(exerciseId, setsToLog, overallRpe, restTime) {
+    try {
+        // Log each set
+        for (const setData of setsToLog) {
+            const response = await fetch(`/workout/api/session/${sessionId}/log-set`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    exercise_id: exerciseId,
+                    set_number: setData.set_number,
+                    weight: setData.weight,
+                    reps: setData.reps,
+                    rpe: setData.rpe
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Update logged sets
+                if (!loggedSets[exerciseId]) {
+                    loggedSets[exerciseId] = [];
+                }
+                const existingIndex = loggedSets[exerciseId].findIndex(s => s.set_number === setData.set_number);
+                if (existingIndex >= 0) {
+                    loggedSets[exerciseId][existingIndex] = data;
+                } else {
+                    loggedSets[exerciseId].push(data);
+                }
+            } else {
+                throw new Error('Failed to log set');
+            }
+        }
+        
+        // Now save overall RPE
+        await saveOverallRpe(exerciseId, overallRpe);
+        
+        // Show logged indicator
+        const cardHeader = document.querySelector(`#logged-badge-${exerciseId}`);
+        if (!cardHeader) {
+            // Add badge if it doesn't exist
+            const exerciseCard = document.querySelector(`#overall-rpe-${exerciseId}`)?.closest('.card');
+            if (exerciseCard) {
+                const header = exerciseCard.querySelector('.card-header > div');
+                if (header) {
+                    const badge = document.createElement('span');
+                    badge.className = 'badge bg-success me-2';
+                    badge.id = `logged-badge-${exerciseId}`;
+                    badge.textContent = '✓ Logged';
+                    header.prepend(badge);
+                }
+            }
+        }
+        
+        // Start rest timer after completing exercise
+        if (restTime > 0) {
+            startRestTimer(restTime);
+        }
+        
+    } catch (error) {
+        console.error('Error logging exercise:', error);
+        alert('Error logging exercise. Please try again.');
+    }
+}
+
+async function saveOverallRpe(exerciseId, overallRpe) {
+    if (!overallRpe) {
+        const overallRpeInput = document.getElementById(`overall-rpe-${exerciseId}`);
+        overallRpe = overallRpeInput?.value;
+    }
+    
+    if (!overallRpe) {
+        alert('Please select how the exercise felt overall');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/workout/api/session/${sessionId}/overall-rpe`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                exercise_id: exerciseId,
+                overall_rpe: overallRpe
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Update logged sets with overall RPE
+            if (loggedSets[exerciseId] && loggedSets[exerciseId].length > 0) {
+                loggedSets[exerciseId][0].overall_rpe = overallRpe;
+            }
+            
+            // Visual feedback - re-render to show updated button styles
+            loadWorkoutData();
+            
+            // Brief success message
+            const btn = document.getElementById(`overall-rpe-btn-${exerciseId}-${overallRpe}`);
+            if (btn) {
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '✓ Saved!';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                }, 1500);
+            }
+        }
+    } catch (error) {
+        console.error('Error saving overall RPE:', error);
+        alert('Error saving feeling. Please try again.');
+    }
+}
+
+function startRestTimer(seconds) {
+    const totalSeconds = seconds;
+    let remaining = seconds;
+    
+    const modalElement = document.getElementById('restTimerModal');
+    const countdown = document.getElementById('restTimerCountdown');
+    const progress = document.getElementById('restTimerProgress');
+    
+    restTimerModal.show();
+    
+    if (restTimerInterval) {
+        clearInterval(restTimerInterval);
+    }
+    
+    restTimerInterval = setInterval(() => {
+        remaining--;
+        const minutes = Math.floor(remaining / 60);
+        const secs = remaining % 60;
+        countdown.textContent = `${minutes}:${secs.toString().padStart(2, '0')}`;
+        
+        const percentRemaining = (remaining / totalSeconds) * 100;
+        progress.style.width = `${percentRemaining}%`;
+        
+        if (remaining <= 0) {
+            clearInterval(restTimerInterval);
+            restTimerModal.hide();
+            // Play sound or notification
+            if ('vibrate' in navigator) {
+                navigator.vibrate([200, 100, 200]);
+            }
+        }
+    }, 1000);
+}
+
+function skipRestTimer() {
+    if (restTimerInterval) {
+        clearInterval(restTimerInterval);
+    }
+    restTimerModal.hide();
+}
+
+function showPreviousSets(exerciseId) {
+    const exercise = workoutData.series
+        .flatMap(s => s.exercises)
+        .find(ex => ex.exercise_id === exerciseId);
+    
+    if (!exercise || !exercise.previous_sets) return;
+    
+    let html = `<h6>${exercise.exercise_name}</h6>`;
+    html += `<table class="table table-sm">`;
+    html += `<thead><tr><th>Date</th><th>Weight</th><th>Reps</th><th>RPE</th></tr></thead>`;
+    html += `<tbody>`;
+    
+    exercise.previous_sets.forEach(set => {
+        html += `<tr>`;
+        html += `<td>${set.date}</td>`;
+        html += `<td>${set.weight} lbs</td>`;
+        html += `<td>${set.reps}</td>`;
+        html += `<td>${set.rpe || '-'}</td>`;
+        html += `</tr>`;
+    });
+    
+    html += `</tbody></table>`;
+    
+    document.getElementById('previousSetsContent').innerHTML = html;
+    new coreui.Modal(document.getElementById('previousSetsModal')).show();
+}
+
+async function finishWorkout() {
+    // Check if all exercises have overall RPE set (for scheduled workouts)
+    if (workoutData && !workoutData.is_standalone && workoutData.series) {
+        const missingRpe = [];
+        
+        workoutData.series.forEach(series => {
+            series.exercises.forEach(exercise => {
+                const hasLoggedSets = loggedSets[exercise.exercise_id] && loggedSets[exercise.exercise_id].length > 0;
+                if (hasLoggedSets) {
+                    const hasOverallRpe = loggedSets[exercise.exercise_id].some(s => s.overall_rpe);
+                    if (!hasOverallRpe) {
+                        missingRpe.push(exercise.exercise_name);
+                    }
+                }
+            });
+        });
+        
+        if (missingRpe.length > 0) {
+            alert(`Please set "Overall Exercise Feeling" for:\n\n${missingRpe.join('\n')}\n\nThis is required to track how exercises felt overall.`);
+            return;
+        }
+    }
+    
+    if (!confirm('Are you sure you want to finish this workout?')) {
+        return;
+    }
+    
+    const notes = prompt('Any notes about this workout?');
+    
+    try {
+        const response = await fetch(`/workout/api/session/${sessionId}/complete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ notes: notes || '' })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            clearInterval(timerInterval);
+            alert('Workout completed! Great job! 💪');
+            window.location.href = '/calendar';
+        }
+    } catch (error) {
+        console.error('Error completing workout:', error);
+        alert('Error completing workout. Please try again.');
+    }
+}
+
+// Standalone workout functions
+async function searchExercises() {
+    const query = document.getElementById('exerciseSearchInput').value;
+    
+    try {
+        const response = await fetch(`/workout/api/exercises/search?q=${encodeURIComponent(query)}`);
+        const data = await response.json();
+        
+        let html = '<div class="list-group">';
+        data.exercises.forEach(ex => {
+            html += `<button class="list-group-item list-group-item-action" `;
+            html += `onclick="addExerciseToWorkout(${ex.id}, '${ex.name}')">`;
+            html += `${ex.name} <small class="text-muted">(${ex.category})</small>`;
+            html += `</button>`;
+        });
+        html += '</div>';
+        
+        document.getElementById('exerciseSearchResults').innerHTML = html;
+    } catch (error) {
+        console.error('Error searching exercises:', error);
+    }
+}
+
+function addExerciseToWorkout(exerciseId, exerciseName) {
+    // TODO: Implement adding exercise to standalone workout
+    alert(`Adding ${exerciseName} to workout - feature coming soon!`);
+}
+</script>
+{% endblock %}
