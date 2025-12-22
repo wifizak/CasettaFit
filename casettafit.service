@@ -1,0 +1,18 @@
+[Unit]
+Description=CasettaFit Workout Tracking Application
+After=network.target
+
+[Service]
+Type=notify
+User=casettalocal
+Group=casettalocal
+WorkingDirectory=/opt/CasettaFit
+Environment="PATH=/opt/CasettaFit/app/venv/bin"
+Environment="PYTHONPATH=/opt/CasettaFit"
+Environment="FLASK_APP=app"
+ExecStart=/opt/CasettaFit/app/venv/bin/gunicorn --bind 0.0.0.0:5000 --workers 4 --timeout 120 --access-logfile /opt/CasettaFit/logs/access.log --error-logfile /opt/CasettaFit/logs/error.log 'app:create_app()'
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
