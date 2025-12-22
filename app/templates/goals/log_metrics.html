@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Log Metrics - CasettaFit{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center">
+                <a href="{{ url_for('goals.index') }}" class="btn btn-outline-secondary me-3">
+                    <i class="cil-arrow-left"></i>
+                </a>
+                <div>
+                    <h1 class="h2 mb-0">
+                        <i class="cil-plus me-2"></i>Log Body Metrics
+                    </h1>
+                    <p class="text-body-secondary mb-0">Record your current measurements</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12 col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="alert alert-info">
+                            <i class="cil-info me-2"></i>
+                            <strong>Tip:</strong> Weigh yourself at the same time of day (preferably morning) for consistency.
+                        </div>
+                        
+                        <h5 class="mb-3">Primary Metrics</h5>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.weight.label }}</label>
+                                {{ form.weight(class="form-control" + (" is-invalid" if form.weight.errors else "")) }}
+                                {% if form.weight.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.weight.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                                <small class="text-body-secondary">Current: {{ profile.current_weight or 'Not set' }} {{ profile.weight_unit if profile else 'lbs' }}</small>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.body_fat.label }}</label>
+                                {{ form.body_fat(class="form-control" + (" is-invalid" if form.body_fat.errors else "")) }}
+                                {% if form.body_fat.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.body_fat.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                                <small class="text-body-secondary">Current: {{ profile.current_body_fat or 'Not set' }}%</small>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <h5 class="mb-3">Body Measurements (Optional)</h5>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">{{ form.chest.label }}</label>
+                                {{ form.chest(class="form-control") }}
+                                <small class="text-body-secondary">Current: {{ profile.chest or '-' }}</small>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">{{ form.waist.label }}</label>
+                                {{ form.waist(class="form-control") }}
+                                <small class="text-body-secondary">Current: {{ profile.waist or '-' }}</small>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">{{ form.hips.label }}</label>
+                                {{ form.hips(class="form-control") }}
+                                <small class="text-body-secondary">Current: {{ profile.hips or '-' }}</small>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.left_arm.label }}</label>
+                                {{ form.left_arm(class="form-control") }}
+                                <small class="text-body-secondary">Current: {{ profile.left_arm or '-' }}</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.right_arm.label }}</label>
+                                {{ form.right_arm(class="form-control") }}
+                                <small class="text-body-secondary">Current: {{ profile.right_arm or '-' }}</small>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.left_thigh.label }}</label>
+                                {{ form.left_thigh(class="form-control") }}
+                                <small class="text-body-secondary">Current: {{ profile.left_thigh or '-' }}</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.right_thigh.label }}</label>
+                                {{ form.right_thigh(class="form-control") }}
+                                <small class="text-body-secondary">Current: {{ profile.right_thigh or '-' }}</small>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.left_calf.label }}</label>
+                                {{ form.left_calf(class="form-control") }}
+                                <small class="text-body-secondary">Current: {{ profile.left_calf or '-' }}</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.right_calf.label }}</label>
+                                {{ form.right_calf(class="form-control") }}
+                                <small class="text-body-secondary">Current: {{ profile.right_calf or '-' }}</small>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="mb-4">
+                            <label class="form-label">{{ form.notes.label }}</label>
+                            {{ form.notes(class="form-control", rows="3") }}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('goals.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-12 col-lg-4">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="cil-info me-2"></i>Measurement Tips</h6>
+                    <ul class="small mb-0">
+                        <li class="mb-2"><strong>Chest:</strong> Measure at the widest part</li>
+                        <li class="mb-2"><strong>Waist:</strong> Measure at belly button level</li>
+                        <li class="mb-2"><strong>Hips:</strong> Measure at the widest part</li>
+                        <li class="mb-2"><strong>Arms:</strong> Measure at the largest part when flexed</li>
+                        <li class="mb-2"><strong>Thighs:</strong> Measure at the largest part</li>
+                        <li><strong>Calves:</strong> Measure at the largest part</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="cil-history me-2"></i>Frequency</h6>
+                    <p class="small mb-0">We recommend logging your metrics:</p>
+                    <ul class="small mb-0">
+                        <li>Weight: Daily or weekly</li>
+                        <li>Body Fat: Weekly or bi-weekly</li>
+                        <li>Measurements: Monthly</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,11 +1,38 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from functools import wraps
+from werkzeug.utils import secure_filename
+import uuid
+import os
 from app import db
 from app.models import User, UserProfile
 from app.forms import CreateUserForm, EditUserForm
 
 bp = Blueprint('admin', __name__, url_prefix='/admin')
+
+# File upload configuration
+UPLOAD_FOLDER = 'app/static/uploads/profiles'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def save_profile_picture(file):
+    """Save uploaded profile picture and return the filename"""
+    if file and allowed_file(file.filename):
+        # Generate unique filename
+        ext = file.filename.rsplit('.', 1)[1].lower()
+        filename = f"{uuid.uuid4().hex}.{ext}"
+        
+        # Ensure upload directory exists
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+        
+        # Save file
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        file.save(filepath)
+        
+        return filename
+    return None
 
 
 def admin_required(f):
@@ -51,8 +78,14 @@ def create_user():
         
         # Create user profile
         profile = UserProfile(user_id=user.id)
-        db.session.add(profile)
         
+        # Handle profile picture upload
+        if form.profile_picture.data:
+            filename = save_profile_picture(form.profile_picture.data)
+            if filename:
+                profile.profile_picture = filename
+        
+        db.session.add(profile)
         db.session.commit()
         
         flash(f'User {user.username} created successfully!', 'success')
@@ -75,6 +108,27 @@ def edit_user(user_id):
         
         if form.password.data:
             user.set_password(form.password.data)
+        
+        # Handle profile picture upload
+        if form.profile_picture.data:
+            # Get or create profile
+            if not user.profile:
+                profile = UserProfile(user_id=user.id)
+                db.session.add(profile)
+                db.session.flush()
+            else:
+                profile = user.profile
+            
+            # Delete old picture if exists
+            if profile.profile_picture:
+                old_path = os.path.join(UPLOAD_FOLDER, profile.profile_picture)
+                if os.path.exists(old_path):
+                    os.remove(old_path)
+            
+            # Save new picture
+            filename = save_profile_picture(form.profile_picture.data)
+            if filename:
+                profile.profile_picture = filename
         
         db.session.commit()
         flash(f'User {user.username} updated successfully!', 'success')

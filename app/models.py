@@ -44,6 +44,9 @@ class UserProfile(db.Model):
     # Preferences
     weight_unit = db.Column(db.String(10), default='lbs', nullable=False)
     
+    # Profile picture
+    profile_picture = db.Column(db.String(255))
+    
     # Current body metrics
     current_weight = db.Column(db.Float)
     current_body_fat = db.Column(db.Float)
@@ -89,6 +92,40 @@ class BodyMetricHistory(db.Model):
     
     def __repr__(self):
         return f'<BodyMetricHistory user_id={self.user_id} date={self.recorded_at}>'
+
+
+class UserGoal(db.Model):
+    __tablename__ = 'user_goals'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
+    
+    # Weight goals
+    target_weight = db.Column(db.Float)
+    target_body_fat = db.Column(db.Float)
+    
+    # Target date
+    target_date = db.Column(db.Date)
+    
+    # Measurement goals
+    target_chest = db.Column(db.Float)
+    target_waist = db.Column(db.Float)
+    target_hips = db.Column(db.Float)
+    target_left_arm = db.Column(db.Float)
+    target_right_arm = db.Column(db.Float)
+    target_left_thigh = db.Column(db.Float)
+    target_right_thigh = db.Column(db.Float)
+    target_left_calf = db.Column(db.Float)
+    target_right_calf = db.Column(db.Float)
+    
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    user = db.relationship('User', backref='goal', uselist=False)
+    
+    def __repr__(self):
+        return f'<UserGoal user_id={self.user_id}>'
 
 
 # ============================================================================
@@ -225,6 +262,8 @@ class MasterEquipment(db.Model):
     name = db.Column(db.String(50), nullable=False, index=True)
     description = db.Column(db.Text)
     equipment_type = db.Column(db.String(20), nullable=False)  # Strength, Cardio, Body, Resistance
+    manufacturer = db.Column(db.String(100))  # Equipment manufacturer
+    model = db.Column(db.String(100))  # Equipment model number/name
     
     # Ownership tracking
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)

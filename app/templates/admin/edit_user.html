@@ -19,7 +19,7 @@
     <div class="col-lg-6">
         <div class="card">
             <div class="card-body">
-                <form method="POST" action="{{ url_for('admin.edit_user', user_id=user.id) }}">
+                <form method="POST" action="{{ url_for('admin.edit_user', user_id=user.id) }}" enctype="multipart/form-data">
                     {{ form.hidden_tag() }}
                     
                     <div class="mb-3">
@@ -56,6 +56,28 @@
                                 {% endfor %}
                             </div>
                         {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.profile_picture.label(class="form-label") }}
+                        {% if user.profile and user.profile.profile_picture %}
+                        <div class="mb-2">
+                            <img src="{{ url_for('static', filename='uploads/profiles/' + user.profile.profile_picture) }}" 
+                                 alt="Current profile picture" 
+                                 class="rounded-circle"
+                                 style="width: 60px; height: 60px; object-fit: cover; border: 2px solid #d8dbe0;">
+                            <span class="ms-2 text-body-secondary small">Current picture</span>
+                        </div>
+                        {% endif %}
+                        {{ form.profile_picture(class="form-control" + (" is-invalid" if form.profile_picture.errors else "")) }}
+                        {% if form.profile_picture.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.profile_picture.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <small class="text-body-secondary">Optional - JPG, PNG, or GIF</small>
                     </div>
                     
                     <div class="mb-3">

@@ -15,6 +15,9 @@
             <div>
                 <h2>{{ gym.name }}</h2>
                 {% if gym.is_shared %}<span class="badge bg-info">Shared</span>{% endif %}
+                {% if gym.address %}
+                    <p class="text-muted mb-0"><i class="cil-location-pin me-1"></i>{{ gym.address }}</p>
+                {% endif %}
             </div>
             {% if gym.user_id == current_user.id %}
             <div class="btn-group">
@@ -31,6 +34,16 @@
         </div>
     </div>
 </div>
+
+{% if gym.picture_url %}
+<div class="row mb-4">
+    <div class="col-md-8 col-lg-6 mx-auto">
+        <div class="card">
+            <img src="{{ gym.picture_url }}" alt="{{ gym.name }}" class="card-img-top" style="max-height: 200px; object-fit: cover;">
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <div class="row mb-4">
     <div class="col-md-6">

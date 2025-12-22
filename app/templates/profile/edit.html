@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile - CasettaFit{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center">
+                <a href="{{ url_for('profile.index') }}" class="btn btn-outline-secondary me-3">
+                    <i class="cil-arrow-left"></i>
+                </a>
+                <div>
+                    <h1 class="h2 mb-0">
+                        <i class="cil-pencil me-2"></i>Edit Profile
+                    </h1>
+                    <p class="text-body-secondary mb-0">Update your profile picture and preferences</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12 col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
+                        
+                        <h5 class="mb-3">Profile Picture</h5>
+                        
+                        <div class="row mb-4">
+                            <div class="col-auto">
+                                {% if profile.profile_picture %}
+                                <img src="{{ url_for('static', filename='uploads/profiles/' + profile.profile_picture) }}" 
+                                     alt="Current profile picture" 
+                                     class="rounded-circle"
+                                     style="width: 100px; height: 100px; object-fit: cover; border: 2px solid #d8dbe0;"
+                                     id="profilePreview">
+                                {% else %}
+                                <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center" 
+                                     style="width: 100px; height: 100px; border: 2px solid #d8dbe0;"
+                                     id="profilePreview">
+                                    <span class="text-white" style="font-size: 40px; font-weight: 600;">
+                                        {{ current_user.username[0].upper() }}
+                                    </span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col">
+                                <label class="form-label">{{ form.profile_picture.label }}</label>
+                                {{ form.profile_picture(class="form-control" + (" is-invalid" if form.profile_picture.errors else ""), id="profilePictureInput") }}
+                                {% if form.profile_picture.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.profile_picture.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                                <small class="text-body-secondary">JPG, PNG, or GIF (max 5MB)</small>
+                                
+                                {% if profile.profile_picture %}
+                                <div class="mt-2">
+                                    <form method="POST" action="{{ url_for('profile.remove_picture') }}" style="display: inline;">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                onclick="return confirm('Remove profile picture?')">
+                                            <i class="cil-trash me-1"></i>Remove Picture
+                                        </button>
+                                    </form>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <h5 class="mb-3">Preferences</h5>
+                        
+                        <div class="mb-4">
+                            <label class="form-label">{{ form.weight_unit.label }}</label>
+                            {{ form.weight_unit(class="form-select" + (" is-invalid" if form.weight_unit.errors else "")) }}
+                            {% if form.weight_unit.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.weight_unit.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                            <small class="text-body-secondary">Used for weight tracking and exercise logging</small>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('profile.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-12 col-lg-4 mt-4 mt-lg-0">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="cil-lightbulb me-2"></i>Tips</h6>
+                    <ul class="small mb-0">
+                        <li class="mb-2">Use a clear, recent photo of yourself</li>
+                        <li class="mb-2">Square photos work best for profile pictures</li>
+                        <li class="mb-2">Your profile picture will appear in the header and throughout the app</li>
+                        <li>You can change your picture anytime</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Preview image before upload
+    document.getElementById('profilePictureInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('profilePreview');
+                preview.innerHTML = '<img src="' + e.target.result + '" alt="Preview" class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover; border: 2px solid #d8dbe0;">';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+</script>
+{% endblock %}

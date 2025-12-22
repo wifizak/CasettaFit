@@ -113,7 +113,19 @@
                         <tbody>
                             {% for eq in equipment_list %}
                             <tr>
-                                <td><strong>{{ eq.name }}</strong><br><small class="text-muted">{{ eq.description }}</small></td>
+                                <td>
+                                    <strong>{{ eq.name }}</strong>
+                                    {% if eq.manufacturer or eq.model %}
+                                    <br><small class="text-muted">
+                                        {% if eq.manufacturer %}{{ eq.manufacturer }}{% endif %}
+                                        {% if eq.manufacturer and eq.model %} - {% endif %}
+                                        {% if eq.model %}{{ eq.model }}{% endif %}
+                                    </small>
+                                    {% endif %}
+                                    {% if eq.description %}
+                                    <br><small class="text-body-secondary">{{ eq.description }}</small>
+                                    {% endif %}
+                                </td>
                                 <td><span class="badge bg-info">{{ eq.equipment_type }}</span></td>
                                 <td>
                                     {% if eq.gyms %}

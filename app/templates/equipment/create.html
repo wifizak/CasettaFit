@@ -31,6 +31,33 @@
                         {{ form.description(class="form-control", rows="3") }}
                     </div>
                     
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.manufacturer.label(class="form-label") }}
+                            <input type="text" name="manufacturer" id="manufacturer" class="form-control" 
+                                   value="{{ form.manufacturer.data or '' }}" 
+                                   list="manufacturerList" 
+                                   placeholder="e.g., Rogue Fitness">
+                            <datalist id="manufacturerList">
+                                {% for manuf in manufacturers %}
+                                <option value="{{ manuf }}"></option>
+                                {% endfor %}
+                            </datalist>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.model.label(class="form-label") }}
+                            <input type="text" name="model" id="model" class="form-control" 
+                                   value="{{ form.model.data or '' }}" 
+                                   list="modelList" 
+                                   placeholder="e.g., Ohio Power Bar">
+                            <datalist id="modelList">
+                                {% for mod in models %}
+                                <option value="{{ mod }}"></option>
+                                {% endfor %}
+                            </datalist>
+                        </div>
+                    </div>
+                    
                     <div class="mb-3">
                         {{ form.equipment_type.label(class="form-label") }}
                         {{ form.equipment_type(class="form-select" + (" is-invalid" if form.equipment_type.errors else "")) }}
@@ -172,6 +199,93 @@
                 document.getElementById('variationOptions').value = optionsArray.join('\n');
             } catch (e) {
                 document.getElementById('variationOptions').value = options;
+            }
+        }
+        
+        // Autocomplete for Manufacturer and Model
+        let availableManufacturers = [];
+        let availableModels = [];
+        
+        // Fetch manufacturers
+        fetch('{{ url_for("equipment.get_manufacturers") }}')
+            .then(response => response.json())
+            .then(data => {
+                availableManufacturers = data;
+            });
+        
+        // Fetch models
+        fetch('{{ url_for("equipment.get_models") }}')
+            .then(response => response.json())
+            .then(data => {
+                availableModels = data;
+            });
+        
+        // Setup autocomplete for manufacturer
+        const manufacturerInput = document.getElementById('manufacturer');
+        setupAutocomplete(manufacturerInput, () => availableManufacturers);
+        
+        // Setup autocomplete for model
+        const modelInput = document.getElementById('model');
+        setupAutocomplete(modelInput, () => availableModels);
+        
+        function setupAutocomplete(input, getSuggestions) {
+            let suggestionsDiv = null;
+            
+            input.addEventListener('input', function(e) {
+                const value = this.value.trim();
+                
+                if (value.length > 0) {
+                    const suggestions = getSuggestions().filter(item => 
+                        item.toLowerCase().includes(value.toLowerCase())
+                    );
+                    
+                    if (suggestions.length > 0) {
+                        showSuggestions(this, suggestions);
+                    } else {
+                        hideSuggestions();
+                    }
+                } else {
+                    hideSuggestions();
+                }
+            });
+            
+            input.addEventListener('blur', function() {
+                setTimeout(hideSuggestions, 200);
+            });
+            
+            function showSuggestions(inputEl, suggestions) {
+                hideSuggestions();
+                
+                suggestionsDiv = document.createElement('div');
+                suggestionsDiv.className = 'autocomplete-suggestions';
+                suggestionsDiv.style.cssText = 'position: absolute; z-index: 1000; background: white; border: 1px solid #ddd; border-top: none; max-height: 200px; overflow-y: auto; width: ' + inputEl.offsetWidth + 'px;';
+                
+                suggestions.forEach(suggestion => {
+                    const div = document.createElement('div');
+                    div.textContent = suggestion;
+                    div.style.cssText = 'padding: 10px; cursor: pointer; border-bottom: 1px solid #f0f0f0;';
+                    div.addEventListener('mouseenter', function() {
+                        this.style.backgroundColor = '#f0f0f0';
+                    });
+                    div.addEventListener('mouseleave', function() {
+                        this.style.backgroundColor = 'white';
+                    });
+                    div.addEventListener('mousedown', function() {
+                        inputEl.value = suggestion;
+                        hideSuggestions();
+                    });
+                    suggestionsDiv.appendChild(div);
+                });
+                
+                inputEl.parentNode.style.position = 'relative';
+                inputEl.parentNode.appendChild(suggestionsDiv);
+            }
+            
+            function hideSuggestions() {
+                if (suggestionsDiv && suggestionsDiv.parentNode) {
+                    suggestionsDiv.parentNode.removeChild(suggestionsDiv);
+                    suggestionsDiv = null;
+                }
             }
         }
         </script>

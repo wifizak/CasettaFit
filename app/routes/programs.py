@@ -119,6 +119,7 @@ def edit(program_id):
         program.name = form.name.data
         program.description = form.description.data
         program.duration_weeks = form.duration_weeks.data
+        program.days_per_week = form.days_per_week.data
         program.notes = form.notes.data
         
         if current_user.is_admin:
@@ -132,6 +133,7 @@ def edit(program_id):
         form.name.data = program.name
         form.description.data = program.description
         form.duration_weeks.data = program.duration_weeks
+        form.days_per_week.data = program.days_per_week
         form.notes.data = program.notes
         form.is_template.data = program.is_template
     

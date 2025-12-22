@@ -19,7 +19,7 @@
     <div class="col-lg-6">
         <div class="card">
             <div class="card-body">
-                <form method="POST" action="{{ url_for('admin.create_user') }}">
+                <form method="POST" action="{{ url_for('admin.create_user') }}" enctype="multipart/form-data">
                     {{ form.hidden_tag() }}
                     
                     <div class="mb-3">
@@ -56,6 +56,19 @@
                                 {% endfor %}
                             </div>
                         {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.profile_picture.label(class="form-label") }}
+                        {{ form.profile_picture(class="form-control" + (" is-invalid" if form.profile_picture.errors else "")) }}
+                        {% if form.profile_picture.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.profile_picture.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <small class="text-body-secondary">Optional - JPG, PNG, or GIF</small>
                     </div>
                     
                     <div class="mb-3">

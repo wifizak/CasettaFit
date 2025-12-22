@@ -1,0 +1,391 @@
+{% extends "base.html" %}
+
+{% block title %}Goals - CasettaFit{% endblock %}
+
+{% block extra_css %}
+<style>
+    .goal-card {
+        transition: transform 0.2s;
+    }
+    
+    .goal-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .progress-circle {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: conic-gradient(
+            #2eb85c 0% var(--progress-percent, 0%),
+            #d8dbe0 var(--progress-percent, 0%) 100%
+        );
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+    
+    .progress-circle-inner {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+    }
+    
+    .metric-comparison {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #d8dbe0;
+    }
+    
+    .metric-comparison:last-child {
+        border-bottom: none;
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2">
+                        <i class="cil-target me-2"></i>Goals & Progress
+                    </h1>
+                    <p class="text-body-secondary">Track your fitness journey</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('goals.log_metrics') }}" class="btn btn-primary me-2">
+                        <i class="cil-plus me-1"></i>Log Metrics
+                    </a>
+                    <a href="{{ url_for('goals.edit') }}" class="btn btn-outline-primary">
+                        <i class="cil-pencil me-1"></i>Edit Goals
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if not goal or (not goal.target_weight and not goal.target_body_fat) %}
+    <!-- No goals set -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="cil-target" style="font-size: 4rem; opacity: 0.3; color: #768192;"></i>
+                    <h3 class="mt-4 mb-3">Set Your Goals</h3>
+                    <p class="text-body-secondary mb-4">Define your target weight, body fat percentage, and measurements to track your progress.</p>
+                    <a href="{{ url_for('goals.edit') }}" class="btn btn-primary btn-lg">
+                        <i class="cil-plus me-2"></i>Set Goals
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    
+    <!-- Goals Overview -->
+    <div class="row g-3 mb-4">
+        <!-- Weight Goal -->
+        {% if goal.target_weight %}
+        <div class="col-12 col-md-6">
+            <div class="card goal-card h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-4"><i class="cil-chart-line me-2"></i>Weight Goal</h5>
+                    
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            {% if 'weight_percent' in progress %}
+                            <div class="progress-circle" style="--progress-percent: {{ progress.weight_percent|abs }}%;">
+                                <div class="progress-circle-inner">
+                                    <div class="h3 mb-0">{{ "%.0f"|format(progress.weight_percent|abs) }}%</div>
+                                    <small class="text-body-secondary">Complete</small>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="progress-circle" style="--progress-percent: 0%;">
+                                <div class="progress-circle-inner">
+                                    <div class="h3 mb-0">0%</div>
+                                    <small class="text-body-secondary">Start</small>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col">
+                            <div class="metric-comparison">
+                                <span class="text-body-secondary">Current</span>
+                                <strong>{{ profile.current_weight or '-' }} {{ profile.weight_unit if profile else 'lbs' }}</strong>
+                            </div>
+                            <div class="metric-comparison">
+                                <span class="text-body-secondary">Target</span>
+                                <strong>{{ goal.target_weight }} {{ profile.weight_unit if profile else 'lbs' }}</strong>
+                            </div>
+                            {% if 'weight_remaining' in progress %}
+                            <div class="metric-comparison">
+                                <span class="text-body-secondary">Remaining</span>
+                                <strong class="{% if progress.weight_remaining > 0 %}text-warning{% else %}text-success{% endif %}">
+                                    {{ "%.1f"|format(progress.weight_remaining|abs) }} {{ profile.weight_unit if profile else 'lbs' }}
+                                </strong>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Body Fat Goal -->
+        {% if goal.target_body_fat %}
+        <div class="col-12 col-md-6">
+            <div class="card goal-card h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-4"><i class="cil-user me-2"></i>Body Fat Goal</h5>
+                    
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            {% if 'body_fat_percent' in progress %}
+                            <div class="progress-circle" style="--progress-percent: {{ progress.body_fat_percent|abs }}%;">
+                                <div class="progress-circle-inner">
+                                    <div class="h3 mb-0">{{ "%.0f"|format(progress.body_fat_percent|abs) }}%</div>
+                                    <small class="text-body-secondary">Complete</small>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="progress-circle" style="--progress-percent: 0%;">
+                                <div class="progress-circle-inner">
+                                    <div class="h3 mb-0">0%</div>
+                                    <small class="text-body-secondary">Start</small>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col">
+                            <div class="metric-comparison">
+                                <span class="text-body-secondary">Current</span>
+                                <strong>{{ profile.current_body_fat or '-' }}%</strong>
+                            </div>
+                            <div class="metric-comparison">
+                                <span class="text-body-secondary">Target</span>
+                                <strong>{{ goal.target_body_fat }}%</strong>
+                            </div>
+                            {% if 'body_fat_remaining' in progress %}
+                            <div class="metric-comparison">
+                                <span class="text-body-secondary">Remaining</span>
+                                <strong class="{% if progress.body_fat_remaining > 0 %}text-warning{% else %}text-success{% endif %}">
+                                    {{ "%.1f"|format(progress.body_fat_remaining|abs) }}%
+                                </strong>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Target Date -->
+    {% if goal.target_date %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="cil-calendar me-2"></i>
+                <strong>Target Date:</strong> {{ goal.target_date.strftime('%B %d, %Y') }}
+                {% if goal.target_date > today %}
+                ({{ (goal.target_date - today).days }} days remaining)
+                {% elif goal.target_date == today %}
+                (Today!)
+                {% else %}
+                ({{ (today - goal.target_date).days }} days past)
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Progress Chart -->
+    {% if metric_history %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <strong><i class="cil-graph me-2"></i>Progress Over Time</strong>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="progressChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Measurements Goals -->
+    {% if goal.target_chest or goal.target_waist or goal.target_hips %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <strong><i class="cil-grid me-2"></i>Measurement Goals</strong>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% if goal.target_chest %}
+                        <div class="col-12 col-sm-6 col-md-4 mb-3">
+                            <div class="metric-comparison">
+                                <span>Chest</span>
+                                <span>{{ profile.chest or '-' }} / {{ goal.target_chest }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if goal.target_waist %}
+                        <div class="col-12 col-sm-6 col-md-4 mb-3">
+                            <div class="metric-comparison">
+                                <span>Waist</span>
+                                <span>{{ profile.waist or '-' }} / {{ goal.target_waist }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if goal.target_hips %}
+                        <div class="col-12 col-sm-6 col-md-4 mb-3">
+                            <div class="metric-comparison">
+                                <span>Hips</span>
+                                <span>{{ profile.hips or '-' }} / {{ goal.target_hips }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Recent Metrics -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <strong><i class="cil-history me-2"></i>Recent Logs</strong>
+                    <a href="{{ url_for('goals.history') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if metric_history %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Weight</th>
+                                    <th>Body Fat</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for metric in metric_history[-5:] %}
+                                <tr>
+                                    <td>{{ metric.recorded_at.strftime('%b %d, %Y') }}</td>
+                                    <td>{{ metric.weight or '-' }} {{ profile.weight_unit if profile else 'lbs' }}</td>
+                                    <td>{{ metric.body_fat or '-' }}%</td>
+                                    <td class="text-truncate" style="max-width: 200px;">{{ metric.notes or '-' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center text-body-secondary py-4">
+                        <i class="cil-info-circle" style="font-size: 3rem; opacity: 0.3;"></i>
+                        <p class="mt-3">No metrics logged yet</p>
+                        <a href="{{ url_for('goals.log_metrics') }}" class="btn btn-outline-primary btn-sm">Log First Measurement</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% endif %}
+</div>
+
+{% if metric_history %}
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    const ctx = document.getElementById('progressChart');
+    const metricData = {{ metric_history | tojson }};
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: metricData.map(m => new Date(m.recorded_at).toLocaleDateString()),
+            datasets: [
+                {
+                    label: 'Weight ({{ profile.weight_unit if profile else "lbs" }})',
+                    data: metricData.map(m => m.weight),
+                    borderColor: '#321fdb',
+                    backgroundColor: 'rgba(50, 31, 219, 0.1)',
+                    yAxisID: 'y',
+                },
+                {
+                    label: 'Body Fat (%)',
+                    data: metricData.map(m => m.body_fat),
+                    borderColor: '#e55353',
+                    backgroundColor: 'rgba(229, 83, 83, 0.1)',
+                    yAxisID: 'y1',
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Weight'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Body Fat %'
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                    },
+                },
+            }
+        }
+    });
+</script>
+{% endblock %}
+{% endif %}
+{% endblock %}

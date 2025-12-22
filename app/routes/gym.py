@@ -1,11 +1,37 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, send_from_directory
 from flask_login import login_required, current_user
 from app import db
 from app.models import UserGym, GymEquipment, GymExercise, MasterExercise, MasterEquipment
 from app.forms import UserGymForm, GymEquipmentForm, GymExerciseForm
+from werkzeug.utils import secure_filename
+import os
 import json
+import uuid
 
 bp = Blueprint('gym', __name__, url_prefix='/gym')
+
+# Configure upload folder
+UPLOAD_FOLDER = 'app/static/uploads/gyms'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def save_gym_picture(file):
+    """Save uploaded gym picture and return the filename"""
+    if file and allowed_file(file.filename):
+        # Create upload directory if it doesn't exist
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+        
+        # Generate unique filename
+        ext = file.filename.rsplit('.', 1)[1].lower()
+        filename = f"{uuid.uuid4().hex}.{ext}"
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        
+        # Save file
+        file.save(filepath)
+        return filename
+    return None
 
 
 @bp.route('/')
@@ -23,10 +49,17 @@ def create():
     form = UserGymForm()
     
     if form.validate_on_submit():
+        # Handle picture upload
+        picture_url = None
+        if form.picture.data:
+            filename = save_gym_picture(form.picture.data)
+            if filename:
+                picture_url = f"/static/uploads/gyms/{filename}"
+        
         gym = UserGym(
             name=form.name.data,
             address=form.address.data,
-            picture_url=form.picture_url.data,
+            picture_url=picture_url,
             user_id=current_user.id,
             created_by=current_user.id,
             is_shared=form.is_shared.data
@@ -68,9 +101,20 @@ def edit(gym_id):
     form = UserGymForm()
     
     if form.validate_on_submit():
+        # Handle picture upload
+        if form.picture.data:
+            filename = save_gym_picture(form.picture.data)
+            if filename:
+                # Delete old picture if exists
+                if gym.picture_url and gym.picture_url.startswith('/static/uploads/gyms/'):
+                    old_file = gym.picture_url.replace('/static/uploads/gyms/', '')
+                    old_path = os.path.join(UPLOAD_FOLDER, old_file)
+                    if os.path.exists(old_path):
+                        os.remove(old_path)
+                gym.picture_url = f"/static/uploads/gyms/{filename}"
+        
         gym.name = form.name.data
         gym.address = form.address.data
-        gym.picture_url = form.picture_url.data
         gym.is_shared = form.is_shared.data
         db.session.commit()
         
@@ -80,7 +124,6 @@ def edit(gym_id):
     elif request.method == 'GET':
         form.name.data = gym.name
         form.address.data = gym.address
-        form.picture_url.data = gym.picture_url
         form.is_shared.data = gym.is_shared
     
     return render_template('gym/edit.html', form=form, gym=gym)

@@ -124,12 +124,12 @@
             </li>
             <li class="nav-title">Progress</li>
             <li class="nav-item">
-                <a class="nav-link" href="#">
+                <a class="nav-link" href="{{ url_for('reports.index') }}">
                     <i class="nav-icon cil-chart-line"></i> Reports
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#">
+                <a class="nav-link" href="{{ url_for('goals.index') }}">
                     <i class="nav-icon cil-target"></i> Goals
                 </a>
             </li>
@@ -159,9 +159,16 @@
                     <li class="nav-item dropdown">
                         <a class="nav-link d-flex align-items-center gap-2 py-2 pe-2" href="#" role="button" data-coreui-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <div class="avatar">
+                                {% if current_user.profile and current_user.profile.profile_picture %}
+                                <img src="{{ url_for('static', filename='uploads/profiles/' + current_user.profile.profile_picture) }}" 
+                                     alt="{{ current_user.username }}" 
+                                     class="avatar-img rounded-circle"
+                                     style="width: 32px; height: 32px; object-fit: cover;">
+                                {% else %}
                                 <span class="avatar-initial rounded-circle bg-primary" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600;">
                                     {{ current_user.username[0].upper() }}
                                 </span>
+                                {% endif %}
                             </div>
                             <i class="cil-chevron-bottom" style="font-size: 12px;"></i>
                         </a>
@@ -169,10 +176,10 @@
                             <div class="dropdown-header bg-body-tertiary text-body-secondary fw-semibold rounded-top mb-2">
                                 {{ current_user.username }}
                             </div>
-                            <a class="dropdown-item" href="#">
+                            <a class="dropdown-item" href="{{ url_for('profile.index') }}">
                                 <i class="cil-user me-2"></i> Profile
                             </a>
-                            <a class="dropdown-item" href="#">
+                            <a class="dropdown-item" href="{{ url_for('profile.edit') }}">
                                 <i class="cil-settings me-2"></i> Settings
                             </a>
                             <div class="dropdown-divider"></div>
@@ -210,17 +217,17 @@
                 <i class="cil-speedometer"></i>
                 <span>Home</span>
             </a>
-            <a href="{{ url_for('gym.index') }}" class="bottom-nav-item {% if request.endpoint and request.endpoint.startswith('gym') %}active{% endif %}">
-                <i class="cil-dumbbell"></i>
-                <span>Gym</span>
-            </a>
-            <a href="{{ url_for('exercises.index') }}" class="bottom-nav-item {% if request.endpoint and request.endpoint.startswith('exercises') %}active{% endif %}">
-                <i class="cil-list"></i>
-                <span>Exercises</span>
-            </a>
             <a href="{{ url_for('programs.index') }}" class="bottom-nav-item {% if request.endpoint and request.endpoint.startswith('programs') %}active{% endif %}">
                 <i class="cil-notes"></i>
                 <span>Programs</span>
+            </a>
+            <a href="{{ url_for('calendar.index') }}" class="bottom-nav-item {% if request.endpoint and request.endpoint.startswith('calendar') %}active{% endif %}">
+                <i class="cil-calendar"></i>
+                <span>Calendar</span>
+            </a>
+            <a href="{{ url_for('reports.index') }}" class="bottom-nav-item {% if request.endpoint and request.endpoint.startswith('reports') %}active{% endif %}">
+                <i class="cil-chart-line"></i>
+                <span>Reports</span>
             </a>
             {% if current_user.is_admin %}
             <a href="{{ url_for('admin.users') }}" class="bottom-nav-item {% if request.endpoint and request.endpoint.startswith('admin') %}active{% endif %}">
@@ -228,9 +235,9 @@
                 <span>Admin</span>
             </a>
             {% else %}
-            <a href="#" class="bottom-nav-item">
-                <i class="cil-user"></i>
-                <span>Profile</span>
+            <a href="{{ url_for('gym.index') }}" class="bottom-nav-item {% if request.endpoint and request.endpoint.startswith('gym') %}active{% endif %}">
+                <i class="cil-dumbbell"></i>
+                <span>Gym</span>
             </a>
             {% endif %}
         </nav>

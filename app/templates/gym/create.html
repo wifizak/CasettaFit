@@ -19,7 +19,7 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-body">
-                <form method="POST">
+                <form method="POST" enctype="multipart/form-data">
                     {{ form.hidden_tag() }}
                     
                     <div class="mb-3">
@@ -30,6 +30,24 @@
                                 {% for error in form.name.errors %}{{ error }}{% endfor %}
                             </div>
                         {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.address.label(class="form-label") }}
+                        {{ form.address(class="form-control", placeholder="123 Main St, City, State ZIP") }}
+                        <small class="text-body-secondary">Physical address of the gym</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.picture.label(class="form-label") }}
+                        {% if gym and gym.picture_url %}
+                        <div class="mb-2">
+                            <img src="{{ gym.picture_url }}" alt="Current gym picture" class="img-thumbnail" style="max-height: 150px;">
+                            <p class="text-muted small mt-1">Current picture (upload a new one to replace)</p>
+                        </div>
+                        {% endif %}
+                        {{ form.picture(class="form-control") }}
+                        <small class="text-body-secondary">Upload a photo of your gym (JPG, PNG, GIF)</small>
                     </div>
                     
                     <div class="mb-3">

@@ -1,5 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, SelectField, FloatField, IntegerField, SelectMultipleField
+from flask_wtf.file import FileField, FileAllowed
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, SelectField, FloatField, IntegerField, SelectMultipleField, DateField
 from wtforms.validators import DataRequired, Length, EqualTo, ValidationError, Optional
 from app.models import User
 
@@ -26,6 +27,10 @@ class CreateUserForm(FlaskForm):
         DataRequired(),
         EqualTo('password', message='Passwords must match')
     ])
+    profile_picture = FileField('Profile Picture', validators=[
+        Optional(),
+        FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Images only!')
+    ])
     is_admin = BooleanField('Administrator')
     submit = SubmitField('Create User')
     
@@ -46,6 +51,10 @@ class EditUserForm(FlaskForm):
     ])
     password2 = PasswordField('Confirm New Password', validators=[
         EqualTo('password', message='Passwords must match')
+    ])
+    profile_picture = FileField('Profile Picture', validators=[
+        Optional(),
+        FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Images only!')
     ])
     is_admin = BooleanField('Administrator')
     is_active = BooleanField('Active')
@@ -112,9 +121,8 @@ class UserGymForm(FlaskForm):
         Optional(),
         Length(max=255, message='Address must be 255 characters or less')
     ])
-    picture_url = StringField('Picture URL (optional)', validators=[
-        Optional(),
-        Length(max=255, message='URL must be 255 characters or less')
+    picture = FileField('Upload Picture (optional)', validators=[
+        FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Images only!')
     ])
     is_shared = BooleanField('Share with other users')
     submit = SubmitField('Save Gym')
@@ -127,6 +135,14 @@ class MasterEquipmentForm(FlaskForm):
         Length(max=50, message='Equipment name must be 50 characters or less')
     ])
     description = TextAreaField('Description', validators=[Optional()])
+    manufacturer = StringField('Manufacturer (optional)', validators=[
+        Optional(),
+        Length(max=100, message='Manufacturer must be 100 characters or less')
+    ])
+    model = StringField('Model (optional)', validators=[
+        Optional(),
+        Length(max=100, message='Model must be 100 characters or less')
+    ])
     equipment_type = SelectField('Equipment Type',
                                  choices=[
                                      ('Strength', 'Strength'),
@@ -297,3 +313,63 @@ class ProgramShareForm(FlaskForm):
     """Form for sharing programs with other users"""
     user_id = SelectField('Share with User', coerce=int, validators=[DataRequired()])
     submit = SubmitField('Share Program')
+
+
+class UserGoalForm(FlaskForm):
+    """Form for creating/editing user goals"""
+    target_weight = FloatField('Target Weight', validators=[Optional()],
+                              render_kw={"placeholder": "e.g., 180"})
+    target_body_fat = FloatField('Target Body Fat %', validators=[Optional()],
+                                render_kw={"placeholder": "e.g., 15.0"})
+    target_date = DateField('Target Date', validators=[Optional()], format='%Y-%m-%d')
+    
+    # Measurement goals
+    target_chest = FloatField('Target Chest', validators=[Optional()])
+    target_waist = FloatField('Target Waist', validators=[Optional()])
+    target_hips = FloatField('Target Hips', validators=[Optional()])
+    target_left_arm = FloatField('Target Left Arm', validators=[Optional()])
+    target_right_arm = FloatField('Target Right Arm', validators=[Optional()])
+    target_left_thigh = FloatField('Target Left Thigh', validators=[Optional()])
+    target_right_thigh = FloatField('Target Right Thigh', validators=[Optional()])
+    target_left_calf = FloatField('Target Left Calf', validators=[Optional()])
+    target_right_calf = FloatField('Target Right Calf', validators=[Optional()])
+    
+    notes = TextAreaField('Notes', validators=[Optional()],
+                         render_kw={"placeholder": "Your fitness goals and motivation..."})
+    submit = SubmitField('Save Goals')
+
+
+class BodyMetricForm(FlaskForm):
+    """Form for logging body metrics"""
+    weight = FloatField('Weight', validators=[Optional()],
+                       render_kw={"placeholder": "e.g., 180.5"})
+    body_fat = FloatField('Body Fat %', validators=[Optional()],
+                         render_kw={"placeholder": "e.g., 15.2"})
+    
+    # Measurements
+    chest = FloatField('Chest', validators=[Optional()])
+    waist = FloatField('Waist', validators=[Optional()])
+    hips = FloatField('Hips', validators=[Optional()])
+    left_arm = FloatField('Left Arm', validators=[Optional()])
+    right_arm = FloatField('Right Arm', validators=[Optional()])
+    left_thigh = FloatField('Left Thigh', validators=[Optional()])
+    right_thigh = FloatField('Right Thigh', validators=[Optional()])
+    left_calf = FloatField('Left Calf', validators=[Optional()])
+    right_calf = FloatField('Right Calf', validators=[Optional()])
+    
+    notes = TextAreaField('Notes', validators=[Optional()],
+                         render_kw={"placeholder": "How you're feeling, diet changes, etc."})
+    submit = SubmitField('Log Metrics')
+
+
+class UserProfileForm(FlaskForm):
+    """Form for editing user profile"""
+    profile_picture = FileField('Profile Picture', validators=[
+        Optional(),
+        FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Images only!')
+    ])
+    weight_unit = SelectField('Weight Unit', choices=[
+        ('lbs', 'Pounds (lbs)'),
+        ('kg', 'Kilograms (kg)')
+    ], validators=[DataRequired()])
+    submit = SubmitField('Save Profile')

@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from app import db
 from app.models import MasterEquipment, EquipmentVariation, UserGym, sync_gym_exercise_associations
@@ -74,6 +74,8 @@ def create():
         equipment = MasterEquipment(
             name=form.name.data,
             description=form.description.data,
+            manufacturer=form.manufacturer.data if form.manufacturer.data else None,
+            model=form.model.data if form.model.data else None,
             equipment_type=form.equipment_type.data,
             created_by=current_user.id
         )
@@ -103,7 +105,22 @@ def create():
     
     # Get all gyms for current user
     gyms = UserGym.query.filter_by(user_id=current_user.id).order_by(UserGym.name).all()
-    return render_template('equipment/create.html', form=form, gyms=gyms)
+    
+    # Get distinct manufacturers and models for autocomplete
+    manufacturers = db.session.query(MasterEquipment.manufacturer).filter(
+        MasterEquipment.manufacturer.isnot(None),
+        MasterEquipment.manufacturer != ''
+    ).distinct().order_by(MasterEquipment.manufacturer).all()
+    manufacturers = [m[0] for m in manufacturers]
+    
+    models = db.session.query(MasterEquipment.model).filter(
+        MasterEquipment.model.isnot(None),
+        MasterEquipment.model != ''
+    ).distinct().order_by(MasterEquipment.model).all()
+    models = [m[0] for m in models]
+    
+    return render_template('equipment/create.html', form=form, gyms=gyms, 
+                         manufacturers=manufacturers, models=models)
 
 
 @bp.route('/<int:equipment_id>/edit', methods=['GET', 'POST'])
@@ -122,6 +139,8 @@ def edit(equipment_id):
     if form.validate_on_submit():
         equipment.name = form.name.data
         equipment.description = form.description.data
+        equipment.manufacturer = form.manufacturer.data if form.manufacturer.data else None
+        equipment.model = form.model.data if form.model.data else None
         equipment.equipment_type = form.equipment_type.data
         
         # Track old gym associations
@@ -152,6 +171,8 @@ def edit(equipment_id):
     elif request.method == 'GET':
         form.name.data = equipment.name
         form.description.data = equipment.description
+        form.manufacturer.data = equipment.manufacturer
+        form.model.data = equipment.model
         form.equipment_type.data = equipment.equipment_type
     
     # Get all unique variation types from database for suggestions
@@ -176,8 +197,22 @@ def edit(equipment_id):
     gyms = UserGym.query.filter_by(user_id=current_user.id).order_by(UserGym.name).all()
     current_gym_ids = [g.id for g in equipment.gyms]
     
+    # Get distinct manufacturers and models for autocomplete
+    manufacturers = db.session.query(MasterEquipment.manufacturer).filter(
+        MasterEquipment.manufacturer.isnot(None),
+        MasterEquipment.manufacturer != ''
+    ).distinct().order_by(MasterEquipment.manufacturer).all()
+    manufacturers = [m[0] for m in manufacturers]
+    
+    models = db.session.query(MasterEquipment.model).filter(
+        MasterEquipment.model.isnot(None),
+        MasterEquipment.model != ''
+    ).distinct().order_by(MasterEquipment.model).all()
+    models = [m[0] for m in models]
+    
     return render_template('equipment/edit.html', form=form, equipment=equipment, 
-                         variation_templates=variation_templates, gyms=gyms, current_gym_ids=current_gym_ids)
+                         variation_templates=variation_templates, gyms=gyms, current_gym_ids=current_gym_ids,
+                         manufacturers=manufacturers, models=models)
 
 
 @bp.route('/<int:equipment_id>/delete', methods=['POST'])
@@ -257,3 +292,25 @@ def delete_variation(variation_id):
     
     flash('Variation deleted successfully.', 'success')
     return redirect(url_for('equipment.edit', equipment_id=equipment.id))
+
+
+@bp.route('/api/manufacturers')
+@login_required
+def get_manufacturers():
+    """API endpoint to get list of manufacturers for autocomplete"""
+    manufacturers = db.session.query(MasterEquipment.manufacturer).filter(
+        MasterEquipment.manufacturer.isnot(None),
+        MasterEquipment.manufacturer != ''
+    ).distinct().order_by(MasterEquipment.manufacturer).all()
+    return jsonify([m[0] for m in manufacturers])
+
+
+@bp.route('/api/models')
+@login_required
+def get_models():
+    """API endpoint to get list of models for autocomplete"""
+    models = db.session.query(MasterEquipment.model).filter(
+        MasterEquipment.model.isnot(None),
+        MasterEquipment.model != ''
+    ).distinct().order_by(MasterEquipment.model).all()
+    return jsonify([m[0] for m in models])

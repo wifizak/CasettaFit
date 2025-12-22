@@ -27,7 +27,7 @@ def create_app(config_name='default'):
     login_manager.session_protection = 'strong'
     
     # Register blueprints
-    from app.routes import auth, main, admin, exercises, equipment, gym, programs, calendar, workout, history
+    from app.routes import auth, main, admin, exercises, equipment, gym, programs, calendar, workout, history, reports, goals, profile
     app.register_blueprint(auth.bp)
     app.register_blueprint(main.bp)
     app.register_blueprint(admin.bp)
@@ -38,6 +38,9 @@ def create_app(config_name='default'):
     app.register_blueprint(calendar.bp)
     app.register_blueprint(workout.bp)
     app.register_blueprint(history.bp)
+    app.register_blueprint(reports.bp)
+    app.register_blueprint(goals.bp)
+    app.register_blueprint(profile.bp)
     
     # Register custom Jinja filters
     @app.template_filter('from_json')

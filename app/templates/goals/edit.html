@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Goals - CasettaFit{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center">
+                <a href="{{ url_for('goals.index') }}" class="btn btn-outline-secondary me-3">
+                    <i class="cil-arrow-left"></i>
+                </a>
+                <div>
+                    <h1 class="h2 mb-0">
+                        <i class="cil-pencil me-2"></i>Edit Goals
+                    </h1>
+                    <p class="text-body-secondary mb-0">Set your fitness targets</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12 col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <h5 class="mb-3">Primary Goals</h5>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.target_weight.label }}</label>
+                                {{ form.target_weight(class="form-control" + (" is-invalid" if form.target_weight.errors else "")) }}
+                                {% if form.target_weight.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.target_weight.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                                <small class="text-body-secondary">Your target body weight</small>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.target_body_fat.label }}</label>
+                                {{ form.target_body_fat(class="form-control" + (" is-invalid" if form.target_body_fat.errors else "")) }}
+                                {% if form.target_body_fat.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.target_body_fat.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                                <small class="text-body-secondary">Your target body fat percentage</small>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label">{{ form.target_date.label }}</label>
+                            {{ form.target_date(class="form-control" + (" is-invalid" if form.target_date.errors else "")) }}
+                            {% if form.target_date.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.target_date.errors %}{{ error }}{% endfor %}
+                            </div>
+                            {% endif %}
+                            <small class="text-body-secondary">When do you want to achieve these goals?</small>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <h5 class="mb-3">Measurement Goals (Optional)</h5>
+                        <p class="text-body-secondary small mb-3">Set target measurements for specific body parts</p>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">{{ form.target_chest.label }}</label>
+                                {{ form.target_chest(class="form-control") }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">{{ form.target_waist.label }}</label>
+                                {{ form.target_waist(class="form-control") }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">{{ form.target_hips.label }}</label>
+                                {{ form.target_hips(class="form-control") }}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.target_left_arm.label }}</label>
+                                {{ form.target_left_arm(class="form-control") }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.target_right_arm.label }}</label>
+                                {{ form.target_right_arm(class="form-control") }}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.target_left_thigh.label }}</label>
+                                {{ form.target_left_thigh(class="form-control") }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.target_right_thigh.label }}</label>
+                                {{ form.target_right_thigh(class="form-control") }}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.target_left_calf.label }}</label>
+                                {{ form.target_left_calf(class="form-control") }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.target_right_calf.label }}</label>
+                                {{ form.target_right_calf(class="form-control") }}
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="mb-4">
+                            <label class="form-label">{{ form.notes.label }}</label>
+                            {{ form.notes(class="form-control", rows="4") }}
+                            <small class="text-body-secondary">Your motivation, why these goals matter to you, etc.</small>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('goals.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-12 col-lg-4">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="cil-lightbulb me-2"></i>Tips</h6>
+                    <ul class="small mb-0">
+                        <li class="mb-2">Set realistic, achievable goals</li>
+                        <li class="mb-2">Focus on sustainable changes rather than quick fixes</li>
+                        <li class="mb-2">Log your metrics regularly to track progress</li>
+                        <li class="mb-2">Adjust goals as needed based on your progress</li>
+                        <li>Celebrate milestones along the way!</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

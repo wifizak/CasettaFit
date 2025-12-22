@@ -1,0 +1,346 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - CasettaFit{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        transition: transform 0.2s;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .progress-indicator {
+        display: inline-flex;
+        align-items: center;
+        font-weight: bold;
+    }
+    
+    .progress-indicator.positive {
+        color: #2eb85c;
+    }
+    
+    .progress-indicator.negative {
+        color: #e55353;
+    }
+    
+    .progress-indicator.neutral {
+        color: #768192;
+    }
+    
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: 300;
+        line-height: 1;
+    }
+    
+    .metric-label {
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        color: #768192;
+        letter-spacing: 0.5px;
+    }
+    
+    .exercise-row {
+        border-bottom: 1px solid #d8dbe0;
+        padding: 1rem 0;
+    }
+    
+    .exercise-row:last-child {
+        border-bottom: none;
+    }
+    
+    .badge-trend {
+        font-size: 0.875rem;
+        padding: 0.35rem 0.65rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h2">
+                <i class="cil-chart-line me-2"></i>Reports & Analytics
+            </h1>
+            <p class="text-body-secondary">Track your progress and achievements</p>
+        </div>
+    </div>
+    
+    <!-- Workout Completion Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="metric-label mb-2">Completed Programs</div>
+                    <div class="metric-value mb-2">{{ completed_programs }}</div>
+                    <div class="text-body-secondary small">
+                        <i class="cil-check-circle me-1"></i>Full programs finished
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="metric-label mb-2">Workout Days</div>
+                    <div class="metric-value mb-2">{{ total_days }}</div>
+                    <div class="text-body-secondary small">
+                        <i class="cil-calendar me-1"></i>Days completed
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="metric-label mb-2">Total Workouts</div>
+                    <div class="metric-value mb-2">{{ total_workouts }}</div>
+                    <div class="text-body-secondary small">
+                        <i class="cil-speedometer me-1"></i>Sessions logged
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="metric-label mb-2">Total Sets</div>
+                    <div class="metric-value mb-2">{{ total_sets }}</div>
+                    <div class="text-body-secondary small">
+                        <i class="cil-layers me-1"></i>Sets performed
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Overall Progressive Overload -->
+    <div class="row mb-4">
+        <div class="col-12 col-lg-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <strong><i class="cil-trending-up me-2"></i>Overall Progressive Overload</strong>
+                </div>
+                <div class="card-body">
+                    <p class="text-body-secondary mb-3">Last 30 days vs previous 30 days</p>
+                    
+                    {% if overall_progress.previous_volume > 0 %}
+                    <div class="row align-items-center mb-3">
+                        <div class="col-auto">
+                            <div class="display-6">
+                                {% if overall_progress.percent_change >= 0 %}
+                                <span class="text-success">+{{ "%.1f"|format(overall_progress.percent_change) }}%</span>
+                                {% else %}
+                                <span class="text-danger">{{ "%.1f"|format(overall_progress.percent_change) }}%</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col">
+                            {% if overall_progress.percent_change >= 0 %}
+                            <span class="badge badge-trend bg-success-gradient">
+                                <i class="cil-arrow-top me-1"></i>Increasing
+                            </span>
+                            {% else %}
+                            <span class="badge badge-trend bg-danger-gradient">
+                                <i class="cil-arrow-bottom me-1"></i>Decreasing
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="text-body-secondary small mb-1">Previous Period</div>
+                            <div class="h5">{{ "%.0f"|format(overall_progress.previous_volume) }} lbs</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-body-secondary small mb-1">Recent Period</div>
+                            <div class="h5">{{ "%.0f"|format(overall_progress.recent_volume) }} lbs</div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center text-body-secondary py-4">
+                        <i class="cil-info-circle" style="font-size: 3rem; opacity: 0.3;"></i>
+                        <p class="mt-3">Complete more workouts to see progressive overload trends</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Body Metrics -->
+        <div class="col-12 col-lg-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <strong><i class="cil-user me-2"></i>Body Metrics</strong>
+                </div>
+                <div class="card-body">
+                    {% if body_metrics.has_history %}
+                    <div class="row g-3">
+                        {% if body_metrics.weight_change is defined %}
+                        <div class="col-6">
+                            <div class="text-body-secondary small mb-1">Weight Change</div>
+                            <div class="h4 mb-1">
+                                {% if body_metrics.weight_change >= 0 %}
+                                <span class="text-success">+{{ "%.1f"|format(body_metrics.weight_change) }}</span>
+                                {% else %}
+                                <span class="text-danger">{{ "%.1f"|format(body_metrics.weight_change) }}</span>
+                                {% endif %}
+                                <small class="text-body-secondary">{{ body_metrics.weight_unit }}</small>
+                            </div>
+                            <div class="small text-body-secondary">
+                                {{ body_metrics.first_weight or '-' }} → {{ body_metrics.latest_weight or '-' }} {{ body_metrics.weight_unit }}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if body_metrics.body_fat_change is defined %}
+                        <div class="col-6">
+                            <div class="text-body-secondary small mb-1">Body Fat Change</div>
+                            <div class="h4 mb-1">
+                                {% if body_metrics.body_fat_change >= 0 %}
+                                <span class="text-warning">+{{ "%.1f"|format(body_metrics.body_fat_change) }}</span>
+                                {% else %}
+                                <span class="text-success">{{ "%.1f"|format(body_metrics.body_fat_change) }}</span>
+                                {% endif %}
+                                <small class="text-body-secondary">%</small>
+                            </div>
+                            <div class="small text-body-secondary">
+                                {{ body_metrics.first_body_fat or '-' }}% → {{ body_metrics.latest_body_fat or '-' }}%
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if body_metrics.first_date and body_metrics.latest_date %}
+                    <hr>
+                    <div class="text-body-secondary small text-center">
+                        Tracking since {{ body_metrics.first_date.strftime('%b %d, %Y') }}
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <div class="text-center text-body-secondary py-4">
+                        <i class="cil-info-circle" style="font-size: 3rem; opacity: 0.3;"></i>
+                        <p class="mt-3 mb-3">No body metrics recorded yet</p>
+                        <a href="#" class="btn btn-outline-primary btn-sm">Add Body Metrics</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Exercise Progress -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <strong><i class="cil-gym me-2"></i>Top Exercises - Progressive Overload</strong>
+                </div>
+                <div class="card-body">
+                    {% if exercise_progress %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Exercise</th>
+                                    <th class="text-center">Total Volume</th>
+                                    <th class="text-center">Sets Performed</th>
+                                    <th class="text-center">First → Last</th>
+                                    <th class="text-center">Change</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ex in exercise_progress %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ ex.name }}</strong>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-light text-dark">{{ "%.0f"|format(ex.total_volume) }} lbs</span>
+                                    </td>
+                                    <td class="text-center">
+                                        {{ ex.set_count }}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if ex.first_weight %}
+                                        <small class="text-body-secondary">
+                                            {{ ex.first_weight }}×{{ ex.first_reps }} → {{ ex.last_weight }}×{{ ex.last_reps }}
+                                        </small>
+                                        {% else %}
+                                        <small class="text-body-secondary">-</small>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if ex.percent_change > 0 %}
+                                        <span class="badge bg-success-gradient">
+                                            <i class="cil-arrow-top"></i> +{{ "%.1f"|format(ex.percent_change) }}%
+                                        </span>
+                                        {% elif ex.percent_change < 0 %}
+                                        <span class="badge bg-danger-gradient">
+                                            <i class="cil-arrow-bottom"></i> {{ "%.1f"|format(ex.percent_change) }}%
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">
+                                            <i class="cil-minus"></i> No change
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center text-body-secondary py-5">
+                        <i class="cil-info-circle" style="font-size: 3rem; opacity: 0.3;"></i>
+                        <p class="mt-3">Complete workouts to see exercise progress</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Activity Chart Placeholder -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <strong><i class="cil-calendar-check me-2"></i>Activity Overview</strong>
+                </div>
+                <div class="card-body">
+                    {% if weekly_workouts %}
+                    <div class="text-body-secondary mb-3">Workouts per week (last 12 weeks)</div>
+                    <div class="row g-2">
+                        {% for week in weekly_workouts %}
+                        <div class="col-auto">
+                            <div class="text-center">
+                                <div class="small text-body-secondary mb-1">W{{ week.week.split('-')[1] }}</div>
+                                <div class="badge bg-primary" style="font-size: 1rem; padding: 0.5rem 0.75rem;">
+                                    {{ week.workout_count }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center text-body-secondary py-4">
+                        <i class="cil-info-circle" style="font-size: 3rem; opacity: 0.3;"></i>
+                        <p class="mt-3">No workout activity yet</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+{% endblock %}
