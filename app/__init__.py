@@ -3,12 +3,32 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from app.config import config
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
 import json
 
 # Initialize extensions
 db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
+
+
+# SQLite-specific optimizations
+@event.listens_for(Engine, "connect")
+def set_sqlite_pragma(dbapi_conn, connection_record):
+    """Enable SQLite optimizations on each connection"""
+    cursor = dbapi_conn.cursor()
+    
+    # CRITICAL: Enable foreign key constraints (SQLite doesn't enforce by default!)
+    cursor.execute("PRAGMA foreign_keys=ON")
+    
+    # Performance optimizations
+    cursor.execute("PRAGMA journal_mode=WAL")  # Write-Ahead Logging for better concurrency
+    cursor.execute("PRAGMA synchronous=NORMAL")  # Faster writes with WAL (still safe)
+    cursor.execute("PRAGMA cache_size=-64000")  # 64MB cache for better read performance
+    cursor.execute("PRAGMA temp_store=MEMORY")  # Temporary tables in RAM
+    
+    cursor.close()
 
 
 def create_app(config_name='default'):

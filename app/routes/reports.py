@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, jsonify, request
 from flask_login import login_required, current_user
 from sqlalchemy import func, distinct, desc
+from sqlalchemy.orm import joinedload
 from datetime import datetime, timedelta
 from app import db
 from app.models import (WorkoutSession, WorkoutSet, ScheduledDay, MasterExercise, 
@@ -12,7 +13,11 @@ bp = Blueprint('reports', __name__, url_prefix='/reports')
 @bp.route('/')
 @login_required
 def index():
-    """Reports dashboard with analytics and insights"""
+    """Reports dashboard with analytics and insights
+    
+    Note: This route is already well-optimized using SQL aggregation functions
+    to minimize queries. Most queries use GROUP BY, COUNT, and SUM at the DB level.
+    """
     
     # ========================================
     # Workout Completion Statistics
@@ -31,15 +36,25 @@ def index():
     ).count()
     
     # Completed programs (instances where all scheduled days are completed)
-    # Get all program instances for this user
-    all_instances = ProgramInstance.query.filter_by(user_id=current_user.id).all()
-    completed_programs = 0
-    for instance in all_instances:
-        # Check if all scheduled days for this instance are completed
-        total_days = ScheduledDay.query.filter_by(instance_id=instance.id).count()
-        completed_days = ScheduledDay.query.filter_by(instance_id=instance.id, is_completed=True).count()
-        if total_days > 0 and total_days == completed_days:
-            completed_programs += 1
+    # Optimized: Use subquery to count completion status
+    completed_programs = db.session.query(
+        ProgramInstance.id
+    ).filter(
+        ProgramInstance.user_id == current_user.id,
+        # Subquery: instance has at least one scheduled day
+        ProgramInstance.id.in_(
+            db.session.query(ScheduledDay.instance_id).filter(
+                ScheduledDay.instance_id.isnot(None)
+            )
+        ),
+        # Subquery: all scheduled days for instance are completed
+        ~ProgramInstance.id.in_(
+            db.session.query(ScheduledDay.instance_id).filter(
+                ScheduledDay.instance_id.isnot(None),
+                ScheduledDay.is_completed == False
+            )
+        )
+    ).count()
     
     # Total sets completed
     total_sets = db.session.query(func.count(WorkoutSet.id)).join(

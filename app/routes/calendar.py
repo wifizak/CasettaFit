@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 from datetime import datetime, date, timedelta
 from app import db
 from app.models import Program, ProgramWeek, ProgramDay, ProgramSeries, ProgramExercise, ScheduledDay, ProgramInstance, InstanceExerciseWeight, WorkoutSession, WorkoutSet
+from sqlalchemy.orm import joinedload
 import json
 
 bp = Blueprint('calendar', __name__, url_prefix='/calendar')
@@ -22,9 +23,13 @@ def index():
 @bp.route('/events')
 @login_required
 def get_events():
-    """Get all scheduled workouts as FullCalendar events"""
+    """Get all scheduled workouts as FullCalendar events - Optimized with eager loading"""
     scheduled_days = ScheduledDay.query.filter_by(
         user_id=current_user.id
+    ).options(
+        joinedload(ScheduledDay.program),
+        joinedload(ScheduledDay.program_day),
+        joinedload(ScheduledDay.gym)
     ).order_by(ScheduledDay.calendar_date).all()
     
     events = []

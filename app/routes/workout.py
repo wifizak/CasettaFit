@@ -5,6 +5,7 @@ from app.models import (
     WorkoutSession, WorkoutSet, ScheduledDay, MasterExercise,
     ProgramExercise, InstanceExerciseWeight
 )
+from sqlalchemy.orm import joinedload, selectinload
 from datetime import datetime
 import json
 
@@ -18,6 +19,8 @@ def start_workout(scheduled_day_id):
     scheduled_day = ScheduledDay.query.filter_by(
         id=scheduled_day_id,
         user_id=current_user.id
+    ).options(
+        joinedload(ScheduledDay.gym)
     ).first_or_404()
     
     # Check if there's already an active session for this scheduled day
@@ -62,10 +65,17 @@ def start_standalone():
 @bp.route('/execute/<int:session_id>')
 @login_required
 def execute_workout(session_id):
-    """Main workout execution page"""
+    """Main workout execution page - Optimized with eager loading"""
     session = WorkoutSession.query.filter_by(
         id=session_id,
         user_id=current_user.id
+    ).options(
+        joinedload(WorkoutSession.gym),
+        joinedload(WorkoutSession.scheduled_day).joinedload(ScheduledDay.program),
+        joinedload(WorkoutSession.scheduled_day).joinedload(ScheduledDay.program_day)
+            .selectinload('series')
+            .selectinload('exercises')
+            .joinedload(ProgramExercise.exercise)
     ).first_or_404()
     
     # Get workout structure if this is a scheduled workout
@@ -81,10 +91,19 @@ def execute_workout(session_id):
 @bp.route('/api/session/<int:session_id>/data')
 @login_required
 def get_session_data(session_id):
-    """Get full workout data including structure and logged sets"""
+    """Get full workout data including structure and logged sets - Optimized"""
     session = WorkoutSession.query.filter_by(
         id=session_id,
         user_id=current_user.id
+    ).options(
+        joinedload(WorkoutSession.gym),
+        joinedload(WorkoutSession.scheduled_day).joinedload(ScheduledDay.program),
+        joinedload(WorkoutSession.scheduled_day).joinedload(ScheduledDay.program_day)
+            .selectinload('series')
+            .selectinload('exercises')
+            .joinedload(ProgramExercise.exercise),
+        joinedload(WorkoutSession.scheduled_day).joinedload(ScheduledDay.instance)
+            .selectinload('custom_weights')
     ).first_or_404()
     
     data = {

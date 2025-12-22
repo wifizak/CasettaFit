@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 from app import db
 from app.models import ProgramInstance, WorkoutSession, WorkoutSet, MasterExercise
 from sqlalchemy import func, desc
+from sqlalchemy.orm import joinedload, selectinload
 
 bp = Blueprint('history', __name__, url_prefix='/history')
 
@@ -17,9 +18,13 @@ def index():
 @bp.route('/api/programs')
 @login_required
 def get_program_history():
-    """Get list of all program instances with completion stats"""
+    """Get list of all program instances with completion stats - Optimized with eager loading"""
     instances = ProgramInstance.query.filter_by(
         user_id=current_user.id
+    ).options(
+        joinedload(ProgramInstance.program),
+        joinedload(ProgramInstance.gym),
+        selectinload(ProgramInstance.scheduled_days)
     ).order_by(desc(ProgramInstance.scheduled_date)).all()
     
     result = []
@@ -51,7 +56,7 @@ def get_program_history():
 @bp.route('/api/exercises')
 @login_required
 def get_exercise_history():
-    """Get list of all exercises performed with stats"""
+    """Get list of all exercises performed with stats - Already optimized with aggregation"""
     # Get all exercises the user has logged
     exercise_stats = db.session.query(
         WorkoutSet.exercise_id,

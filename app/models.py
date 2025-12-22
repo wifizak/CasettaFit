@@ -22,6 +22,12 @@ class User(UserMixin, db.Model):
     
     # Relationships
     profile = db.relationship('UserProfile', backref='user', uselist=False, cascade='all, delete-orphan')
+    body_metrics = db.relationship('BodyMetricHistory', backref='user', cascade='all, delete-orphan')
+    goal = db.relationship('UserGoal', backref='user', uselist=False, cascade='all, delete-orphan')
+    gyms = db.relationship('UserGym', backref='user', foreign_keys='UserGym.user_id', cascade='all, delete-orphan')
+    program_instances = db.relationship('ProgramInstance', backref='user', cascade='all, delete-orphan')
+    workout_sessions = db.relationship('WorkoutSession', backref='user', cascade='all, delete-orphan')
+    scheduled_days = db.relationship('ScheduledDay', backref='user', cascade='all, delete-orphan')
     
     def set_password(self, password):
         """Set password hash"""
@@ -88,7 +94,12 @@ class BodyMetricHistory(db.Model):
     right_calf = db.Column(db.Float)
     notes = db.Column(db.Text)
     
-    user = db.relationship('User', backref='body_metrics')
+    # Indexes for query optimization
+    __table_args__ = (
+        db.Index('idx_user_recorded', 'user_id', 'recorded_at'),
+    )
+    
+    # Relationship handled by User.body_metrics with cascade
     
     def __repr__(self):
         return f'<BodyMetricHistory user_id={self.user_id} date={self.recorded_at}>'
@@ -122,7 +133,7 @@ class UserGoal(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    user = db.relationship('User', backref='goal', uselist=False)
+    # Relationship handled by User.goal with cascade
     
     def __repr__(self):
         return f'<UserGoal user_id={self.user_id}>'
@@ -157,7 +168,7 @@ class MasterExercise(db.Model):
     equipment = db.relationship('MasterEquipment', secondary='exercise_equipment_mapping', backref='exercises')
     
     # Relationships
-    creator = db.relationship('User', backref='created_exercises', foreign_keys=[created_by])
+    creator = db.relationship('User', backref=db.backref('created_exercises', cascade='all, delete-orphan'), foreign_keys=[created_by])
     
     def __repr__(self):
         return f'<MasterExercise {self.name}>'
@@ -223,8 +234,7 @@ class UserGym(db.Model):
     is_shared = db.Column(db.Boolean, default=False, nullable=False)  # Can other users access this gym?
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     
-    # Relationships
-    user = db.relationship('User', backref='gyms', foreign_keys=[user_id])
+    # Relationships handled by User.gyms with cascade
     creator = db.relationship('User', backref='created_gyms', foreign_keys=[created_by])
     equipment = db.relationship('GymEquipment', backref='gym', cascade='all, delete-orphan')
     exercises = db.relationship('GymExercise', backref='gym', cascade='all, delete-orphan')
@@ -420,6 +430,11 @@ class ProgramWeek(db.Model):
     # Relationships
     days = db.relationship('ProgramDay', backref='week', cascade='all, delete-orphan', order_by='ProgramDay.day_number')
     
+    # Indexes for query optimization
+    __table_args__ = (
+        db.Index('idx_program', 'program_id'),
+    )
+    
     def __repr__(self):
         return f'<ProgramWeek program_id={self.program_id} week={self.week_number}>'
 
@@ -437,6 +452,11 @@ class ProgramDay(db.Model):
     
     # Relationships
     series = db.relationship('ProgramSeries', backref='day', cascade='all, delete-orphan', order_by='ProgramSeries.order_index')
+    
+    # Indexes for query optimization
+    __table_args__ = (
+        db.Index('idx_week', 'week_id'),
+    )
     
     def __repr__(self):
         return f'<ProgramDay week_id={self.week_id} day={self.day_number}>'
@@ -483,6 +503,11 @@ class ProgramExercise(db.Model):
     
     # Relationships
     exercise = db.relationship('MasterExercise', backref='program_assignments')
+    
+    # Indexes for query optimization
+    __table_args__ = (
+        db.Index('idx_series', 'series_id'),
+    )
     
     def __repr__(self):
         return f'<ProgramExercise series_id={self.series_id} exercise_id={self.exercise_id}>'
@@ -577,12 +602,11 @@ class ProgramInstance(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     program_id = db.Column(db.Integer, db.ForeignKey('programs.id'), nullable=False)
-    gym_id = db.Column(db.Integer, db.ForeignKey('user_gyms.id'), nullable=True)
+    gym_id = db.Column(db.Integer, db.ForeignKey('user_gyms.id', ondelete='SET NULL'), nullable=True)
     scheduled_date = db.Column(db.Date, nullable=False)  # Date the instance was created
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     
-    # Relationships
-    user = db.relationship('User', backref='program_instances')
+    # Relationships handled by User.program_instances with cascade
     program = db.relationship('Program', backref='instances')
     gym = db.relationship('UserGym', backref='program_instances')
     scheduled_days = db.relationship('ScheduledDay', backref='instance', cascade='all, delete-orphan')
@@ -618,15 +642,14 @@ class WorkoutSession(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     scheduled_day_id = db.Column(db.Integer, db.ForeignKey('scheduled_days.id'), nullable=True)  # Nullable for standalone workouts
-    gym_id = db.Column(db.Integer, db.ForeignKey('user_gyms.id'), nullable=True)
+    gym_id = db.Column(db.Integer, db.ForeignKey('user_gyms.id', ondelete='SET NULL'), nullable=True)
     started_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     completed_at = db.Column(db.DateTime, nullable=True)
     is_completed = db.Column(db.Boolean, default=False, nullable=False)
     notes = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     
-    # Relationships
-    user = db.relationship('User', backref='workout_sessions')
+    # Relationships handled by User.workout_sessions with cascade
     scheduled_day = db.relationship('ScheduledDay', backref='workout_sessions')
     gym = db.relationship('UserGym', backref='workout_sessions')
     sets = db.relationship('WorkoutSet', back_populates='workout_session', cascade='all, delete-orphan', lazy='dynamic')
@@ -680,13 +703,12 @@ class ScheduledDay(db.Model):
     program_id = db.Column(db.Integer, db.ForeignKey('programs.id'), nullable=False)
     program_day_id = db.Column(db.Integer, db.ForeignKey('program_days.id'), nullable=False)
     instance_id = db.Column(db.Integer, db.ForeignKey('program_instances.id'), nullable=True)
-    gym_id = db.Column(db.Integer, db.ForeignKey('user_gyms.id'), nullable=True)
+    gym_id = db.Column(db.Integer, db.ForeignKey('user_gyms.id', ondelete='SET NULL'), nullable=True)
     calendar_date = db.Column(db.Date, nullable=False)
     is_completed = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     
-    # Relationships
-    user = db.relationship('User', backref='scheduled_days')
+    # Relationships handled by User.scheduled_days with cascade
     program = db.relationship('Program', backref='scheduled_days')
     program_day = db.relationship('ProgramDay', backref='scheduled_instances')
     gym = db.relationship('UserGym', backref='scheduled_workouts')
