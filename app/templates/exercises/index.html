@@ -2,6 +2,30 @@
 
 {% block title %}Exercise Library - CasettaFit{% endblock %}
 
+{% block extra_css %}
+<style>
+    .sortable {
+        cursor: pointer;
+        user-select: none;
+    }
+    .sortable:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+    .sortable a {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        margin: -0.5rem -0.75rem;
+    }
+    .sortable a:hover {
+        background-color: transparent;
+    }
+    .table-active {
+        background-color: rgba(13, 110, 253, 0.1) !important;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row">
     <div class="col-12">
@@ -18,11 +42,12 @@
     <div class="col-12">
         <div class="card">
             <div class="card-body">
-                <form method="GET" action="{{ url_for('exercises.index') }}" class="row g-3">
-                    <div class="col-md-6">
-                        <input type="text" name="search" class="form-control" placeholder="Search exercises..." value="{{ search }}">
+                <form method="GET" action="{{ url_for('exercises.index') }}" class="row g-3" id="filterForm">
+                    <div class="col-md-5">
+                        <input type="text" name="search" class="form-control" placeholder="Search by name, muscle, category, or difficulty..." value="{{ search }}" id="searchInput">
+                        <small class="text-body-secondary">Search across exercise name, muscles, category, and difficulty</small>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <select name="category" class="form-select">
                             <option value="">All Categories</option>
                             {% for category in categories %}
@@ -33,8 +58,18 @@
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> Search
+                        </button>
                     </div>
+                    <div class="col-md-2">
+                        <a href="{{ url_for('exercises.index') }}" class="btn btn-outline-secondary w-100">
+                            <i class="bi bi-x-circle"></i> Clear
+                        </a>
+                    </div>
+                    <!-- Hidden fields to preserve sorting -->
+                    <input type="hidden" name="sort_by" value="{{ sort_by }}">
+                    <input type="hidden" name="sort_dir" value="{{ sort_dir }}">
                 </form>
             </div>
         </div>
@@ -49,11 +84,50 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>Exercise Name</th>
-                                <th>Category</th>
-                                <th>Primary Muscle</th>
+                                <th class="sortable {% if sort_by == 'name' %}table-active{% endif %}">
+                                    <a href="{{ url_for('exercises.index', search=search, category=selected_category, sort_by='name', sort_dir='desc' if sort_by == 'name' and sort_dir == 'asc' else 'asc', page=1) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+                                        <span>Exercise Name</span>
+                                        {% if sort_by == 'name' %}
+                                            <i class="cil-chevron-{{ 'bottom' if sort_dir == 'desc' else 'top' }} ms-1"></i>
+                                        {% else %}
+                                            <i class="cil-chevron-bottom ms-1 text-muted" style="opacity: 0.3;"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th class="sortable {% if sort_by == 'category' %}table-active{% endif %}">
+                                    <a href="{{ url_for('exercises.index', search=search, category=selected_category, sort_by='category', sort_dir='desc' if sort_by == 'category' and sort_dir == 'asc' else 'asc', page=1) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+                                        <span>Category</span>
+                                        {% if sort_by == 'category' %}
+                                            <i class="cil-chevron-{{ 'bottom' if sort_dir == 'desc' else 'top' }} ms-1"></i>
+                                        {% else %}
+                                            <i class="cil-chevron-bottom ms-1 text-muted" style="opacity: 0.3;"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th class="sortable {% if sort_by == 'primary_muscle' %}table-active{% endif %}">
+                                    <a href="{{ url_for('exercises.index', search=search, category=selected_category, sort_by='primary_muscle', sort_dir='desc' if sort_by == 'primary_muscle' and sort_dir == 'asc' else 'asc', page=1) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+                                        <span>Primary Muscle</span>
+                                        {% if sort_by == 'primary_muscle' %}
+                                            <i class="cil-chevron-{{ 'bottom' if sort_dir == 'desc' else 'top' }} ms-1"></i>
+                                        {% else %}
+                                            <i class="cil-chevron-bottom ms-1 text-muted" style="opacity: 0.3;"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
                                 <th>Equipment</th>
-                                <th>Difficulty</th>
+                                <th class="sortable {% if sort_by == 'difficulty_level' %}table-active{% endif %}">
+                                    <a href="{{ url_for('exercises.index', search=search, category=selected_category, sort_by='difficulty_level', sort_dir='desc' if sort_by == 'difficulty_level' and sort_dir == 'asc' else 'asc', page=1) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+                                        <span>Difficulty</span>
+                                        {% if sort_by == 'difficulty_level' %}
+                                            <i class="cil-chevron-{{ 'bottom' if sort_dir == 'desc' else 'top' }} ms-1"></i>
+                                        {% else %}
+                                            <i class="cil-chevron-bottom ms-1 text-muted" style="opacity: 0.3;"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th>Video</th>
+                                <th>Last Performed</th>
+                                <th>Max Weight</th>
                                 <th>Created By</th>
                                 <th>Actions</th>
                             </tr>
@@ -91,6 +165,35 @@
                                         <span class="text-body-secondary">-</span>
                                     {% endif %}
                                 </td>
+                                <td>
+                                    {% if exercise.video_url %}
+                                        <a href="{{ exercise.video_url }}" target="_blank" class="btn btn-sm btn-outline-danger" title="Watch video">
+                                            <i class="bi bi-youtube"></i>
+                                        </a>
+                                    {% else %}
+                                        <span class="text-body-secondary">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% set stats = exercise_stats.get(exercise.id) %}
+                                    {% if stats and stats.last_performed %}
+                                        <a href="#" class="text-decoration-none" onclick="showExerciseHistory({{ exercise.id }}); return false;" title="Click to see history">
+                                            {{ stats.last_performed.strftime('%b %d, %Y') }}
+                                        </a>
+                                    {% else %}
+                                        <span class="text-body-secondary">Never</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% set stats = exercise_stats.get(exercise.id) %}
+                                    {% if stats and stats.max_weight %}
+                                        <a href="#" class="text-decoration-none" onclick="showExerciseHistory({{ exercise.id }}); return false;" title="Click to see history">
+                                            <strong>{{ stats.max_weight }}</strong>
+                                        </a>
+                                    {% else %}
+                                        <span class="text-body-secondary">-</span>
+                                    {% endif %}
+                                </td>
                                 <td>{{ exercise.creator.username }}</td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
@@ -109,7 +212,7 @@
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="7" class="text-center text-body-secondary">
+                                <td colspan="10" class="text-center text-body-secondary">
                                     No exercises found. <a href="{{ url_for('exercises.create') }}">Create your first exercise</a>
                                 </td>
                             </tr>
@@ -122,19 +225,19 @@
                 <nav>
                     <ul class="pagination justify-content-center">
                         <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
-                            <a class="page-link" href="{{ url_for('exercises.index', page=pagination.prev_num, search=search, category=selected_category) if pagination.has_prev else '#' }}">Previous</a>
+                            <a class="page-link" href="{{ url_for('exercises.index', page=pagination.prev_num, search=search, category=selected_category, sort_by=sort_by, sort_dir=sort_dir) if pagination.has_prev else '#' }}">Previous</a>
                         </li>
                         {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
                             {% if page_num %}
                                 <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
-                                    <a class="page-link" href="{{ url_for('exercises.index', page=page_num, search=search, category=selected_category) }}">{{ page_num }}</a>
+                                    <a class="page-link" href="{{ url_for('exercises.index', page=page_num, search=search, category=selected_category, sort_by=sort_by, sort_dir=sort_dir) }}">{{ page_num }}</a>
                                 </li>
                             {% else %}
                                 <li class="page-item disabled"><span class="page-link">...</span></li>
                             {% endif %}
                         {% endfor %}
                         <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
-                            <a class="page-link" href="{{ url_for('exercises.index', page=pagination.next_num, search=search, category=selected_category) if pagination.has_next else '#' }}">Next</a>
+                            <a class="page-link" href="{{ url_for('exercises.index', page=pagination.next_num, search=search, category=selected_category, sort_by=sort_by, sort_dir=sort_dir) if pagination.has_next else '#' }}">Next</a>
                         </li>
                     </ul>
                 </nav>
@@ -143,4 +246,107 @@
         </div>
     </div>
 </div>
+
+<!-- Exercise History Modal -->
+<div class="modal fade" id="exerciseHistoryModal" tabindex="-1" aria-labelledby="exerciseHistoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exerciseHistoryModalLabel">Exercise History</h5>
+                <button type="button" class="btn-close" data-coreui-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="exerciseHistoryContent">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let historyModal;
+
+document.addEventListener('DOMContentLoaded', function() {
+    historyModal = new coreui.Modal(document.getElementById('exerciseHistoryModal'));
+});
+
+function showExerciseHistory(exerciseId) {
+    // Show modal with loading spinner
+    document.getElementById('exerciseHistoryContent').innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    `;
+    historyModal.show();
+    
+    // Fetch history data
+    fetch(`/exercises/api/${exerciseId}/history`)
+        .then(response => response.json())
+        .then(data => {
+            let html = `<h6 class="mb-3">${data.exercise_name}</h6>`;
+            
+            if (data.history.length === 0) {
+                html += '<p class="text-muted">No workout history found for this exercise.</p>';
+            } else {
+                // Find max number of sets across all workouts
+                let maxSets = 0;
+                data.history.forEach(workout => {
+                    maxSets = Math.max(maxSets, workout.sets.length);
+                });
+                
+                // Build table
+                html += '<div class="table-responsive"><table class="table table-sm table-bordered">';
+                html += '<thead><tr><th>Date</th>';
+                
+                // Column headers for sets
+                for (let i = 1; i <= maxSets; i++) {
+                    html += `<th class="text-center">Set ${i}</th>`;
+                }
+                
+                html += '<th class="text-center">Overall</th></tr></thead><tbody>';
+                
+                // Each workout is a row
+                data.history.forEach(workout => {
+                    // Get overall RPE from any set that has it (they should all have the same overall_rpe for that day)
+                    const overallRpe = workout.sets.find(s => s.overall_rpe)?.overall_rpe || '-';
+                    
+                    html += `<tr>
+                        <td class="text-nowrap"><strong>${new Date(workout.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</strong></td>`;
+                    
+                    // Add cells for each set
+                    for (let i = 0; i < maxSets; i++) {
+                        if (i < workout.sets.length) {
+                            const set = workout.sets[i];
+                            const rpe = set.rpe;
+                            html += `<td class="text-center">
+                                ${set.reps} × <strong>${set.weight}</strong>${rpe ? ` <span class="text-muted">(${rpe})</span>` : ''}
+                            </td>`;
+                        } else {
+                            html += '<td class="text-center text-muted">-</td>';
+                        }
+                    }
+                    
+                    // Add overall RPE at the end
+                    html += `<td class="text-center"><span class="badge bg-secondary">${overallRpe}</span></td>`;
+                    
+                    html += '</tr>';
+                });
+                
+                html += '</tbody></table></div>';
+            }
+            
+            document.getElementById('exerciseHistoryContent').innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error loading history:', error);
+            document.getElementById('exerciseHistoryContent').innerHTML = 
+                '<div class="alert alert-danger">Error loading exercise history</div>';
+        });
+}
+</script>
 {% endblock %}

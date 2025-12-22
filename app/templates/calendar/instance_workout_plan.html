@@ -2,6 +2,10 @@
 
 {% block title %}Workout Plan - {{ instance.program.name }} - CasettaFit{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
     <div class="row mb-3">
@@ -76,7 +80,25 @@ function displayWorkoutPlan(data) {
         html += `<div class="card-body">`;
         
         week.days.forEach(day => {
-            html += `<h5 class="border-bottom pb-2 mb-3">${day.name}</h5>`;
+            html += `<div class="d-flex justify-content-between align-items-center mb-3">`;
+            html += `<h5 class="border-bottom pb-2 mb-0 flex-grow-1">${day.name}</h5>`;
+            
+            // Show completion status
+            if (day.is_completed) {
+                html += `<span class="badge bg-success ms-3">
+                         <i class="bi bi-check-circle-fill"></i> Completed
+                         </span>`;
+            } else if (day.scheduled_date) {
+                html += `<span class="badge bg-secondary ms-3">
+                         <i class="bi bi-calendar-event"></i> Scheduled ${day.scheduled_date}
+                         </span>`;
+            } else {
+                html += `<span class="badge bg-light text-dark ms-3">
+                         <i class="bi bi-circle"></i> Not Scheduled
+                         </span>`;
+            }
+            
+            html += `</div>`;
             
             if (day.series.length === 0) {
                 html += `<p class="text-muted">No exercises scheduled</p>`;
@@ -106,16 +128,40 @@ function displayWorkoutPlan(data) {
                     html += `<td>${exercise.reps}</td>`;
                     html += `<td>`;
                     
-                    // Weight inputs
-                    for (let i = 0; i < exercise.sets; i++) {
-                        const weight = exercise.weights[i] || '';
-                        html += `<input type="number" class="form-control form-control-sm d-inline-block mb-1" 
-                                 style="width: 80px;" 
-                                 placeholder="Set ${i + 1}"
-                                 value="${weight}"
-                                 data-exercise-id="${exercise.id}"
-                                 data-set-number="${i}"
-                                 onchange="markWeightChanged(${exercise.id})"> `;
+                    // Show logged weights if day is completed, otherwise show editable planned weights
+                    if (day.is_completed && exercise.logged_weights) {
+                        // Display both planned and actual logged weights for comparison
+                        for (let i = 0; i < exercise.sets; i++) {
+                            const loggedWeight = exercise.logged_weights[i];
+                            const loggedReps = exercise.logged_reps[i];
+                            const plannedWeight = exercise.weights[i] || '';
+                            
+                            html += `<div class="d-inline-block mb-1 me-2" style="min-width: 100px;">`;
+                            
+                            if (loggedWeight !== null) {
+                                // Show planned weight in small text, actual in badge
+                                html += `<small class="text-muted d-block">Plan: ${plannedWeight || '-'}</small>`;
+                                html += `<span class="badge bg-success" title="Set ${i + 1} completed">${loggedWeight} × ${loggedReps}</span>`;
+                            } else {
+                                // Set wasn't logged
+                                html += `<small class="text-muted d-block">Plan: ${plannedWeight || '-'}</small>`;
+                                html += `<span class="badge bg-secondary" title="Set ${i + 1} not logged">Not logged</span>`;
+                            }
+                            
+                            html += `</div>`;
+                        }
+                    } else {
+                        // Editable weight inputs for planning
+                        for (let i = 0; i < exercise.sets; i++) {
+                            const weight = exercise.weights[i] || '';
+                            html += `<input type="number" class="form-control form-control-sm d-inline-block mb-1" 
+                                     style="width: 80px;" 
+                                     placeholder="Set ${i + 1}"
+                                     value="${weight}"
+                                     data-exercise-id="${exercise.id}"
+                                     data-set-number="${i}"
+                                     onchange="markWeightChanged(${exercise.id})"> `;
+                        }
                     }
                     
                     html += `</td>`;

@@ -1,5 +1,30 @@
 {% extends "base.html" %}
 {% block title %}Equipment Library - CasettaFit{% endblock %}
+
+{% block extra_css %}
+<style>
+    .sortable {
+        cursor: pointer;
+        user-select: none;
+    }
+    .sortable:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+    .sortable a {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        margin: -0.5rem -0.75rem;
+    }
+    .sortable a:hover {
+        background-color: transparent;
+    }
+    .table-active {
+        background-color: rgba(13, 110, 253, 0.1) !important;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row">
     <div class="col-12">
@@ -12,21 +37,41 @@
     </div>
 </div>
 
-<div class="row mb-3">
-    <div class="col-md-6">
-        <form method="GET" action="{{ url_for('equipment.index') }}" class="input-group">
-            <input type="text" name="search" class="form-control" placeholder="Search equipment..." value="{{ search }}">
-            <button class="btn btn-outline-secondary" type="submit"><i class="cil-search"></i></button>
-        </form>
-    </div>
-    <div class="col-md-3">
-        <select name="type" class="form-select" onchange="window.location.href='{{ url_for('equipment.index') }}?type=' + this.value">
-            <option value="">All Types</option>
-            <option value="Strength" {% if selected_type == 'Strength' %}selected{% endif %}>Strength</option>
-            <option value="Cardio" {% if selected_type == 'Cardio' %}selected{% endif %}>Cardio</option>
-            <option value="Body" {% if selected_type == 'Body' %}selected{% endif %}>Body Weight</option>
-            <option value="Resistance" {% if selected_type == 'Resistance' %}selected{% endif %}>Resistance</option>
-        </select>
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('equipment.index') }}" class="row g-3" id="filterForm">
+                    <div class="col-md-5">
+                        <input type="text" name="search" class="form-control" placeholder="Search by name, description, or type..." value="{{ search }}" id="searchInput">
+                        <small class="text-body-secondary">Search across equipment name, description, and type</small>
+                    </div>
+                    <div class="col-md-3">
+                        <select name="type" class="form-select">
+                            <option value="">All Types</option>
+                            {% for type in equipment_types %}
+                            <option value="{{ type }}" {% if selected_type == type %}selected{% endif %}>
+                                {{ type }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="cil-search"></i> Search
+                        </button>
+                    </div>
+                    <div class="col-md-2">
+                        <a href="{{ url_for('equipment.index') }}" class="btn btn-outline-secondary w-100">
+                            <i class="cil-x-circle"></i> Clear
+                        </a>
+                    </div>
+                    <!-- Hidden fields to preserve sorting -->
+                    <input type="hidden" name="sort_by" value="{{ sort_by }}">
+                    <input type="hidden" name="sort_dir" value="{{ sort_dir }}">
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -39,8 +84,26 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>Name</th>
-                                <th>Type</th>
+                                <th class="sortable {% if sort_by == 'name' %}table-active{% endif %}">
+                                    <a href="{{ url_for('equipment.index', search=search, type=selected_type, sort_by='name', sort_dir='desc' if sort_by == 'name' and sort_dir == 'asc' else 'asc', page=1) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+                                        <span>Name</span>
+                                        {% if sort_by == 'name' %}
+                                            <i class="cil-chevron-{{ 'bottom' if sort_dir == 'desc' else 'top' }} ms-1"></i>
+                                        {% else %}
+                                            <i class="cil-chevron-bottom ms-1 text-muted" style="opacity: 0.3;"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                <th class="sortable {% if sort_by == 'equipment_type' %}table-active{% endif %}">
+                                    <a href="{{ url_for('equipment.index', search=search, type=selected_type, sort_by='equipment_type', sort_dir='desc' if sort_by == 'equipment_type' and sort_dir == 'asc' else 'asc', page=1) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+                                        <span>Type</span>
+                                        {% if sort_by == 'equipment_type' %}
+                                            <i class="cil-chevron-{{ 'bottom' if sort_dir == 'desc' else 'top' }} ms-1"></i>
+                                        {% else %}
+                                            <i class="cil-chevron-bottom ms-1 text-muted" style="opacity: 0.3;"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
                                 <th>Gyms</th>
                                 <th>Variations</th>
                                 <th>Created By</th>
@@ -96,19 +159,21 @@
         {% if pagination.pages > 1 %}
         <nav class="mt-3">
             <ul class="pagination justify-content-center">
-                {% if pagination.has_prev %}
-                <li class="page-item"><a class="page-link" href="{{ url_for('equipment.index', page=pagination.prev_num, search=search, type=selected_type) }}">Previous</a></li>
-                {% endif %}
-                {% for p in pagination.iter_pages() %}
-                    {% if p %}
-                    <li class="page-item {% if p == pagination.page %}active{% endif %}">
-                        <a class="page-link" href="{{ url_for('equipment.index', page=p, search=search, type=selected_type) }}">{{ p }}</a>
-                    </li>
+                <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('equipment.index', page=pagination.prev_num, search=search, type=selected_type, sort_by=sort_by, sort_dir=sort_dir) if pagination.has_prev else '#' }}">Previous</a>
+                </li>
+                {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                    {% if page_num %}
+                        <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('equipment.index', page=page_num, search=search, type=selected_type, sort_by=sort_by, sort_dir=sort_dir) }}">{{ page_num }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
                     {% endif %}
                 {% endfor %}
-                {% if pagination.has_next %}
-                <li class="page-item"><a class="page-link" href="{{ url_for('equipment.index', page=pagination.next_num, search=search, type=selected_type) }}">Next</a></li>
-                {% endif %}
+                <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('equipment.index', page=pagination.next_num, search=search, type=selected_type, sort_by=sort_by, sort_dir=sort_dir) if pagination.has_next else '#' }}">Next</a>
+                </li>
             </ul>
         </nav>
         {% endif %}

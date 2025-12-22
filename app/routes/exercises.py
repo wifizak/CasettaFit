@@ -1,8 +1,9 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from app import db
-from app.models import MasterExercise, MasterEquipment, ExerciseEquipmentMapping, UserExercisePreference, ExerciseEquipmentVariation, EquipmentVariation, UserGym, GymExercise, sync_exercise_gym_associations
+from app.models import MasterExercise, MasterEquipment, ExerciseEquipmentMapping, UserExercisePreference, ExerciseEquipmentVariation, EquipmentVariation, UserGym, GymExercise, GymEquipment, sync_exercise_gym_associations, WorkoutSet
 from app.forms import MasterExerciseForm, UserExercisePreferenceForm
+from sqlalchemy import func, desc
 import json
 
 bp = Blueprint('exercises', __name__, url_prefix='/exercises')
@@ -15,20 +16,64 @@ def index():
     page = request.args.get('page', 1, type=int)
     search = request.args.get('search', '', type=str)
     category = request.args.get('category', '', type=str)
+    sort_by = request.args.get('sort_by', 'name', type=str)
+    sort_dir = request.args.get('sort_dir', 'asc', type=str)
     per_page = 20
     
     query = MasterExercise.query
     
-    # Search filter
+    # Search filter - search across name, primary_muscle, and category
     if search:
-        query = query.filter(MasterExercise.name.ilike(f'%{search}%'))
+        search_filter = f'%{search}%'
+        query = query.filter(
+            db.or_(
+                MasterExercise.name.ilike(search_filter),
+                MasterExercise.primary_muscle.ilike(search_filter),
+                MasterExercise.category.ilike(search_filter),
+                MasterExercise.difficulty_level.ilike(search_filter)
+            )
+        )
     
     # Category filter
     if category:
         query = query.filter_by(category=category)
     
-    query = query.order_by(MasterExercise.name)
+    # Sorting
+    valid_sort_fields = {
+        'name': MasterExercise.name,
+        'category': MasterExercise.category,
+        'primary_muscle': MasterExercise.primary_muscle,
+        'difficulty_level': MasterExercise.difficulty_level,
+        'created_at': MasterExercise.created_at
+    }
+    
+    sort_field = valid_sort_fields.get(sort_by, MasterExercise.name)
+    if sort_dir == 'desc':
+        sort_field = desc(sort_field)
+    
+    query = query.order_by(sort_field)
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    
+    # Get exercise history stats for current user
+    exercise_stats = {}
+    if pagination.items:
+        exercise_ids = [ex.id for ex in pagination.items]
+        
+        # Get max weight and last performed date for each exercise
+        stats_query = db.session.query(
+            WorkoutSet.exercise_id,
+            func.max(WorkoutSet.weight).label('max_weight'),
+            func.max(WorkoutSet.created_at).label('last_performed')
+        ).join(WorkoutSet.workout_session).filter(
+            WorkoutSet.exercise_id.in_(exercise_ids),
+            WorkoutSet.workout_session.has(user_id=current_user.id)
+        ).group_by(WorkoutSet.exercise_id).all()
+        
+        for stat in stats_query:
+            exercise_stats[stat.exercise_id] = {
+                'max_weight': stat.max_weight,
+                'last_performed': stat.last_performed
+            }
     
     # Fixed categories list
     categories = ['Strength', 'Cardio', 'Stretch', 'Resistance', 'Bodyweight']
@@ -38,7 +83,10 @@ def index():
                          pagination=pagination,
                          categories=categories,
                          search=search,
-                         selected_category=category)
+                         selected_category=category,
+                         exercise_stats=exercise_stats,
+                         sort_by=sort_by,
+                         sort_dir=sort_dir)
 
 
 @bp.route('/create', methods=['GET', 'POST'])
@@ -54,6 +102,7 @@ def create():
         exercise = MasterExercise(
             name=form.name.data,
             description=form.description.data,
+            video_url=form.video_url.data if form.video_url.data else None,
             category=form.category.data,
             primary_muscle=form.primary_muscle.data if form.primary_muscle.data else None,
             secondary_muscles=json.dumps(secondary_muscles),
@@ -104,13 +153,19 @@ def create():
         flash(f'Exercise "{exercise.name}" created successfully!', 'success')
         return redirect(url_for('exercises.index'))
     
-    # Get all equipment for modal
+    # Get all equipment for modal with gym associations
     equipment_list = MasterEquipment.query.order_by(MasterEquipment.name).all()
+    
+    # Get gym equipment mappings to show which gyms have which equipment
+    gym_equipment_map = {}
+    for equip in equipment_list:
+        gym_equip = GymEquipment.query.filter_by(equipment_id=equip.id).join(UserGym).filter(UserGym.user_id == current_user.id).all()
+        gym_equipment_map[equip.id] = [{'gym_id': ge.gym_id, 'gym_name': ge.gym.name} for ge in gym_equip]
     
     # Get all gyms for current user
     gyms = UserGym.query.filter_by(user_id=current_user.id).order_by(UserGym.name).all()
     
-    return render_template('exercises/create.html', form=form, equipment_list=equipment_list, gyms=gyms)
+    return render_template('exercises/create.html', form=form, equipment_list=equipment_list, gyms=gyms, gym_equipment_map=gym_equipment_map)
 
 
 @bp.route('/<int:exercise_id>/edit', methods=['GET', 'POST'])
@@ -132,6 +187,7 @@ def edit(exercise_id):
         
         exercise.name = form.name.data
         exercise.description = form.description.data
+        exercise.video_url = form.video_url.data if form.video_url.data else None
         exercise.category = form.category.data
         exercise.primary_muscle = form.primary_muscle.data if form.primary_muscle.data else None
         exercise.secondary_muscles = json.dumps(secondary_muscles)
@@ -182,6 +238,7 @@ def edit(exercise_id):
     elif request.method == 'GET':
         form.name.data = exercise.name
         form.description.data = exercise.description
+        form.video_url.data = exercise.video_url
         form.category.data = exercise.category
         form.primary_muscle.data = exercise.primary_muscle
         
@@ -191,10 +248,16 @@ def edit(exercise_id):
         
         form.difficulty_level.data = exercise.difficulty_level
     
-    # Get equipment for modal
+    # Get equipment for modal with gym associations
     equipment_list = MasterEquipment.query.order_by(MasterEquipment.name).all()
     current_equipment_ids = [e.id for e in exercise.equipment]
     current_variations = ExerciseEquipmentVariation.query.filter_by(exercise_id=exercise.id).all()
+    
+    # Get gym equipment mappings to show which gyms have which equipment
+    gym_equipment_map = {}
+    for equip in equipment_list:
+        gym_equip = GymEquipment.query.filter_by(equipment_id=equip.id).join(UserGym).filter(UserGym.user_id == current_user.id).all()
+        gym_equipment_map[equip.id] = [{'gym_id': ge.gym_id, 'gym_name': ge.gym.name} for ge in gym_equip]
     
     # Get all gyms for current user
     gyms = UserGym.query.filter_by(user_id=current_user.id).order_by(UserGym.name).all()
@@ -207,7 +270,8 @@ def edit(exercise_id):
                          current_equipment_ids=current_equipment_ids,
                          current_variations=current_variations,
                          gyms=gyms,
-                         current_gym_ids=current_gym_ids)
+                         current_gym_ids=current_gym_ids,
+                         gym_equipment_map=gym_equipment_map)
 
 
 @bp.route('/<int:exercise_id>/delete', methods=['POST'])
@@ -331,3 +395,50 @@ def get_secondary_muscles():
                 pass
     
     return jsonify(sorted(list(muscles)))
+
+
+@bp.route('/api/<int:exercise_id>/history')
+@login_required
+def get_exercise_history(exercise_id):
+    """Get workout history for a specific exercise"""
+    exercise = MasterExercise.query.get_or_404(exercise_id)
+    
+    # Get last 10 workout sessions where this exercise was performed
+    history = db.session.query(
+        WorkoutSet.created_at,
+        WorkoutSet.set_number,
+        WorkoutSet.weight,
+        WorkoutSet.reps,
+        WorkoutSet.rpe,
+        WorkoutSet.overall_rpe
+    ).join(WorkoutSet.workout_session).filter(
+        WorkoutSet.exercise_id == exercise_id,
+        WorkoutSet.workout_session.has(user_id=current_user.id)
+    ).order_by(desc(WorkoutSet.created_at)).limit(30).all()
+    
+    # Group by date and organize sets
+    history_by_date = {}
+    for record in history:
+        date_str = record.created_at.strftime('%Y-%m-%d')
+        if date_str not in history_by_date:
+            history_by_date[date_str] = []
+        history_by_date[date_str].append({
+            'set_number': record.set_number,
+            'weight': record.weight,
+            'reps': record.reps,
+            'rpe': record.rpe,
+            'overall_rpe': record.overall_rpe
+        })
+    
+    # Convert to list and limit to 10 most recent dates
+    history_list = []
+    for date_str in sorted(history_by_date.keys(), reverse=True)[:10]:
+        history_list.append({
+            'date': date_str,
+            'sets': sorted(history_by_date[date_str], key=lambda x: x['set_number'])
+        })
+    
+    return jsonify({
+        'exercise_name': exercise.name,
+        'history': history_list
+    })

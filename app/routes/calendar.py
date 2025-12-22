@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, jsonify, redirect, url_fo
 from flask_login import login_required, current_user
 from datetime import datetime, date, timedelta
 from app import db
-from app.models import Program, ProgramWeek, ProgramDay, ProgramSeries, ProgramExercise, ScheduledDay, ProgramInstance, InstanceExerciseWeight
+from app.models import Program, ProgramWeek, ProgramDay, ProgramSeries, ProgramExercise, ScheduledDay, ProgramInstance, InstanceExerciseWeight, WorkoutSession, WorkoutSet
 import json
 
 bp = Blueprint('calendar', __name__, url_prefix='/calendar')
@@ -30,8 +30,6 @@ def get_events():
     events = []
     for sd in scheduled_days:
         event_title = f"{sd.program.name} - {sd.program_day.day_name or 'Day ' + str(sd.program_day.day_number)}"
-        if sd.gym:
-            event_title += f"\n📍 {sd.gym.name}"
         
         events.append({
             'id': sd.id,
@@ -447,11 +445,73 @@ def get_instance_workout_data(instance_id):
             'notes': cw.notes
         }
     
+    # Get all scheduled days for this instance to check completion status
+    scheduled_days = ScheduledDay.query.filter_by(
+        user_id=current_user.id,
+        instance_id=instance.id
+    ).all()
+    
+    # Map program_day_id to scheduled day info and get workout sessions
+    scheduled_day_map = {}
+    scheduled_day_ids = []
+    for sd in scheduled_days:
+        scheduled_day_map[sd.program_day_id] = {
+            'scheduled_date': sd.calendar_date.strftime('%Y-%m-%d'),
+            'is_completed': sd.is_completed,
+            'scheduled_day_id': sd.id
+        }
+        scheduled_day_ids.append(sd.id)
+    
+    # Get all workout sessions for this instance's scheduled days
+    workout_sessions = WorkoutSession.query.filter(
+        WorkoutSession.scheduled_day_id.in_(scheduled_day_ids)
+    ).order_by(WorkoutSession.started_at.desc()).all()
+    
+    # Map scheduled_day_id to the most recent session
+    session_map = {}
+    for ws in workout_sessions:
+        if ws.scheduled_day_id not in session_map:
+            session_map[ws.scheduled_day_id] = ws
+    
+    # Get all logged sets for these sessions
+    session_ids = [ws.id for ws in workout_sessions]
+    workout_sets = WorkoutSet.query.filter(
+        WorkoutSet.workout_session_id.in_(session_ids)
+    ).all() if session_ids else []
+    
+    # Map (session_id, exercise_id, set_number) to logged weight/reps
+    logged_sets_map = {}
+    for ws in workout_sets:
+        key = (ws.workout_session_id, ws.exercise_id, ws.set_number)
+        logged_sets_map[key] = {
+            'weight': ws.weight,
+            'reps': ws.reps,
+            'rpe': ws.rpe,
+            'overall_rpe': ws.overall_rpe
+        }
+    
+    # Build map of which session has actual logged sets for each scheduled_day
+    # (in case there are multiple sessions but only one has data)
+    session_with_data = {}
+    for ws in workout_sets:
+        session = next((s for s in workout_sessions if s.id == ws.workout_session_id), None)
+        if session and session.scheduled_day_id:
+            session_with_data[session.scheduled_day_id] = session
+    
+    # Use session with data if available, otherwise use most recent
+    for sd_id in scheduled_day_ids:
+        if sd_id in session_with_data:
+            session_map[sd_id] = session_with_data[sd_id]
+    
     # Build workout structure
     weeks_data = []
     for week in instance.program.weeks:
         days_data = []
         for day in week.days:
+            day_completion = scheduled_day_map.get(day.id, {})
+            scheduled_day_id = day_completion.get('scheduled_day_id')
+            session = session_map.get(scheduled_day_id) if scheduled_day_id else None
+            
             series_data = []
             for series in day.series:
                 exercises_data = []
@@ -465,12 +525,27 @@ def get_instance_workout_data(instance_id):
                         weights = json.loads(prog_ex.starting_weights) if prog_ex.starting_weights else []
                         notes = None
                     
+                    # Get actual logged weights if session exists
+                    logged_weights = []
+                    logged_reps = []
+                    if session:
+                        for i in range(prog_ex.sets):
+                            key = (session.id, prog_ex.exercise_id, i + 1)
+                            if key in logged_sets_map:
+                                logged_weights.append(logged_sets_map[key]['weight'])
+                                logged_reps.append(logged_sets_map[key]['reps'])
+                            else:
+                                logged_weights.append(None)
+                                logged_reps.append(None)
+                    
                     exercises_data.append({
                         'id': prog_ex.id,
                         'exercise_name': prog_ex.exercise.name,
                         'sets': prog_ex.sets,
                         'reps': prog_ex.reps,
                         'weights': weights,
+                        'logged_weights': logged_weights if session else None,
+                        'logged_reps': logged_reps if session else None,
                         'notes': notes,
                         'superset_position': prog_ex.superset_position
                     })
@@ -481,10 +556,13 @@ def get_instance_workout_data(instance_id):
                     'exercises': exercises_data
                 })
             
+            # Add completion info for this day
             days_data.append({
                 'id': day.id,
                 'name': day.day_name or f'Day {day.day_number}',
-                'series': series_data
+                'series': series_data,
+                'scheduled_date': day_completion.get('scheduled_date'),
+                'is_completed': day_completion.get('is_completed', False)
             })
         
         weeks_data.append({

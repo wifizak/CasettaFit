@@ -73,6 +73,10 @@ class MasterExerciseForm(FlaskForm):
         Length(max=50, message='Exercise name must be 50 characters or less')
     ])
     description = TextAreaField('Description', validators=[Optional()])
+    video_url = StringField('Video URL', validators=[
+        Optional(),
+        Length(max=255, message='Video URL must be 255 characters or less')
+    ], render_kw={"placeholder": "YouTube or instructional video URL"})
     
     # Category - Fixed dropdown
     category = SelectField('Category', choices=[

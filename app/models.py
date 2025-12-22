@@ -101,6 +101,7 @@ class MasterExercise(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False, index=True)
     description = db.Column(db.Text)
+    video_url = db.Column(db.String(255))  # YouTube or video URL
     
     # Muscle groupings (simplified)
     primary_muscle = db.Column(db.String(50))  # "Chest", "Back", "Legs", etc.

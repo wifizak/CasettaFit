@@ -23,8 +23,27 @@
                         <small class="text-body-secondary">{{ "Today" }}</small>
                     </div>
                 </div>
-                <p class="card-text text-body-secondary">No workout scheduled for today</p>
-                <a href="#" class="btn btn-primary">Start Freestyle Workout</a>
+                {% if todays_workout %}
+                    <h6 class="mb-1">{{ todays_workout.program.name }}</h6>
+                    <p class="card-text text-body-secondary mb-2">
+                        {{ todays_workout.program_day.day_name or 'Day ' + todays_workout.program_day.day_number|string }}
+                    </p>
+                    {% if todays_workout.is_completed %}
+                        <span class="badge bg-success mb-2"><i class="cil-check"></i> Completed</span>
+                        <br>
+                    {% endif %}
+                    {% if todays_workout.gym %}
+                        <small class="text-muted"><i>{{ todays_workout.gym.name }}</i></small><br>
+                    {% endif %}
+                    {% if not todays_workout.is_completed %}
+                        <a href="{{ url_for('workout.start_workout', scheduled_day_id=todays_workout.id) }}" class="btn btn-primary mt-2">
+                            <i class="cil-play-circle"></i> Start Workout
+                        </a>
+                    {% endif %}
+                {% else %}
+                    <p class="card-text text-body-secondary">No workout scheduled for today</p>
+                    <a href="{{ url_for('calendar.index') }}" class="btn btn-outline-primary">View Calendar</a>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -39,11 +58,19 @@
                     </div>
                     <div>
                         <h5 class="card-title mb-0">Recent Activity</h5>
-                        <small class="text-body-secondary">Last 7 days</small>
+                        <small class="text-body-secondary">Last completed</small>
                     </div>
                 </div>
-                <p class="card-text text-body-secondary">No recent workouts</p>
-                <a href="#" class="btn btn-outline-success">View History</a>
+                {% if recent_workout %}
+                    <h6 class="mb-1">{{ recent_workout.program.name }}</h6>
+                    <p class="card-text text-body-secondary mb-2">
+                        {{ recent_workout.program_day.day_name or 'Day ' + recent_workout.program_day.day_number|string }}
+                    </p>
+                    <small class="text-muted">{{ recent_workout.calendar_date.strftime('%b %d, %Y') }}</small>
+                {% else %}
+                    <p class="card-text text-body-secondary">No recent workouts</p>
+                {% endif %}
+                <a href="{{ url_for('history.index') }}" class="btn btn-outline-success mt-3">View History</a>
             </div>
         </div>
     </div>
@@ -61,8 +88,24 @@
                         <small class="text-body-secondary">Next 7 days</small>
                     </div>
                 </div>
-                <p class="card-text text-body-secondary">No workouts scheduled</p>
-                <a href="#" class="btn btn-outline-info">View Calendar</a>
+                {% if upcoming_workouts %}
+                    <ul class="list-unstyled mb-0">
+                        {% for workout in upcoming_workouts %}
+                            <li class="mb-2 pb-2 {% if not loop.last %}border-bottom{% endif %}">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong>{{ workout.calendar_date.strftime('%b %d') }}</strong>
+                                        <div class="small text-body-secondary">{{ workout.program_day.day_name or 'Day ' + workout.program_day.day_number|string }}</div>
+                                    </div>
+                                    <span class="badge bg-info">{{ workout.program.name[:15] }}</span>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="card-text text-body-secondary">No workouts scheduled</p>
+                {% endif %}
+                <a href="{{ url_for('calendar.index') }}" class="btn btn-outline-info mt-3">View Calendar</a>
             </div>
         </div>
     </div>
@@ -79,19 +122,19 @@
                 <div class="row text-center">
                     <div class="col-6 col-md-3 mb-3 mb-md-0">
                         <div class="text-body-secondary small">Workouts This Week</div>
-                        <div class="h3 mb-0">0</div>
+                        <div class="h3 mb-0">{{ workouts_this_week }}</div>
                     </div>
                     <div class="col-6 col-md-3 mb-3 mb-md-0">
                         <div class="text-body-secondary small">Total Workouts</div>
-                        <div class="h3 mb-0">0</div>
+                        <div class="h3 mb-0">{{ total_workouts }}</div>
                     </div>
                     <div class="col-6 col-md-3">
                         <div class="text-body-secondary small">Active Programs</div>
-                        <div class="h3 mb-0">0</div>
+                        <div class="h3 mb-0">{{ active_programs }}</div>
                     </div>
                     <div class="col-6 col-md-3">
                         <div class="text-body-secondary small">Current Streak</div>
-                        <div class="h3 mb-0">0 days</div>
+                        <div class="h3 mb-0">{{ streak }} day{{ 's' if streak != 1 else '' }}</div>
                     </div>
                 </div>
             </div>

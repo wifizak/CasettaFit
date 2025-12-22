@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+
+{% block title %}History - CasettaFit{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2>Workout History</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="programs-tab" data-coreui-toggle="tab" 
+                                data-coreui-target="#programs" type="button" role="tab" 
+                                aria-controls="programs" aria-selected="true">
+                            <i class="cil-list"></i> Programs
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="exercises-tab" data-coreui-toggle="tab" 
+                                data-coreui-target="#exercises" type="button" role="tab" 
+                                aria-controls="exercises" aria-selected="false">
+                            <i class="cil-bullhorn"></i> Exercises
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content">
+                    <!-- Programs Tab -->
+                    <div class="tab-pane fade show active" id="programs" role="tabpanel" aria-labelledby="programs-tab">
+                        <div id="programsContent">
+                            <div class="text-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Exercises Tab -->
+                    <div class="tab-pane fade" id="exercises" role="tabpanel" aria-labelledby="exercises-tab">
+                        <div id="exercisesContent">
+                            <div class="text-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Exercise History Modal -->
+<div class="modal fade" id="exerciseHistoryModal" tabindex="-1" aria-labelledby="exerciseHistoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exerciseHistoryModalLabel">Exercise History</h5>
+                <button type="button" class="btn-close" data-coreui-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="exerciseHistoryContent">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let historyModal;
+
+document.addEventListener('DOMContentLoaded', function() {
+    historyModal = new coreui.Modal(document.getElementById('exerciseHistoryModal'));
+    
+    // Load programs data on page load
+    loadProgramHistory();
+    
+    // Load exercises when tab is clicked
+    document.getElementById('exercises-tab').addEventListener('shown.coreui.tab', function() {
+        if (!document.getElementById('exercisesContent').dataset.loaded) {
+            loadExerciseHistory();
+        }
+    });
+});
+
+function loadProgramHistory() {
+    fetch('/history/api/programs')
+        .then(response => response.json())
+        .then(data => {
+            let html = '';
+            
+            if (data.length === 0) {
+                html = '<p class="text-muted">No program history found. <a href="/calendar">Schedule a program</a> to get started.</p>';
+            } else {
+                html = '<div class="table-responsive"><table class="table table-hover">';
+                html += '<thead><tr>';
+                html += '<th>Program</th>';
+                html += '<th>Gym</th>';
+                html += '<th>Start Date</th>';
+                html += '<th>End Date</th>';
+                html += '<th>Progress</th>';
+                html += '<th>Actions</th>';
+                html += '</tr></thead><tbody>';
+                
+                data.forEach(program => {
+                    html += `<tr>
+                        <td><strong>${program.program_name}</strong></td>
+                        <td>${program.gym_name || '-'}</td>
+                        <td>${new Date(program.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+                        <td>${program.end_date ? new Date(program.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-'}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="progress flex-grow-1 me-2" style="height: 20px;">
+                                    <div class="progress-bar ${program.completion_percentage === 100 ? 'bg-success' : 'bg-primary'}" 
+                                         role="progressbar" 
+                                         style="width: ${program.completion_percentage}%"
+                                         aria-valuenow="${program.completion_percentage}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                        ${program.completion_percentage}%
+                                    </div>
+                                </div>
+                                <small class="text-muted">${program.completed_days}/${program.total_days}</small>
+                            </div>
+                        </td>
+                        <td>
+                            <a href="/calendar/instance/${program.id}/workout-plan" class="btn btn-sm btn-outline-primary">
+                                <i class="cil-list"></i> View
+                            </a>
+                        </td>
+                    </tr>`;
+                });
+                
+                html += '</tbody></table></div>';
+            }
+            
+            document.getElementById('programsContent').innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error loading program history:', error);
+            document.getElementById('programsContent').innerHTML = 
+                '<div class="alert alert-danger">Error loading program history</div>';
+        });
+}
+
+function loadExerciseHistory() {
+    fetch('/history/api/exercises')
+        .then(response => response.json())
+        .then(data => {
+            let html = '';
+            
+            if (data.length === 0) {
+                html = '<p class="text-muted">No exercise history found. Complete some workouts to see your history.</p>';
+            } else {
+                html = '<div class="table-responsive"><table class="table table-hover">';
+                html += '<thead><tr>';
+                html += '<th>Exercise</th>';
+                html += '<th>Category</th>';
+                html += '<th>Primary Muscle</th>';
+                html += '<th>Times Performed</th>';
+                html += '<th>Total Sets</th>';
+                html += '<th>Max Weight</th>';
+                html += '<th>Last Performed</th>';
+                html += '</tr></thead><tbody>';
+                
+                data.forEach(exercise => {
+                    html += `<tr>
+                        <td>
+                            <a href="#" class="text-decoration-none" onclick="showExerciseHistory(${exercise.id}); return false;">
+                                <strong>${exercise.name}</strong>
+                            </a>
+                        </td>
+                        <td>${exercise.category ? `<span class="badge bg-info">${exercise.category}</span>` : '-'}</td>
+                        <td>${exercise.primary_muscle || '-'}</td>
+                        <td class="text-center">${exercise.session_count}</td>
+                        <td class="text-center">${exercise.total_sets}</td>
+                        <td class="text-center"><strong>${exercise.max_weight}</strong></td>
+                        <td>${new Date(exercise.last_performed).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+                    </tr>`;
+                });
+                
+                html += '</tbody></table></div>';
+            }
+            
+            document.getElementById('exercisesContent').innerHTML = html;
+            document.getElementById('exercisesContent').dataset.loaded = 'true';
+        })
+        .catch(error => {
+            console.error('Error loading exercise history:', error);
+            document.getElementById('exercisesContent').innerHTML = 
+                '<div class="alert alert-danger">Error loading exercise history</div>';
+        });
+}
+
+function showExerciseHistory(exerciseId) {
+    // Show modal with loading spinner
+    document.getElementById('exerciseHistoryContent').innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    `;
+    historyModal.show();
+    
+    // Fetch history data
+    fetch(`/exercises/api/${exerciseId}/history`)
+        .then(response => response.json())
+        .then(data => {
+            let html = `<h6 class="mb-3">${data.exercise_name}</h6>`;
+            
+            if (data.history.length === 0) {
+                html += '<p class="text-muted">No workout history found for this exercise.</p>';
+            } else {
+                // Find max number of sets across all workouts
+                let maxSets = 0;
+                data.history.forEach(workout => {
+                    maxSets = Math.max(maxSets, workout.sets.length);
+                });
+                
+                // Build table
+                html += '<div class="table-responsive"><table class="table table-sm table-bordered">';
+                html += '<thead><tr><th>Date</th>';
+                
+                // Column headers for sets
+                for (let i = 1; i <= maxSets; i++) {
+                    html += `<th class="text-center">Set ${i}</th>`;
+                }
+                
+                html += '<th class="text-center">Overall</th></tr></thead><tbody>';
+                
+                // Each workout is a row
+                data.history.forEach(workout => {
+                    // Get overall RPE from any set that has it (they should all have the same overall_rpe for that day)
+                    const overallRpe = workout.sets.find(s => s.overall_rpe)?.overall_rpe || '-';
+                    
+                    html += `<tr>
+                        <td class="text-nowrap"><strong>${new Date(workout.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</strong></td>`;
+                    
+                    // Add cells for each set
+                    for (let i = 0; i < maxSets; i++) {
+                        if (i < workout.sets.length) {
+                            const set = workout.sets[i];
+                            const rpe = set.rpe;
+                            html += `<td class="text-center">
+                                ${set.reps} × <strong>${set.weight}</strong>${rpe ? ` <span class="text-muted">(${rpe})</span>` : ''}
+                            </td>`;
+                        } else {
+                            html += '<td class="text-center text-muted">-</td>';
+                        }
+                    }
+                    
+                    // Add overall RPE at the end
+                    html += `<td class="text-center"><span class="badge bg-secondary">${overallRpe}</span></td>`;
+                    
+                    html += '</tr>';
+                });
+                
+                html += '</tbody></table></div>';
+            }
+            
+            document.getElementById('exerciseHistoryContent').innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error loading history:', error);
+            document.getElementById('exerciseHistoryContent').innerHTML = 
+                '<div class="alert alert-danger">Error loading exercise history</div>';
+        });
+}
+</script>
+{% endblock %}

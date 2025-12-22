@@ -118,17 +118,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('body_patterns.index') }}">
-                    <i class="nav-icon cil-layers"></i> Body Patterns
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">
-                    <i class="nav-icon cil-calendar"></i> Calendar
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">
+                <a class="nav-link" href="{{ url_for('history.index') }}">
                     <i class="nav-icon cil-history"></i> History
                 </a>
             </li>
@@ -167,26 +157,27 @@
                 </button>
                 <ul class="header-nav ms-auto">
                     <li class="nav-item dropdown">
-                        <a class="nav-link py-0" href="#" role="button" data-coreui-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <div class="avatar avatar-md">
-                                <span class="avatar-initial rounded-circle bg-primary">
+                        <a class="nav-link d-flex align-items-center gap-2 py-2 pe-2" href="#" role="button" data-coreui-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <div class="avatar">
+                                <span class="avatar-initial rounded-circle bg-primary" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600;">
                                     {{ current_user.username[0].upper() }}
                                 </span>
                             </div>
+                            <i class="cil-chevron-bottom" style="font-size: 12px;"></i>
                         </a>
                         <div class="dropdown-menu dropdown-menu-end pt-0">
                             <div class="dropdown-header bg-body-tertiary text-body-secondary fw-semibold rounded-top mb-2">
                                 {{ current_user.username }}
                             </div>
                             <a class="dropdown-item" href="#">
-                                <i class="icon cil-user me-2"></i> Profile
+                                <i class="cil-user me-2"></i> Profile
                             </a>
                             <a class="dropdown-item" href="#">
-                                <i class="icon cil-settings me-2"></i> Settings
+                                <i class="cil-settings me-2"></i> Settings
                             </a>
                             <div class="dropdown-divider"></div>
                             <a class="dropdown-item" href="{{ url_for('auth.logout') }}">
-                                <i class="icon cil-account-logout me-2"></i> Logout
+                                <i class="cil-account-logout me-2"></i> Logout
                             </a>
                         </div>
                     </li>

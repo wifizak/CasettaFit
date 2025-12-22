@@ -38,6 +38,12 @@
                     </div>
                     
                     <div class="mb-3">
+                        {{ form.video_url.label(class="form-label") }}
+                        {{ form.video_url(class="form-control") }}
+                        <small class="text-body-secondary">YouTube or instructional video URL</small>
+                    </div>
+                    
+                    <div class="mb-3">
                         {{ form.category.label(class="form-label") }}
                         {{ form.category(class="form-select" + (" is-invalid" if form.category.errors else "")) }}
                         {% if form.category.errors %}
@@ -73,6 +79,7 @@
                         <button type="button" class="btn btn-outline-primary btn-sm d-block" onclick="openEquipmentModal()">
                             <i class="bi bi-plus-circle"></i> Add Equipment
                         </button>
+                        <small class="text-body-secondary">Add all equipment options for this exercise. The same exercise can use different equipment from different gyms (e.g., Barbell from multiple locations).</small>
                         <div id="selectedEquipment" class="mt-2"></div>
                         <!-- Hidden inputs will be added here by JavaScript -->
                     </div>
@@ -92,7 +99,12 @@
                             </div>
                             {% endfor %}
                         </div>
-                        <small class="text-body-secondary">Optional: Manually select gyms. If left blank, exercise will auto-associate with gyms that have all required equipment.</small>
+                        <small class="text-body-secondary">
+                            <strong>Optional:</strong> Manually select gyms where this exercise can be performed. 
+                            If left blank, the exercise will automatically be available at gyms that have <em>all</em> the required equipment. 
+                            Use this to override auto-associations if the exercise can be done at specific gyms even without all equipment, 
+                            or to associate with multiple gyms that have different equipment variations.
+                        </small>
                         {% else %}
                         <p class="text-muted">No gyms found. <a href="{{ url_for('gym.create') }}">Create a gym first</a>.</p>
                         {% endif %}
@@ -126,6 +138,7 @@
                             <tr>
                                 <th>Equipment</th>
                                 <th>Type</th>
+                                <th>Available at Gyms</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -134,6 +147,19 @@
                             <tr class="equipment-row" data-id="{{ equip.id }}" data-name="{{ equip.name }}" data-type="{{ equip.equipment_type }}">
                                 <td>{{ equip.name }}</td>
                                 <td><span class="badge bg-secondary">{{ equip.equipment_type }}</span></td>
+                                <td>
+                                    {% set gym_list = gym_equipment_map.get(equip.id, []) %}
+                                    {% if gym_list %}
+                                        {% for gym in gym_list[:2] %}
+                                            <span class="badge bg-info">{{ gym.gym_name }}</span>
+                                        {% endfor %}
+                                        {% if gym_list|length > 2 %}
+                                            <span class="badge bg-secondary">+{{ gym_list|length - 2 }} more</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-body-secondary small">Not in any gym</span>
+                                    {% endif %}
+                                </td>
                                 <td>
                                     <button type="button" class="btn btn-sm btn-primary add-equipment" 
                                             data-id="{{ equip.id }}" 

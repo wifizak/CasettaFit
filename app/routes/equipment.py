@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 from app import db
 from app.models import MasterEquipment, EquipmentVariation, UserGym, sync_gym_exercise_associations
 from app.forms import MasterEquipmentForm, EquipmentVariationForm
+from sqlalchemy import desc
 import json
 
 bp = Blueprint('equipment', __name__, url_prefix='/equipment')
@@ -15,26 +16,52 @@ def index():
     page = request.args.get('page', 1, type=int)
     search = request.args.get('search', '', type=str)
     equipment_type = request.args.get('type', '', type=str)
+    sort_by = request.args.get('sort_by', 'name', type=str)
+    sort_dir = request.args.get('sort_dir', 'asc', type=str)
     per_page = 20
     
     query = MasterEquipment.query
     
-    # Search filter
+    # Search filter - search across name and description
     if search:
-        query = query.filter(MasterEquipment.name.ilike(f'%{search}%'))
+        search_filter = f'%{search}%'
+        query = query.filter(
+            db.or_(
+                MasterEquipment.name.ilike(search_filter),
+                MasterEquipment.description.ilike(search_filter),
+                MasterEquipment.equipment_type.ilike(search_filter)
+            )
+        )
     
     # Type filter
     if equipment_type:
         query = query.filter_by(equipment_type=equipment_type)
     
-    query = query.order_by(MasterEquipment.name)
+    # Sorting
+    valid_sort_fields = {
+        'name': MasterEquipment.name,
+        'equipment_type': MasterEquipment.equipment_type,
+        'created_at': MasterEquipment.created_at
+    }
+    
+    sort_field = valid_sort_fields.get(sort_by, MasterEquipment.name)
+    if sort_dir == 'desc':
+        sort_field = desc(sort_field)
+    
+    query = query.order_by(sort_field)
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    
+    # Equipment types list
+    equipment_types = ['Strength', 'Cardio', 'Body', 'Resistance']
     
     return render_template('equipment/index.html', 
                          equipment_list=pagination.items, 
                          pagination=pagination,
                          search=search,
-                         selected_type=equipment_type)
+                         selected_type=equipment_type,
+                         equipment_types=equipment_types,
+                         sort_by=sort_by,
+                         sort_dir=sort_dir)
 
 
 @bp.route('/create', methods=['GET', 'POST'])

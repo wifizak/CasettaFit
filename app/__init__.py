@@ -18,7 +18,7 @@ def create_app(config_name='default'):
     
     # Initialize extensions with app
     db.init_app(app)
-    migrate.init_app(app, db)
+    migrate.init_app(app, db, directory='app/migrations')
     login_manager.init_app(app)
     
     # Configure login
@@ -27,7 +27,7 @@ def create_app(config_name='default'):
     login_manager.session_protection = 'strong'
     
     # Register blueprints
-    from app.routes import auth, main, admin, exercises, equipment, gym, programs, body_patterns, calendar, workout
+    from app.routes import auth, main, admin, exercises, equipment, gym, programs, calendar, workout, history
     app.register_blueprint(auth.bp)
     app.register_blueprint(main.bp)
     app.register_blueprint(admin.bp)
@@ -35,9 +35,9 @@ def create_app(config_name='default'):
     app.register_blueprint(equipment.bp)
     app.register_blueprint(gym.bp)
     app.register_blueprint(programs.bp)
-    app.register_blueprint(body_patterns.bp)
     app.register_blueprint(calendar.bp)
     app.register_blueprint(workout.bp)
+    app.register_blueprint(history.bp)
     
     # Register custom Jinja filters
     @app.template_filter('from_json')
