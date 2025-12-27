@@ -23,7 +23,9 @@
                     {{ form.hidden_tag() }}
                     
                     <div class="mb-3">
-                        {{ form.name.label(class="form-label") }}
+                        <label class="form-label">
+                            {{ form.name.label.text }} <span class="text-danger">*</span>
+                        </label>
                         {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
                         {% if form.name.errors %}
                             <div class="invalid-feedback">
@@ -46,8 +48,14 @@
                             <p class="text-muted small mt-1">Current picture (upload a new one to replace)</p>
                         </div>
                         {% endif %}
-                        {{ form.picture(class="form-control") }}
+                        {{ form.picture(class="form-control", id="gymPictureInput") }}
                         <small class="text-body-secondary">Upload a photo of your gym (JPG, PNG, GIF)</small>
+                        
+                        <!-- Image preview before upload -->
+                        <div id="imagePreview" class="mt-2" style="display:none;">
+                            <p class="text-muted small mb-1">New image preview:</p>
+                            <img id="previewImg" class="img-thumbnail" style="max-height: 150px;">
+                        </div>
                     </div>
                     
                     <div class="mb-3">
@@ -67,4 +75,21 @@
         </div>
     </div>
 </div>
+
+<script>
+// Image preview before upload
+document.getElementById('gymPictureInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            document.getElementById('imagePreview').style.display = 'block';
+            document.getElementById('previewImg').src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    } else {
+        document.getElementById('imagePreview').style.display = 'none';
+    }
+});
+</script>
 {% endblock %}

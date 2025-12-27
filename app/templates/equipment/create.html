@@ -19,7 +19,9 @@
                 <form method="POST">
                     {{ form.hidden_tag() }}
                     <div class="mb-3">
-                        {{ form.name.label(class="form-label") }}
+                        <label class="form-label">
+                            {{ form.name.label.text }} <span class="text-danger">*</span>
+                        </label>
                         {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
                         {% if form.name.errors %}
                             <div class="invalid-feedback">{% for error in form.name.errors %}{{ error }}{% endfor %}</div>
@@ -59,7 +61,9 @@
                     </div>
                     
                     <div class="mb-3">
-                        {{ form.equipment_type.label(class="form-label") }}
+                        <label class="form-label">
+                            {{ form.equipment_type.label.text }} <span class="text-danger">*</span>
+                        </label>
                         {{ form.equipment_type(class="form-select" + (" is-invalid" if form.equipment_type.errors else "")) }}
                         {% if form.equipment_type.errors %}
                             <div class="invalid-feedback">{% for error in form.equipment_type.errors %}{{ error }}{% endfor %}</div>
@@ -206,88 +210,32 @@
         let availableManufacturers = [];
         let availableModels = [];
         
-        // Fetch manufacturers
-        fetch('{{ url_for("equipment.get_manufacturers") }}')
-            .then(response => response.json())
+        // Fetch manufacturers using shared utility
+        apiGet('{{ url_for("equipment.get_manufacturers") }}')
             .then(data => {
                 availableManufacturers = data;
+            })
+            .catch(error => {
+                console.error('Error loading manufacturers:', error);
             });
         
-        // Fetch models
-        fetch('{{ url_for("equipment.get_models") }}')
-            .then(response => response.json())
+        // Fetch models using shared utility
+        apiGet('{{ url_for("equipment.get_models") }}')
             .then(data => {
                 availableModels = data;
+            })
+            .catch(error => {
+                console.error('Error loading models:', error);
             });
         
-        // Setup autocomplete for manufacturer
+        // Setup autocomplete for manufacturer using shared utility
         const manufacturerInput = document.getElementById('manufacturer');
         setupAutocomplete(manufacturerInput, () => availableManufacturers);
         
-        // Setup autocomplete for model
+        // Setup autocomplete for model using shared utility
         const modelInput = document.getElementById('model');
         setupAutocomplete(modelInput, () => availableModels);
         
-        function setupAutocomplete(input, getSuggestions) {
-            let suggestionsDiv = null;
-            
-            input.addEventListener('input', function(e) {
-                const value = this.value.trim();
-                
-                if (value.length > 0) {
-                    const suggestions = getSuggestions().filter(item => 
-                        item.toLowerCase().includes(value.toLowerCase())
-                    );
-                    
-                    if (suggestions.length > 0) {
-                        showSuggestions(this, suggestions);
-                    } else {
-                        hideSuggestions();
-                    }
-                } else {
-                    hideSuggestions();
-                }
-            });
-            
-            input.addEventListener('blur', function() {
-                setTimeout(hideSuggestions, 200);
-            });
-            
-            function showSuggestions(inputEl, suggestions) {
-                hideSuggestions();
-                
-                suggestionsDiv = document.createElement('div');
-                suggestionsDiv.className = 'autocomplete-suggestions';
-                suggestionsDiv.style.cssText = 'position: absolute; z-index: 1000; background: white; border: 1px solid #ddd; border-top: none; max-height: 200px; overflow-y: auto; width: ' + inputEl.offsetWidth + 'px;';
-                
-                suggestions.forEach(suggestion => {
-                    const div = document.createElement('div');
-                    div.textContent = suggestion;
-                    div.style.cssText = 'padding: 10px; cursor: pointer; border-bottom: 1px solid #f0f0f0;';
-                    div.addEventListener('mouseenter', function() {
-                        this.style.backgroundColor = '#f0f0f0';
-                    });
-                    div.addEventListener('mouseleave', function() {
-                        this.style.backgroundColor = 'white';
-                    });
-                    div.addEventListener('mousedown', function() {
-                        inputEl.value = suggestion;
-                        hideSuggestions();
-                    });
-                    suggestionsDiv.appendChild(div);
-                });
-                
-                inputEl.parentNode.style.position = 'relative';
-                inputEl.parentNode.appendChild(suggestionsDiv);
-            }
-            
-            function hideSuggestions() {
-                if (suggestionsDiv && suggestionsDiv.parentNode) {
-                    suggestionsDiv.parentNode.removeChild(suggestionsDiv);
-                    suggestionsDiv = null;
-                }
-            }
-        }
         </script>
         {% endif %}
     </div>

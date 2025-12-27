@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from app import db
 from app.models import (
     WorkoutSession, WorkoutSet, ScheduledDay, MasterExercise,
-    ProgramExercise, InstanceExerciseWeight
+    ProgramExercise, InstanceExerciseWeight, ProgramDay, ProgramSeries, ProgramInstance
 )
 from sqlalchemy.orm import joinedload, selectinload
 from datetime import datetime
@@ -73,8 +73,8 @@ def execute_workout(session_id):
         joinedload(WorkoutSession.gym),
         joinedload(WorkoutSession.scheduled_day).joinedload(ScheduledDay.program),
         joinedload(WorkoutSession.scheduled_day).joinedload(ScheduledDay.program_day)
-            .selectinload('series')
-            .selectinload('exercises')
+            .selectinload(ProgramDay.series)
+            .selectinload(ProgramSeries.exercises)
             .joinedload(ProgramExercise.exercise)
     ).first_or_404()
     
@@ -99,11 +99,11 @@ def get_session_data(session_id):
         joinedload(WorkoutSession.gym),
         joinedload(WorkoutSession.scheduled_day).joinedload(ScheduledDay.program),
         joinedload(WorkoutSession.scheduled_day).joinedload(ScheduledDay.program_day)
-            .selectinload('series')
-            .selectinload('exercises')
+            .selectinload(ProgramDay.series)
+            .selectinload(ProgramSeries.exercises)
             .joinedload(ProgramExercise.exercise),
         joinedload(WorkoutSession.scheduled_day).joinedload(ScheduledDay.instance)
-            .selectinload('custom_weights')
+            .selectinload(ProgramInstance.custom_weights)
     ).first_or_404()
     
     data = {
@@ -140,8 +140,9 @@ def get_session_data(session_id):
                 if prog_ex.starting_weights:
                     try:
                         default_weights = json.loads(prog_ex.starting_weights)
-                    except:
-                        pass
+                    except (json.JSONDecodeError, ValueError, TypeError):
+                        # If JSON is invalid, use empty list
+                        default_weights = []
                 
                 # Get custom weights if they exist
                 suggested_weights = default_weights

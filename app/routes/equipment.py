@@ -88,10 +88,13 @@ def create():
         affected_gym_ids = []
         for gym_id in gym_ids:
             if gym_id:
-                gym = UserGym.query.get(int(gym_id))
-                if gym:
-                    equipment.gyms.append(gym)
-                    affected_gym_ids.append(int(gym_id))
+                try:
+                    gym = db.session.get(UserGym, int(gym_id))
+                    if gym:
+                        equipment.gyms.append(gym)
+                        affected_gym_ids.append(int(gym_id))
+                except ValueError:
+                    continue  # Skip invalid gym_id
         
         db.session.commit()
         
@@ -152,10 +155,13 @@ def edit(equipment_id):
         new_gym_ids = set()
         for gym_id in gym_ids:
             if gym_id:
-                gym = UserGym.query.get(int(gym_id))
-                if gym:
-                    equipment.gyms.append(gym)
-                    new_gym_ids.add(int(gym_id))
+                try:
+                    gym = db.session.get(UserGym, int(gym_id))
+                    if gym:
+                        equipment.gyms.append(gym)
+                        new_gym_ids.add(int(gym_id))
+                except ValueError:
+                    continue  # Skip invalid gym_id
         
         db.session.commit()
         

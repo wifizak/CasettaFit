@@ -675,7 +675,8 @@ def share(program_id):
         db.session.commit()
         
         user = User.query.get(form.user_id.data)
-        flash(f'Program shared with {user.username}!', 'success')
+        username = user.username if user else 'user'
+        flash(f'Program shared with {username}!', 'success')
         return redirect(url_for('programs.view', program_id=program.id))
     
     # Get list of users already shared with

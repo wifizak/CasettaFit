@@ -1,37 +1,14 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
-from werkzeug.utils import secure_filename
-import uuid
-import os
 from app import db
 from app.models import UserProfile, User
 from app.forms import UserProfileForm
+from app.utils import save_uploaded_file, delete_uploaded_file
 
 bp = Blueprint('profile', __name__, url_prefix='/profile')
 
 # File upload configuration
 UPLOAD_FOLDER = 'app/static/uploads/profiles'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-def save_profile_picture(file):
-    """Save uploaded profile picture and return the filename"""
-    if file and allowed_file(file.filename):
-        # Generate unique filename
-        ext = file.filename.rsplit('.', 1)[1].lower()
-        filename = f"{uuid.uuid4().hex}.{ext}"
-        
-        # Ensure upload directory exists
-        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-        
-        # Save file
-        filepath = os.path.join(UPLOAD_FOLDER, filename)
-        file.save(filepath)
-        
-        return filename
-    return None
 
 
 @bp.route('/')
@@ -66,12 +43,10 @@ def edit():
         if form.profile_picture.data:
             # Delete old picture if exists
             if profile.profile_picture:
-                old_path = os.path.join(UPLOAD_FOLDER, profile.profile_picture)
-                if os.path.exists(old_path):
-                    os.remove(old_path)
+                delete_uploaded_file(profile.profile_picture, UPLOAD_FOLDER)
             
-            # Save new picture
-            filename = save_profile_picture(form.profile_picture.data)
+            # Save new picture using shared utility
+            filename = save_uploaded_file(form.profile_picture.data, UPLOAD_FOLDER)
             if filename:
                 profile.profile_picture = filename
         
@@ -95,10 +70,8 @@ def remove_picture():
     profile = UserProfile.query.filter_by(user_id=current_user.id).first()
     
     if profile and profile.profile_picture:
-        # Delete file
-        filepath = os.path.join(UPLOAD_FOLDER, profile.profile_picture)
-        if os.path.exists(filepath):
-            os.remove(filepath)
+        # Delete file using shared utility
+        delete_uploaded_file(profile.profile_picture, UPLOAD_FOLDER)
         
         # Update database
         profile.profile_picture = None

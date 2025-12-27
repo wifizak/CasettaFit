@@ -70,7 +70,7 @@ def get_exercise_history():
     
     result = []
     for stat in exercise_stats:
-        exercise = MasterExercise.query.get(stat.exercise_id)
+        exercise = db.session.get(MasterExercise, stat.exercise_id)
         if exercise:
             result.append({
                 'id': exercise.id,

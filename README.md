@@ -65,7 +65,7 @@ The application uses NGINX as a reverse proxy to the Gunicorn application server
 ### Configuration
 
 - **Config File**: `/etc/nginx/sites-available/casettafit.conf`
-- **Server Name**: `casettafit.local` (update to your domain/IP)
+- **Server Name**: Accepts any hostname or IP address
 - **Ports**: 
   - 443 (HTTPS) - Primary access
   - 80 (HTTP) - Redirects to HTTPS
@@ -75,8 +75,9 @@ The application uses NGINX as a reverse proxy to the Gunicorn application server
 
 ### Accessing the Application
 
-- **HTTPS**: `https://your-server-ip/` (recommended)
-- **HTTP**: `http://your-server-ip/` (redirects to HTTPS)
+- **By IP**: `https://your-server-ip/` (recommended)
+- **By hostname**: `https://casettafit.local/`
+- **HTTP**: Automatically redirects to HTTPS
 
 **Note**: Since this uses a self-signed certificate, browsers will show a security warning. Click "Advanced" and "Proceed" to continue.
 
@@ -116,9 +117,14 @@ For production, consider using Let's Encrypt for a trusted SSL certificate.
 
 ### Updating Server Name
 
-Edit `/etc/nginx/sites-available/casettafit.conf` and change:
+If you want to restrict to a specific domain, edit `/etc/nginx/sites-available/casettafit.conf` and change:
 ```nginx
-server_name casettafit.local;  # Change to your domain or IP
+server_name _;  # Currently accepts any hostname or IP
+```
+
+To:
+```nginx
+server_name yourdomain.com www.yourdomain.com;
 ```
 
 Then reload NGINX:

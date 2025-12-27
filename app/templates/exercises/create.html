@@ -227,11 +227,15 @@ function closeEquipmentModal() {
 let availableMuscles = [];
 let selectedMuscles = [];
 
-// Fetch available muscle suggestions
-fetch('{{ url_for("exercises.get_secondary_muscles") }}')
-    .then(response => response.json())
+// Fetch available muscle suggestions using shared utility
+apiGet('{{ url_for("exercises.get_secondary_muscles") }}', {
+    errorMessage: 'Error loading muscle suggestions'
+})
     .then(data => {
         availableMuscles = data;
+    })
+    .catch(error => {
+        console.error('Error loading muscles:', error);
     });
 
 // Initialize selected muscles from form value on load

@@ -391,7 +391,8 @@ def get_secondary_muscles():
                 for muscle in secondary_list:
                     if muscle and muscle.strip():
                         muscles.add(muscle.strip())
-            except:
+            except (json.JSONDecodeError, ValueError, TypeError, AttributeError):
+                # Skip exercises with invalid JSON or non-list data
                 pass
     
     return jsonify(sorted(list(muscles)))

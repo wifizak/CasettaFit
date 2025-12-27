@@ -3,35 +3,10 @@ from flask_login import login_required, current_user
 from app import db
 from app.models import UserGym, GymEquipment, GymExercise, MasterExercise, MasterEquipment
 from app.forms import UserGymForm, GymEquipmentForm, GymExerciseForm
-from werkzeug.utils import secure_filename
-import os
+from app.utils import save_uploaded_file, delete_uploaded_file
 import json
-import uuid
 
 bp = Blueprint('gym', __name__, url_prefix='/gym')
-
-# Configure upload folder
-UPLOAD_FOLDER = 'app/static/uploads/gyms'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-def save_gym_picture(file):
-    """Save uploaded gym picture and return the filename"""
-    if file and allowed_file(file.filename):
-        # Create upload directory if it doesn't exist
-        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-        
-        # Generate unique filename
-        ext = file.filename.rsplit('.', 1)[1].lower()
-        filename = f"{uuid.uuid4().hex}.{ext}"
-        filepath = os.path.join(UPLOAD_FOLDER, filename)
-        
-        # Save file
-        file.save(filepath)
-        return filename
-    return None
 
 
 @bp.route('/')
@@ -52,7 +27,7 @@ def create():
         # Handle picture upload
         picture_url = None
         if form.picture.data:
-            filename = save_gym_picture(form.picture.data)
+            filename = save_uploaded_file(form.picture.data, 'app/static/uploads/gyms')
             if filename:
                 picture_url = f"/static/uploads/gyms/{filename}"
         
@@ -103,14 +78,12 @@ def edit(gym_id):
     if form.validate_on_submit():
         # Handle picture upload
         if form.picture.data:
-            filename = save_gym_picture(form.picture.data)
+            filename = save_uploaded_file(form.picture.data, 'app/static/uploads/gyms')
             if filename:
                 # Delete old picture if exists
                 if gym.picture_url and gym.picture_url.startswith('/static/uploads/gyms/'):
                     old_file = gym.picture_url.replace('/static/uploads/gyms/', '')
-                    old_path = os.path.join(UPLOAD_FOLDER, old_file)
-                    if os.path.exists(old_path):
-                        os.remove(old_path)
+                    delete_uploaded_file(old_file, 'app/static/uploads/gyms')
                 gym.picture_url = f"/static/uploads/gyms/{filename}"
         
         gym.name = form.name.data
@@ -197,7 +170,8 @@ def add_equipment(gym_id):
         db.session.commit()
         
         master_eq = MasterEquipment.query.get(form.equipment_id.data)
-        flash(f'Equipment "{master_eq.name}" added successfully!', 'success')
+        equipment_name = master_eq.name if master_eq else 'Equipment'
+        flash(f'Equipment "{equipment_name}" added successfully!', 'success')
         return redirect(url_for('gym.view', gym_id=gym.id))
     
     return render_template('gym/add_equipment.html', form=form, gym=gym)

@@ -96,8 +96,11 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function loadProgramHistory() {
-    fetch('/history/api/programs')
-        .then(response => response.json())
+    showContainerLoading('programsContent');
+    
+    apiGet('/history/api/programs', {
+        errorMessage: 'Error loading program history'
+    })
         .then(data => {
             let html = '';
             
@@ -149,15 +152,17 @@ function loadProgramHistory() {
             document.getElementById('programsContent').innerHTML = html;
         })
         .catch(error => {
-            console.error('Error loading program history:', error);
             document.getElementById('programsContent').innerHTML = 
                 '<div class="alert alert-danger">Error loading program history</div>';
         });
 }
 
 function loadExerciseHistory() {
-    fetch('/history/api/exercises')
-        .then(response => response.json())
+    showContainerLoading('exercisesContent');
+    
+    apiGet('/history/api/exercises', {
+        errorMessage: 'Error loading exercise history'
+    })
         .then(data => {
             let html = '';
             
@@ -198,7 +203,6 @@ function loadExerciseHistory() {
             document.getElementById('exercisesContent').dataset.loaded = 'true';
         })
         .catch(error => {
-            console.error('Error loading exercise history:', error);
             document.getElementById('exercisesContent').innerHTML = 
                 '<div class="alert alert-danger">Error loading exercise history</div>';
         });

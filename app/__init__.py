@@ -6,6 +6,7 @@ from app.config import config
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
 import json
+import logging
 
 # Initialize extensions
 db = SQLAlchemy()
@@ -35,6 +36,24 @@ def create_app(config_name='default'):
     """Application factory pattern"""
     app = Flask(__name__)
     app.config.from_object(config[config_name])
+    
+    # Configure logging
+    if not app.debug:
+        # Production logging
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]',
+            handlers=[
+                logging.FileHandler('logs/casettafit.log'),
+                logging.StreamHandler()
+            ]
+        )
+        app.logger.setLevel(logging.INFO)
+        app.logger.info('CasettaFit startup')
+    else:
+        # Development logging
+        logging.basicConfig(level=logging.DEBUG)
+        app.logger.setLevel(logging.DEBUG)
     
     # Initialize extensions with app
     db.init_app(app)

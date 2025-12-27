@@ -279,8 +279,9 @@ def get_scheduled_day(scheduled_day_id):
             if prog_ex.starting_weights:
                 try:
                     default_weights = json.loads(prog_ex.starting_weights)
-                except:
-                    pass
+                except (json.JSONDecodeError, ValueError, TypeError):
+                    # If JSON is invalid, use empty list
+                    default_weights = []
             
             # Get custom weights if they exist
             custom_weights = None

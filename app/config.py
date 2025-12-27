@@ -11,6 +11,9 @@ class Config:
         'sqlite:///' + os.path.join(basedir, 'casettafit.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
+    # File upload limits
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 MB max file size
+    
     # Session configuration - 8 hour timeout
     PERMANENT_SESSION_LIFETIME = timedelta(hours=8)
     SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
