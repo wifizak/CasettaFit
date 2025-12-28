@@ -195,29 +195,29 @@
                 <button type="button" class="btn-close" onclick="toggleMobileMenu()"></button>
             </div>
             <div class="mobile-menu-content">
-                <a href="{{ url_for('gym.index') }}" class="mobile-menu-item">
+                <a href="{{ url_for('gym.index') }}" class="mobile-menu-item" onclick="window.location.href='{{ url_for('gym.index') }}'; return false;">
                     <i class="icon cil-dumbbell"></i>
                     <span>My Gym</span>
                 </a>
-                <a href="{{ url_for('exercises.index') }}" class="mobile-menu-item">
+                <a href="{{ url_for('exercises.index') }}" class="mobile-menu-item" onclick="window.location.href='{{ url_for('exercises.index') }}'; return false;">
                     <i class="icon cil-list"></i>
                     <span>Exercises</span>
                 </a>
-                <a href="{{ url_for('equipment.index') }}" class="mobile-menu-item">
+                <a href="{{ url_for('equipment.index') }}" class="mobile-menu-item" onclick="window.location.href='{{ url_for('equipment.index') }}'; return false;">
                     <i class="icon cil-building"></i>
                     <span>Equipment</span>
                 </a>
-                <a href="{{ url_for('history.index') }}" class="mobile-menu-item">
+                <a href="{{ url_for('history.index') }}" class="mobile-menu-item" onclick="window.location.href='{{ url_for('history.index') }}'; return false;">
                     <i class="icon cil-history"></i>
                     <span>History</span>
                 </a>
-                <a href="{{ url_for('goals.index') }}" class="mobile-menu-item">
+                <a href="{{ url_for('goals.index') }}" class="mobile-menu-item" onclick="window.location.href='{{ url_for('goals.index') }}'; return false;">
                     <i class="icon cil-target"></i>
                     <span>Goals</span>
                 </a>
                 {% if current_user.is_admin %}
                 <div class="mobile-menu-divider"></div>
-                <a href="{{ url_for('admin.users') }}" class="mobile-menu-item">
+                <a href="{{ url_for('admin.users') }}" class="mobile-menu-item" onclick="window.location.href='{{ url_for('admin.users') }}'; return false;">
                     <i class="icon cil-people"></i>
                     <span>Admin - Users</span>
                 </a>
