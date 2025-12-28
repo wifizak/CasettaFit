@@ -10,6 +10,136 @@
         min-height: 600px;
         height: auto;
     }
+    
+    /* Mobile-specific calendar styles */
+    @media (max-width: 767px) {
+        /* Remove container padding for full width */
+        .calendar-page-container {
+            padding-left: 0.25rem !important;
+            padding-right: 0.25rem !important;
+        }
+        .calendar-page-container .row {
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+        .calendar-page-container .col-12 {
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+        }
+        #calendar {
+            min-height: 400px;
+        }
+        .fc-view-harness {
+            min-height: 350px !important;
+        }
+        .fc-daygrid-day-frame {
+            min-height: 80px !important;
+        }
+        /* Reduce card padding */
+        .calendar-page-container .card {
+            border-radius: 0.25rem !important;
+        }
+        .calendar-page-container .card-body {
+            min-height: auto !important;
+            padding: 0.5rem !important;
+            padding-bottom: 80px !important;
+        }
+        #calendar {
+            margin: 0 !important;
+        }
+        .fc-daygrid-day {
+            padding: 1px !important;
+        }
+        .fc-col-header-cell {
+            padding: 0.35rem 1px !important;
+        }
+        /* Better toolbar layout - force proper structure */
+        #calendar .fc-header-toolbar.fc-toolbar {
+            margin-bottom: 0.75rem !important;
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            width: 100% !important;
+        }
+        /* Left chunk - buttons */
+        #calendar .fc-header-toolbar .fc-toolbar-chunk:first-child {
+            flex: 0 0 auto !important;
+            order: 1 !important;
+        }
+        /* Center chunk - title - force to new line */
+        #calendar .fc-header-toolbar .fc-toolbar-chunk:nth-child(2) {
+            flex: 1 1 100% !important;
+            order: 3 !important;
+            margin-top: 0.75rem !important;
+        }
+        /* Right chunk - arrows */
+        #calendar .fc-header-toolbar .fc-toolbar-chunk:last-child {
+            flex: 0 0 auto !important;
+            order: 2 !important;
+            margin-left: auto !important;
+        }
+        #calendar .fc-toolbar-chunk {
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.5rem !important;
+        }
+        /* Title styling - prevent wrapping */
+        #calendar .fc-toolbar-title {
+            display: block !important;
+            font-size: 1.05rem !important;
+            font-weight: 600 !important;
+            text-align: center !important;
+            width: 100% !important;
+            padding: 0.5rem 0 !important;
+            line-height: 1.2 !important;
+            white-space: nowrap !important;
+            overflow: visible !important;
+        }
+        /* Larger touch targets for navigation */
+        #calendar .fc .fc-button,
+        #calendar .fc .fc-button-primary {
+            padding: 0.5rem 0.75rem !important;
+            font-size: 0.9rem !important;
+            min-width: 44px !important;
+            min-height: 44px !important;
+            line-height: 1.2 !important;
+        }
+        #calendar .fc .fc-today-button {
+            font-size: 0.85rem !important;
+        }
+        #calendar .fc .fc-button-group {
+            gap: 2px !important;
+        }
+        /* Better day headers - hide dates, show only day names */
+        .fc-col-header-cell {
+            padding: 0.5rem 0 !important;
+        }
+        .fc-col-header-cell-cushion {
+            font-size: 0.75rem !important;
+            font-weight: 600 !important;
+        }
+        /* Hide the day numbers/dates in cells */
+        .fc-daygrid-day-top {
+            justify-content: center !important;
+        }
+        .fc-daygrid-day-number {
+            display: none !important;
+        }
+        /* Simplified event display */
+        .fc-event-gym {
+            display: none !important;
+        }
+        .fc-event {
+            font-size: 0.85rem !important;
+            padding: 4px 3px !important;
+            line-height: 1.3 !important;
+            margin-bottom: 2px !important;
+        }
+        .fc-event-title {
+            font-weight: 500 !important;
+        }
+    }
+    
     .fc {
         font-size: 0.9rem;
     }
@@ -72,16 +202,16 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid calendar-page-container">
     <div class="row mb-3">
-        <div class="col">
+        <div class="col-12 col-md-auto mb-2 mb-md-0">
             <h2 class="mb-0">Workout Calendar</h2>
-            <small class="text-muted">
+            <small class="text-muted d-none d-md-inline">
                 <i class="cil-cursor-move"></i> Drag workouts to reschedule them
             </small>
         </div>
-        <div class="col-auto">
-            <button type="button" class="btn btn-primary" onclick="showScheduleProgramModal()">
+        <div class="col-12 col-md-auto ms-md-auto">
+            <button type="button" class="btn btn-primary w-100 w-md-auto" onclick="showScheduleProgramModal()">
                 <i class="cil-plus"></i> Schedule Program
             </button>
         </div>
@@ -90,7 +220,7 @@
     <div class="row">
         <div class="col-lg-9">
             <div class="card">
-                <div class="card-body" style="min-height: 650px;">
+                <div class="card-body calendar-card-body" style="min-height: 650px;">
                     <div id='calendar'></div>
                 </div>
             </div>
@@ -297,16 +427,25 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     try {
+        // Detect mobile device
+        const isMobile = window.innerWidth < 768;
+        
         calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
+            initialView: isMobile ? 'dayGridWeek' : 'dayGridMonth',
             height: 'auto',
-            contentHeight: 650,
-            aspectRatio: 1.5,
-            headerToolbar: {
+            contentHeight: isMobile ? 400 : 650,
+            aspectRatio: isMobile ? 1.0 : 1.5,
+            headerToolbar: isMobile ? {
+                start: 'today dayGridWeek,dayGridMonth',
+                center: 'title',
+                end: 'prev,next'
+            } : {
                 left: 'prev,next today',
                 center: 'title',
                 right: 'dayGridMonth,timeGridWeek,listWeek'
             },
+            titleFormat: isMobile ? { month: 'short', day: 'numeric', year: 'numeric' } : { year: 'numeric', month: 'long' },
+            dayHeaderFormat: isMobile ? { weekday: 'short' } : { weekday: 'short', month: 'numeric', day: 'numeric', omitCommas: true },
             editable: true,
             droppable: true,
             eventDrop: handleEventDrop,
@@ -321,7 +460,23 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             eventContent: function(arg) {
                 // Custom render to add italicized gym name and checkmark
-                let html = '<div class="fc-event-title">' + arg.event.title;
+                const isMobile = window.innerWidth < 768;
+                let title = arg.event.title;
+                
+                // Simplify title on mobile - just show program name and day number
+                if (isMobile) {
+                    const parts = title.split(' - ');
+                    if (parts.length > 0) {
+                        // Extract just program name and day (e.g., "Test 1 - Day 2" becomes "Test 1 D2")
+                        title = parts[0];
+                        if (parts[1] && parts[1].includes('Day')) {
+                            const dayNum = parts[1].replace('Day ', 'D');
+                            title += ' ' + dayNum;
+                        }
+                    }
+                }
+                
+                let html = '<div class="fc-event-title">' + title;
                 
                 // Add checkmark for completed workouts
                 if (arg.event.extendedProps.isCompleted) {
@@ -330,8 +485,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 html += '</div>';
                 
-                // Add italicized gym name if present
-                if (arg.event.extendedProps.gymName) {
+                // Add italicized gym name if present (desktop only)
+                if (!isMobile && arg.event.extendedProps.gymName) {
                     html += '<div class="fc-event-gym"><i>' + arg.event.extendedProps.gymName + '</i></div>';
                 }
                 
@@ -344,6 +499,36 @@ document.addEventListener('DOMContentLoaded', function() {
         
         calendar.render();
         console.log('Calendar rendered successfully');
+        
+        // Force mobile toolbar layout after render
+        if (isMobile) {
+            setTimeout(function() {
+                const toolbar = document.querySelector('#calendar .fc-header-toolbar');
+                if (toolbar) {
+                    toolbar.style.display = 'flex';
+                    toolbar.style.flexWrap = 'wrap';
+                    toolbar.style.marginBottom = '0.75rem';
+                    
+                    const chunks = toolbar.querySelectorAll('.fc-toolbar-chunk');
+                    if (chunks.length >= 3) {
+                        // First chunk (left buttons)
+                        chunks[0].style.order = '1';
+                        chunks[0].style.flex = '0 0 auto';
+                        
+                        // Second chunk (title) - force to new line
+                        chunks[1].style.order = '3';
+                        chunks[1].style.flex = '1 1 100%';
+                        chunks[1].style.marginTop = '0.75rem';
+                        chunks[1].style.textAlign = 'center';
+                        
+                        // Third chunk (right arrows)
+                        chunks[2].style.order = '2';
+                        chunks[2].style.flex = '0 0 auto';
+                        chunks[2].style.marginLeft = 'auto';
+                    }
+                }
+            }, 100);
+        }
     } catch (error) {
         console.error('Error initializing calendar:', error);
     }

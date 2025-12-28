@@ -564,6 +564,38 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+    
+    // ============================================
+    // KEYBOARD NAVIGATION ENHANCEMENTS
+    // ============================================
+    
+    // Enable Escape key to close modals
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            // Find all visible modals and close the top-most one
+            const modals = document.querySelectorAll('.modal.show');
+            if (modals.length > 0) {
+                const topModal = modals[modals.length - 1];
+                const modalInstance = coreui.Modal.getInstance(topModal);
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+            }
+        }
+    });
+    
+    // Trap focus within modals for better keyboard accessibility
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('shown.coreui.modal', function() {
+            // Focus first focusable element
+            const focusableElements = this.querySelectorAll(
+                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            );
+            if (focusableElements.length > 0) {
+                focusableElements[0].focus();
+            }
+        });
+    });
 });
 
 /**

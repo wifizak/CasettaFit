@@ -13,68 +13,10 @@
     <!-- CoreUI Icons -->
     <link href="https://cdn.jsdelivr.net/npm/@coreui/icons@3.0.1/css/all.min.css" rel="stylesheet">
     
-    {% block extra_css %}{% endblock %}
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/custom.css') }}" rel="stylesheet">
     
-    <style>
-        /* Mobile-first responsive design */
-        body {
-            padding-bottom: 70px; /* Space for bottom nav on mobile */
-        }
-        
-        @media (min-width: 768px) {
-            body {
-                padding-bottom: 0;
-            }
-        }
-        
-        /* Bottom navigation for mobile */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #fff;
-            border-top: 1px solid #d8dbe0;
-            display: flex;
-            justify-content: space-around;
-            padding: 0.5rem 0;
-            z-index: 1000;
-        }
-        
-        .bottom-nav-item {
-            flex: 1;
-            text-align: center;
-            padding: 0.5rem;
-            color: #768192;
-            text-decoration: none;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            font-size: 0.75rem;
-        }
-        
-        .bottom-nav-item.active {
-            color: #321fdb;
-        }
-        
-        .bottom-nav-item i {
-            font-size: 1.5rem;
-            margin-bottom: 0.25rem;
-        }
-        
-        @media (min-width: 768px) {
-            .bottom-nav {
-                display: none;
-            }
-        }
-        
-        /* Hide sidebar on mobile */
-        @media (max-width: 767px) {
-            .sidebar {
-                display: none;
-            }
-        }
-    </style>
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
     {% if current_user.is_authenticated %}
@@ -149,6 +91,13 @@
     
     <!-- Main content wrapper -->
     <div class="wrapper d-flex flex-column min-vh-100">
+        <!-- Mobile header with logo -->
+        <header class="mobile-header d-md-none">
+            <div class="mobile-header-content">
+                <img src="{{ url_for('static', filename='images/logo-white.png') }}" alt="CasettaFit" class="mobile-logo">
+            </div>
+        </header>
+        
         <!-- Header for desktop -->
         <header class="header header-sticky p-0 mb-4 d-none d-md-block">
             <div class="container-fluid border-bottom px-4">
@@ -210,37 +159,81 @@
                 {% block content %}{% endblock %}
             </div>
         </div>
+    </div>
+    
+    <!-- Bottom navigation for mobile (outside wrapper for proper fixed positioning) -->
+    <nav class="bottom-nav d-md-none">
+        <a href="{{ url_for('main.index') }}" class="bottom-nav-item {% if request.endpoint == 'main.index' %}active{% endif %}" onclick="window.location.href='{{ url_for('main.index') }}'; return false;">
+            <i class="icon cil-speedometer"></i>
+            <span>Home</span>
+        </a>
+        <a href="{{ url_for('programs.index') }}" class="bottom-nav-item {% if request.endpoint and request.endpoint.startswith('programs') %}active{% endif %}" onclick="window.location.href='{{ url_for('programs.index') }}'; return false;">
+            <i class="icon cil-notes"></i>
+            <span>Programs</span>
+        </a>
+        <a href="{{ url_for('calendar.index') }}" class="bottom-nav-item {% if request.endpoint and request.endpoint.startswith('calendar') %}active{% endif %}" onclick="window.location.href='{{ url_for('calendar.index') }}'; return false;">
+            <i class="icon cil-calendar"></i>
+            <span>Calendar</span>
+        </a>
+        <a href="{{ url_for('reports.index') }}" class="bottom-nav-item {% if request.endpoint and request.endpoint.startswith('reports') %}active{% endif %}" onclick="window.location.href='{{ url_for('reports.index') }}'; return false;">
+            <i class="icon cil-chart-line"></i>
+            <span>Reports</span>
+        </a>
+        <button type="button" class="bottom-nav-item" onclick="toggleMobileMenu()">
+            <i class="icon cil-menu"></i>
+            <span>More</span>
+        </button>
+    </nav>
+    
+    <!-- Mobile menu overlay -->
+    <div class="mobile-menu-overlay" id="mobileMenuOverlay" onclick="toggleMobileMenu()"></div>
+    
+    <!-- Mobile slide-up menu -->
+    <div class="mobile-menu" id="mobileMenu">
+            <div class="mobile-menu-header">
+                <h5>Menu</h5>
+                <button type="button" class="btn-close" onclick="toggleMobileMenu()"></button>
+            </div>
+            <div class="mobile-menu-content">
+                <a href="{{ url_for('gym.index') }}" class="mobile-menu-item">
+                    <i class="icon cil-dumbbell"></i>
+                    <span>My Gym</span>
+                </a>
+                <a href="{{ url_for('exercises.index') }}" class="mobile-menu-item">
+                    <i class="icon cil-list"></i>
+                    <span>Exercises</span>
+                </a>
+                <a href="{{ url_for('equipment.index') }}" class="mobile-menu-item">
+                    <i class="icon cil-building"></i>
+                    <span>Equipment</span>
+                </a>
+                <a href="{{ url_for('history.index') }}" class="mobile-menu-item">
+                    <i class="icon cil-history"></i>
+                    <span>History</span>
+                </a>
+                <a href="{{ url_for('goals.index') }}" class="mobile-menu-item">
+                    <i class="icon cil-target"></i>
+                    <span>Goals</span>
+                </a>
+                {% if current_user.is_admin %}
+                <div class="mobile-menu-divider"></div>
+                <a href="{{ url_for('admin.users') }}" class="mobile-menu-item">
+                    <i class="icon cil-people"></i>
+                    <span>Admin - Users</span>
+                </a>
+                {% endif %}
+            </div>
+        </div>
         
-        <!-- Bottom navigation for mobile -->
-        <nav class="bottom-nav d-md-none">
-            <a href="{{ url_for('main.index') }}" class="bottom-nav-item {% if request.endpoint == 'main.index' %}active{% endif %}">
-                <i class="cil-speedometer"></i>
-                <span>Home</span>
-            </a>
-            <a href="{{ url_for('programs.index') }}" class="bottom-nav-item {% if request.endpoint and request.endpoint.startswith('programs') %}active{% endif %}">
-                <i class="cil-notes"></i>
-                <span>Programs</span>
-            </a>
-            <a href="{{ url_for('calendar.index') }}" class="bottom-nav-item {% if request.endpoint and request.endpoint.startswith('calendar') %}active{% endif %}">
-                <i class="cil-calendar"></i>
-                <span>Calendar</span>
-            </a>
-            <a href="{{ url_for('reports.index') }}" class="bottom-nav-item {% if request.endpoint and request.endpoint.startswith('reports') %}active{% endif %}">
-                <i class="cil-chart-line"></i>
-                <span>Reports</span>
-            </a>
-            {% if current_user.is_admin %}
-            <a href="{{ url_for('admin.users') }}" class="bottom-nav-item {% if request.endpoint and request.endpoint.startswith('admin') %}active{% endif %}">
-                <i class="cil-settings"></i>
-                <span>Admin</span>
-            </a>
-            {% else %}
-            <a href="{{ url_for('gym.index') }}" class="bottom-nav-item {% if request.endpoint and request.endpoint.startswith('gym') %}active{% endif %}">
-                <i class="cil-dumbbell"></i>
-                <span>Gym</span>
-            </a>
-            {% endif %}
-        </nav>
+        <script>
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            const overlay = document.getElementById('mobileMenuOverlay');
+            menu.classList.toggle('active');
+            overlay.classList.toggle('active');
+            document.body.style.overflow = menu.classList.contains('active') ? 'hidden' : '';
+        }
+        </script>
     </div>
     {% else %}
     <!-- Non-authenticated layout -->

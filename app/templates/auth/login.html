@@ -20,7 +20,7 @@
                             <span class="input-group-text">
                                 <i class="icon cil-user"></i>
                             </span>
-                            {{ form.username(class="form-control", placeholder="Username") }}
+                            {{ form.username(class="form-control", placeholder="Username", **{'aria-label': 'Username'}) }}
                         </div>
                         {% if form.username.errors %}
                             <div class="text-danger mb-3">
@@ -34,7 +34,7 @@
                             <span class="input-group-text">
                                 <i class="icon cil-lock-locked"></i>
                             </span>
-                            {{ form.password(class="form-control", placeholder="Password") }}
+                            {{ form.password(class="form-control", placeholder="Password", type="password", **{'aria-label': 'Password'}) }}
                         </div>
                         {% if form.password.errors %}
                             <div class="text-danger mb-3">
