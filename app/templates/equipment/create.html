@@ -219,39 +219,39 @@ function removeVariation(id) {
     }
 }
 
-// Autocomplete for Manufacturer and Model
-let availableManufacturers = [];
-let availableModels = [];
-
-// Fetch manufacturers using shared utility
-apiGet('{{ url_for("equipment.get_manufacturers") }}')
-    .then(data => {
-        availableManufacturers = data;
-    })
-    .catch(error => {
-        console.error('Error loading manufacturers:', error);
-    });
-
-// Fetch models using shared utility
-apiGet('{{ url_for("equipment.get_models") }}')
-    .then(data => {
-        availableModels = data;
-    })
-    .catch(error => {
-        console.error('Error loading models:', error);
-    });
-
-// Setup autocomplete for manufacturer using shared utility
-const manufacturerInput = document.getElementById('manufacturer');
-setupAutocomplete(manufacturerInput, () => availableManufacturers);
-
-// Setup autocomplete for model using shared utility
-const modelInput = document.getElementById('model');
-setupAutocomplete(modelInput, () => availableModels);
-
-// Manual modal initialization for add variation modal
-{% if equipment %}
+// Autocomplete for Manufacturer and Model - wait for DOM and common.js to load
 document.addEventListener('DOMContentLoaded', function() {
+    let availableManufacturers = [];
+    let availableModels = [];
+
+    // Fetch manufacturers using shared utility
+    apiGet('{{ url_for("equipment.get_manufacturers") }}')
+        .then(data => {
+            availableManufacturers = data;
+        })
+        .catch(error => {
+            console.error('Error loading manufacturers:', error);
+        });
+
+    // Fetch models using shared utility
+    apiGet('{{ url_for("equipment.get_models") }}')
+        .then(data => {
+            availableModels = data;
+        })
+        .catch(error => {
+            console.error('Error loading models:', error);
+        });
+
+    // Setup autocomplete for manufacturer using shared utility
+    const manufacturerInput = document.getElementById('manufacturer');
+    setupAutocomplete(manufacturerInput, () => availableManufacturers);
+
+    // Setup autocomplete for model using shared utility
+    const modelInput = document.getElementById('model');
+    setupAutocomplete(modelInput, () => availableModels);
+
+    // Manual modal initialization for add variation modal
+    {% if equipment %}
     const modalElement = document.getElementById('addVariationModal');
     if (modalElement && typeof bootstrap !== 'undefined') {
         // Bootstrap is loaded, initialize modal
@@ -267,8 +267,8 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         console.error('Modal element or Bootstrap not found');
     }
+    {% endif %}
 });
-{% endif %}
 </script>
 
 {% endblock %}
