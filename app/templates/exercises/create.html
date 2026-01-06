@@ -294,12 +294,92 @@ function removeEquipment(equipId) {
     if (badge) badge.remove();
 }
 
+// Secondary Muscles - Global variables and functions (for onclick handlers)
+let availableMuscles = [];
+let selectedMuscles = [];
+let isSelectingSuggestion = false;
+let musclesInput; // Hidden storage field
+let musclesTyping; // Visible typing field
+
+function selectMuscle(muscle) {
+    isSelectingSuggestion = true;
+    addMuscle(muscle);
+    musclesTyping.value = '';
+    musclesTyping.focus();
+    hideMuscleSuggestions();
+}
+
+function addMuscle(muscle) {
+    muscle = muscle.trim();
+    if (muscle && !selectedMuscles.includes(muscle)) {
+        selectedMuscles.push(muscle);
+        updateMuscleDisplay();
+        updateHiddenInput();
+    }
+}
+
+function removeMuscle(muscle) {
+    selectedMuscles = selectedMuscles.filter(m => m !== muscle);
+    updateMuscleDisplay();
+    updateHiddenInput();
+}
+
+function updateMuscleDisplay() {
+    const container = document.getElementById('muscleTagsContainer');
+    container.innerHTML = selectedMuscles.map(muscle =>
+        `<span class="badge bg-secondary me-1 mb-1">
+            ${muscle}
+            <button type="button" class="btn-close btn-close-white ms-1" style="font-size: 0.6rem; padding: 0;" onclick="removeMuscle('${muscle.replace(/'/g, "\\'")}')"></button>
+        </span>`
+    ).join('');
+}
+
+function updateHiddenInput() {
+    const newValue = selectedMuscles.join(', ');
+    musclesInput.value = newValue;
+    console.log('Updated secondary_muscles field:', newValue, 'selectedMuscles:', selectedMuscles);
+}
+
+function showMuscleSuggestions(search, prefix) {
+    const suggestions = availableMuscles.filter(m => 
+        m.toLowerCase().includes(search.toLowerCase()) && 
+        !selectedMuscles.includes(m)
+    ).slice(0, 5);
+    
+    if (suggestions.length === 0) {
+        hideMuscleSuggestions();
+        return;
+    }
+    
+    let dropdown = document.getElementById('muscleSuggestionsDropdown');
+    if (!dropdown) {
+        dropdown = document.createElement('div');
+        dropdown.id = 'muscleSuggestionsDropdown';
+        dropdown.className = 'list-group position-absolute w-100';
+        dropdown.style.zIndex = '1000';
+        dropdown.style.maxHeight = '200px';
+        dropdown.style.overflowY = 'auto';
+        musclesTyping.parentElement.style.position = 'relative';
+        musclesTyping.parentElement.appendChild(dropdown);
+    }
+    
+    dropdown.innerHTML = suggestions.map(muscle => 
+        `<button type="button" class="list-group-item list-group-item-action" onmousedown="event.preventDefault()" onclick="selectMuscle('${muscle.replace(/'/g, "\\'")}')">
+            ${muscle}
+        </button>`
+    ).join('');
+}
+
+function hideMuscleSuggestions() {
+    const dropdown = document.getElementById('muscleSuggestionsDropdown');
+    if (dropdown) dropdown.remove();
+}
+
 // Wrap DOM-dependent code in DOMContentLoaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Secondary Muscles Autocomplete
-    let availableMuscles = [];
-    let selectedMuscles = [];
-    let isSelectingSuggestion = false; // Flag to prevent blur from adding
+    // Initialize field references
+    musclesInput = document.getElementById('secondary_muscles_input');
+    musclesTyping = document.getElementById('secondary_muscles_typing');
 
     // Fetch available muscle suggestions using shared utility
     apiGet('{{ url_for("exercises.get_secondary_muscles") }}', {
@@ -362,80 +442,6 @@ musclesTyping.addEventListener('blur', function(e) {
         hideMuscleSuggestions();
     }, 200);
 });
-
-function showMuscleSuggestions(search, prefix) {
-    const suggestions = availableMuscles.filter(m => 
-        m.toLowerCase().includes(search.toLowerCase()) && 
-        !selectedMuscles.includes(m)
-    ).slice(0, 5);
-    
-    if (suggestions.length === 0) {
-        hideMuscleSuggestions();
-        return;
-    }
-    
-    let dropdown = document.getElementById('muscleSuggestionsDropdown');
-    if (!dropdown) {
-        dropdown = document.createElement('div');
-        dropdown.id = 'muscleSuggestionsDropdown';
-        dropdown.className = 'list-group position-absolute w-100';
-        dropdown.style.zIndex = '1000';
-        dropdown.style.maxHeight = '200px';
-        dropdown.style.overflowY = 'auto';
-        musclesTyping.parentElement.style.position = 'relative';
-        musclesTyping.parentElement.appendChild(dropdown);
-    }
-    
-    dropdown.innerHTML = suggestions.map(muscle => 
-        `<button type="button" class="list-group-item list-group-item-action" onclick="selectMuscle('${muscle.replace(/'/g, "\\'")}', '${prefix.replace(/'/g, "\\'")}')">
-            ${muscle}
-        </button>`
-    ).join('');
-}
-
-function hideMuscleSuggestions() {
-    const dropdown = document.getElementById('muscleSuggestionsDropdown');
-    if (dropdown) dropdown.remove();
-}
-
-function selectMuscle(muscle) {
-    isSelectingSuggestion = true; // Prevent blur handler from adding
-    addMuscle(muscle);
-    musclesTyping.value = '';
-    musclesTyping.focus();
-    hideMuscleSuggestions();
-}
-
-function addMuscle(muscle) {
-    muscle = muscle.trim();
-    if (muscle && !selectedMuscles.includes(muscle)) {
-        selectedMuscles.push(muscle);
-        updateMuscleDisplay();
-        updateHiddenInput();
-    }
-}
-
-function removeMuscle(muscle) {
-    selectedMuscles = selectedMuscles.filter(m => m !== muscle);
-    updateMuscleDisplay();
-    updateHiddenInput();
-}
-
-function updateMuscleDisplay() {
-    const container = document.getElementById('muscleTagsContainer');
-    container.innerHTML = selectedMuscles.map(muscle => 
-        `<span class="badge bg-secondary me-1 mb-1">
-            ${muscle}
-            <button type="button" class="btn-close btn-close-white ms-1" style="font-size: 0.6rem; padding: 0;" onclick="removeMuscle('${muscle.replace(/'/g, "\\'")}')"></button>
-        </span>`
-    ).join('');
-}
-
-function updateHiddenInput() {
-    const newValue = selectedMuscles.join(', ');
-    musclesInput.value = newValue;
-    console.log('Updated secondary_muscles field:', newValue, 'selectedMuscles:', selectedMuscles);
-}
 
 // Load equipment variations data from JSON script tag
 const equipmentVariationsData = JSON.parse(document.getElementById('equipmentVariationsData').textContent);
