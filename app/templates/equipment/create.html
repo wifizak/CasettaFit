@@ -118,7 +118,7 @@
         <div class="card mt-3">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Existing Variations</h5>
-                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addVariationModal">
+                <button type="button" class="btn btn-sm btn-primary" onclick="showAddVariationModal()">
                     <i class="bi bi-plus-circle"></i> Add Variation
                 </button>
             </div>
@@ -249,7 +249,24 @@ document.addEventListener('DOMContentLoaded', function() {
     // Setup autocomplete for model using shared utility
     const modelInput = document.getElementById('model');
     setupAutocomplete(modelInput, () => availableModels);
+
+    // Initialize add variation modal (for edit mode)
+    {% if equipment %}
+    const addVariationModalElement = document.getElementById('addVariationModal');
+    if (addVariationModalElement && typeof coreui !== 'undefined') {
+        window.addVariationModal = new coreui.Modal(addVariationModalElement);
+    }
+    {% endif %}
 });
+
+{% if equipment %}
+// Function to show add variation modal
+function showAddVariationModal() {
+    if (window.addVariationModal) {
+        window.addVariationModal.show();
+    }
+}
+{% endif %}
 </script>
 
 {% endblock %}
