@@ -67,7 +67,8 @@ with app.app_context():
 
 echo "Setting permissions..."
 chown -R www-data:www-data /opt/CasettaFit/app
-chmod -R 755 /opt/CasettaFit/app
+chmod 775 /opt/CasettaFit/app  # SQLite needs write access to directory for WAL files
+chmod -R 755 /opt/CasettaFit/app/static /opt/CasettaFit/app/templates 2>/dev/null || true
 # Ensure www-data can write to logs and database
 chmod 775 /opt/CasettaFit/app/logs
 chmod 664 /opt/CasettaFit/app/casettafit.db* 2>/dev/null || true
