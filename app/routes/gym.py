@@ -78,7 +78,7 @@ def edit(gym_id):
     if form.validate_on_submit():
         # Handle picture upload
         if form.picture.data:
-            filename = save_uploaded_file(form.picture.data, 'app/static/uploads/gyms')
+            filename = save_uploaded_file(form.picture.data, 'static/uploads/gyms')
             if filename:
                 # Delete old picture if exists
                 if gym.picture_url and gym.picture_url.startswith('/static/uploads/gyms/'):
