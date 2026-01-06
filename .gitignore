@@ -68,6 +68,11 @@ instance/
 # CasettaFit specific
 app/casettafit.db*
 app/migrations/
+app/logs/
+app/static/uploads/*
+!app/static/uploads/.gitkeep
+!app/static/uploads/gyms/.gitkeep
+!app/static/uploads/profiles/.gitkeep
 
 # Scrapy stuff:
 .scrapy
