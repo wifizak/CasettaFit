@@ -7,6 +7,7 @@ User=www-data
 Group=www-data
 WorkingDirectory=/opt/CasettaFit/app
 Environment="PATH=/opt/CasettaFit/app/venv/bin"
+Environment="PYTHONPATH=/opt/CasettaFit"
 ExecStart=/opt/CasettaFit/app/venv/bin/gunicorn --workers 3 --bind 127.0.0.1:5000 wsgi:app
 
 [Install]

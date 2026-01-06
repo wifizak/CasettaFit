@@ -21,6 +21,11 @@ apt-get install -y python3 python3-pip python3-venv nginx
 echo "Creating Python virtual environment..."
 cd /opt/CasettaFit/app
 python3 -m venv venv
+
+# Create necessary directories
+mkdir -p logs
+mkdir -p uploads
+
 source venv/bin/activate
 
 echo "Installing Python dependencies..."
@@ -28,16 +33,44 @@ pip install --upgrade pip
 pip install -r requirements.txt
 
 echo "Initializing database..."
+export PYTHONPATH=/opt/CasettaFit
 flask db init
 flask db migrate -m "Initial migration"
 flask db upgrade
 
 echo "Seeding admin user..."
-python3 seed.py
+python3 -c "
+import sys
+sys.path.insert(0, '/opt/CasettaFit')
+from app import create_app, db
+from app.models import User, UserProfile
+
+app = create_app('production')
+
+with app.app_context():
+    admin = User.query.filter_by(username='admin').first()
+    
+    if not admin:
+        admin = User(username='admin', is_admin=True)
+        admin.set_password('adminpass')
+        db.session.add(admin)
+        db.session.flush()
+        
+        profile = UserProfile(user_id=admin.id)
+        db.session.add(profile)
+        
+        db.session.commit()
+        print('Admin user created successfully!')
+    else:
+        print('Admin user already exists.')
+"
 
 echo "Setting permissions..."
 chown -R www-data:www-data /opt/CasettaFit/app
 chmod -R 755 /opt/CasettaFit/app
+# Ensure www-data can write to logs and database
+chmod 775 /opt/CasettaFit/app/logs
+chmod 664 /opt/CasettaFit/app/casettafit.db* 2>/dev/null || true
 
 echo "Configuring Gunicorn service..."
 cp /opt/CasettaFit/app/casettafit.service /etc/systemd/system/

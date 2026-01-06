@@ -3,15 +3,15 @@
 import sys
 import os
 
-# Add the parent directory to the path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Set the FLASK_APP environment variable and use flask shell context
+os.environ['FLASK_APP'] = 'wsgi:app'
+os.environ['CONFIG_ENV'] = 'production'
 
-from app import create_app, db
-from app.models import User, UserProfile
+# Import after setting environment
+from wsgi import app
+from models import User, UserProfile, db
 
 def seed_admin():
-    app = create_app()
-    
     with app.app_context():
         # Check if admin already exists
         admin = User.query.filter_by(username='admin').first()
