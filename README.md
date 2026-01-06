@@ -5,6 +5,74 @@ Home Gym Weight Lifting Tracker
 
 CasettaFit is a comprehensive workout tracking application designed for home gym enthusiasts. Track your exercises, monitor progress, and manage your fitness journey with a powerful yet intuitive interface.
 
+## Quick Start
+
+### Installation
+
+1. Clone the repository to `/opt/CasettaFit`
+2. Run the installation script:
+```bash
+cd /opt/CasettaFit/app
+sudo bash setup.sh
+```
+
+3. Configure SSL/HTTPS (recommended):
+```bash
+sudo bash setup_ssl.sh
+```
+
+### First Login
+
+- **URL**: https://your-server-ip/ or https://your-domain.com/
+- **Username**: admin
+- **Password**: adminpass
+
+⚠️ **Change the admin password immediately after first login!**
+
+## SSL/HTTPS Setup
+
+CasettaFit supports three SSL certificate options. See [SSL_SETUP.md](SSL_SETUP.md) for detailed instructions.
+
+### Option 1: Let's Encrypt (Recommended for Production)
+
+**Automated setup:**
+```bash
+cd /opt/CasettaFit/app
+sudo bash setup_ssl_auto.sh
+```
+
+**Manual setup:**
+```bash
+sudo bash setup_ssl.sh
+# Select option 1
+# Enter your domain name
+```
+
+**Features:**
+- Free trusted SSL certificate
+- Auto-renewal every 90 days
+- No browser warnings
+
+### Option 2: Self-Signed Certificate (Development/Testing)
+
+```bash
+sudo bash setup_ssl.sh
+# Select option 2
+```
+
+**Note:** Browsers will show security warnings. Click "Advanced" → "Proceed" to continue.
+
+### Option 3: Custom Certificate Upload
+
+If you have your own SSL certificate:
+```bash
+sudo bash setup_ssl.sh
+# Select option 3
+# Provide paths to your certificate files
+```
+
+For detailed SSL setup instructions, troubleshooting, and certificate management, see **[SSL_SETUP.md](SSL_SETUP.md)**.
+
 ## System Service Management
 
 The application runs as a systemd service using Gunicorn as the production WSGI server.
@@ -60,26 +128,30 @@ tail -f /opt/CasettaFit/logs/error.log
 
 ## NGINX Reverse Proxy
 
-The application uses NGINX as a reverse proxy to the Gunicorn application server with HTTPS enabled.
+The application uses NGINX as a reverse proxy to the Gunicorn application server.
 
 ### Configuration
 
-- **Config File**: `/etc/nginx/sites-available/casettafit.conf`
-- **Server Name**: Accepts any hostname or IP address
+- **Config File**: `/etc/nginx/sites-available/casettafit`
 - **Ports**: 
-  - 443 (HTTPS) - Primary access
-  - 80 (HTTP) - Redirects to HTTPS
-- **SSL Certificate**: Self-signed certificate at `/etc/nginx/ssl/casettafit.crt`
-- **Static Files**: Served directly by NGINX for better performance
+  - 80 (HTTP) - Redirects to HTTPS when SSL is configured
+  - 443 (HTTPS) - Primary access when SSL is configured
 - **Max Upload Size**: 10MB
+
+### SSL Configuration
+
+After running the initial setup, configure SSL using:
+```bash
+cd /opt/CasettaFit/app
+sudo bash setup_ssl.sh
+```
+
+See [SSL_SETUP.md](SSL_SETUP.md) for detailed SSL setup instructions.
 
 ### Accessing the Application
 
-- **By IP**: `https://your-server-ip/` (recommended)
-- **By hostname**: `https://casettafit.local/`
-- **HTTP**: Automatically redirects to HTTPS
-
-**Note**: Since this uses a self-signed certificate, browsers will show a security warning. Click "Advanced" and "Proceed" to continue.
+- **With SSL**: `https://your-domain.com/`
+- **Without SSL**: `http://your-server-ip/`
 
 ### NGINX Commands
 
@@ -94,46 +166,13 @@ sudo systemctl reload nginx
 sudo systemctl restart nginx
 
 # View NGINX logs
-tail -f /var/log/nginx/casettafit_access.log
-tail -f /var/log/nginx/casettafit_error.log
+sudo tail -f /var/log/nginx/access.log
+sudo tail -f /var/log/nginx/error.log
 ```
 
-### SSL Certificate Management
+## Database Management
 
-The current self-signed certificate is valid for 1 year. To regenerate:
-
-```bash
-sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-  -keyout /etc/nginx/ssl/casettafit.key \
-  -out /etc/nginx/ssl/casettafit.crt \
-  -subj "/C=US/ST=State/L=City/O=CasettaFit/CN=your-domain.com"
-
-sudo chmod 600 /etc/nginx/ssl/casettafit.key
-sudo chmod 644 /etc/nginx/ssl/casettafit.crt
-sudo systemctl reload nginx
-```
-
-For production, consider using Let's Encrypt for a trusted SSL certificate.
-
-### Updating Server Name
-
-If you want to restrict to a specific domain, edit `/etc/nginx/sites-available/casettafit.conf` and change:
-```nginx
-server_name _;  # Currently accepts any hostname or IP
-```
-
-To:
-```nginx
-server_name yourdomain.com www.yourdomain.com;
-```
-
-Then reload NGINX:
-```bash
-sudo nginx -t
-sudo systemctl reload nginx
-```
-
-## Troubleshooting
+### Migrations
 
 ### Service Won't Start
 ```bash
