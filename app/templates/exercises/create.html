@@ -272,7 +272,11 @@ function addEquipmentBadge(equipId, equipName, variations) {
             <strong>${equipName}</strong>${variationText}
             <input type="hidden" name="equipment_ids[]" value="${equipId}">
             ${Object.entries(variations).map(([varId, varData]) => 
-                `<input type="hidden" name="variations[]" value="${equipId}:${varId}:${varData.option}">`
+                `<input type="hidden" name="variations[]" value='${JSON.stringify({
+                    equipment_id: equipId,
+                    variation_id: parseInt(varId),
+                    selected_option: varData.option
+                })}'>`
             ).join('')}
         </div>
         <button type="button" class="btn-close" onclick="removeEquipment(${equipId})"></button>
