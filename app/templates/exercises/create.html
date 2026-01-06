@@ -377,8 +377,8 @@ function showMuscleSuggestions(search, prefix) {
         dropdown.style.zIndex = '1000';
         dropdown.style.maxHeight = '200px';
         dropdown.style.overflowY = 'auto';
-        musclesInput.parentElement.style.position = 'relative';
-        musclesInput.parentElement.appendChild(dropdown);
+        musclesTyping.parentElement.style.position = 'relative';
+        musclesTyping.parentElement.appendChild(dropdown);
     }
     
     dropdown.innerHTML = suggestions.map(muscle => 
@@ -393,7 +393,7 @@ function hideMuscleSuggestions() {
     if (dropdown) dropdown.remove();
 }
 
-function selectMuscle(muscle, prefix) {
+function selectMuscle(muscle) {
     addMuscle(muscle);
     musclesTyping.value = '';
     musclesTyping.focus();
