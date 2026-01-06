@@ -249,25 +249,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Setup autocomplete for model using shared utility
     const modelInput = document.getElementById('model');
     setupAutocomplete(modelInput, () => availableModels);
-
-    // Manual modal initialization for add variation modal
-    {% if equipment %}
-    const modalElement = document.getElementById('addVariationModal');
-    if (modalElement && typeof bootstrap !== 'undefined') {
-        // Bootstrap is loaded, initialize modal
-        const modal = new bootstrap.Modal(modalElement);
-        
-        // Add click handler to button
-        const triggerButton = document.querySelector('[data-bs-target="#addVariationModal"]');
-        if (triggerButton) {
-            triggerButton.addEventListener('click', function() {
-                modal.show();
-            });
-        }
-    } else {
-        console.error('Modal element or Bootstrap not found');
-    }
-    {% endif %}
 });
 </script>
 
