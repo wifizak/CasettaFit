@@ -65,6 +65,10 @@ db.sqlite3-journal
 instance/
 .webassets-cache
 
+# CasettaFit specific
+app/casettafit.db*
+app/migrations/
+
 # Scrapy stuff:
 .scrapy
 
