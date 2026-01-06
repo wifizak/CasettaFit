@@ -302,6 +302,7 @@ let musclesInput; // Hidden storage field
 let musclesTyping; // Visible typing field
 
 function selectMuscle(muscle) {
+    if (!musclesTyping) return; // Guard against early calls
     isSelectingSuggestion = true;
     addMuscle(muscle);
     musclesTyping.value = '';
@@ -326,6 +327,7 @@ function removeMuscle(muscle) {
 
 function updateMuscleDisplay() {
     const container = document.getElementById('muscleTagsContainer');
+    if (!container) return; // Guard against early calls
     container.innerHTML = selectedMuscles.map(muscle =>
         `<span class="badge bg-secondary me-1 mb-1">
             ${muscle}
@@ -335,12 +337,14 @@ function updateMuscleDisplay() {
 }
 
 function updateHiddenInput() {
+    if (!musclesInput) return; // Guard against early calls
     const newValue = selectedMuscles.join(', ');
     musclesInput.value = newValue;
     console.log('Updated secondary_muscles field:', newValue, 'selectedMuscles:', selectedMuscles);
 }
 
 function showMuscleSuggestions(search, prefix) {
+    if (!musclesTyping) return; // Guard against early calls
     const suggestions = availableMuscles.filter(m => 
         m.toLowerCase().includes(search.toLowerCase()) && 
         !selectedMuscles.includes(m)
