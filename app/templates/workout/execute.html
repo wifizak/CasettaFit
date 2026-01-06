@@ -134,6 +134,266 @@
     background-color: #ffc107;
     color: #000;
 }
+
+/* Mobile View Styles */
+@media (max-width: 767px) {
+    /* Hide table view on mobile */
+    .desktop-sets-table {
+        display: none !important;
+    }
+    
+    /* Toggle button */
+    .mobile-view-toggle {
+        margin-bottom: 1rem;
+    }
+    
+    .mobile-view-toggle button {
+        width: 100%;
+        padding: 0.75rem;
+        font-size: 1rem;
+        font-weight: 600;
+        min-height: 44px;
+    }
+    
+    /* One at a time carousel (default) */
+    .mobile-sets-carousel {
+        display: block !important;
+    }
+    
+    .mobile-sets-carousel.hidden {
+        display: none !important;
+    }
+    
+    .carousel-set-header {
+        text-align: left;
+        padding: 0.25rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .carousel-set-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #6c757d;
+        margin-bottom: 0;
+    }
+    
+    .carousel-set-subtitle {
+        font-size: 0.85rem;
+        color: #198754;
+        font-weight: 600;
+    }
+    
+    .carousel-input-row {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        gap: 0.75rem;
+    }
+    
+    .carousel-input-label {
+        font-weight: 600;
+        font-size: 1rem;
+        min-width: 90px;
+        flex-shrink: 0;
+    }
+    
+    .carousel-input-label small {
+        display: block;
+        font-size: 0.8rem;
+        color: #6c757d;
+        font-weight: normal;
+    }
+    
+    .carousel-input-field {
+        flex: 1;
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .carousel-input-field input {
+        flex: 1;
+        padding: 0.75rem;
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        font-size: 1rem;
+        min-height: 44px;
+    }
+    
+    .carousel-input-field button {
+        padding: 0.75rem 1rem;
+        min-height: 44px;
+        white-space: nowrap;
+    }
+    
+    .carousel-rpe-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .carousel-rpe-buttons button {
+        flex: 1;
+        min-height: 38px;
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+    
+    .carousel-log-btn {
+        width: 100%;
+        min-height: 38px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-top: 0.75rem;
+    }
+    
+    .carousel-navigation {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
+        border-top: 1px solid #dee2e6;
+    }
+    
+    .carousel-navigation button {
+        flex: 1;
+        min-height: 36px;
+        font-size: 0.85rem;
+    }
+    
+    .carousel-navigation button:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+    
+    /* Mobile accordion container (show all mode) */
+    .mobile-sets-accordion {
+        display: none !important;
+    }
+    
+    .mobile-sets-accordion.active {
+        display: block !important;
+    }
+    
+    .set-accordion-item {
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        margin-bottom: 0.5rem;
+        background: #fff;
+    }
+    
+    .set-accordion-header {
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #f8f9fa;
+        border-radius: 0.375rem;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .set-accordion-header.completed {
+        background: #d1e7dd;
+    }
+    
+    .set-accordion-header.current {
+        background: #fff3cd;
+        border: 2px solid #ffc107;
+    }
+    
+    .set-accordion-title {
+        font-weight: 600;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .set-accordion-summary {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .set-accordion-icon {
+        transition: transform 0.2s;
+        font-size: 1.2rem;
+    }
+    
+    .set-accordion-icon.expanded {
+        transform: rotate(180deg);
+    }
+    
+    .set-accordion-body {
+        padding: 1rem;
+        display: none;
+    }
+    
+    .set-accordion-body.expanded {
+        display: block;
+    }
+    
+    .mobile-set-input-group {
+        margin-bottom: 1rem;
+    }
+    
+    .mobile-set-input-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+    
+    .mobile-set-input-group input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        font-size: 1rem;
+    }
+    
+    .mobile-set-input-group .input-with-button {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .mobile-set-input-group .input-with-button input {
+        flex: 1;
+    }
+    
+    .mobile-set-input-group .input-with-button button {
+        padding: 0.75rem 1rem;
+        min-height: 44px;
+    }
+    
+    .mobile-rpe-buttons {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: space-between;
+    }
+    
+    .mobile-rpe-buttons button {
+        flex: 1;
+        min-height: 38px;
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+    
+    .mobile-save-set-btn {
+        width: 100%;
+        min-height: 50px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-top: 1rem;
+    }
+}
+
+/* Desktop: hide mobile accordion */
+@media (min-width: 768px) {
+    .mobile-sets-accordion {
+        display: none !important;
+    }
+}
 </style>
 
 <script>
@@ -218,19 +478,125 @@ function renderWorkout() {
     container.innerHTML = html;
 }
 
+function renderCarouselSet(exercise, setNumber, logged) {
+    const numSets = exercise.sets;
+    const loggedSet = logged.find(s => s.set_number === setNumber);
+    const isCompleted = loggedSet !== undefined;
+    const suggestedWeight = exercise.suggested_weights[setNumber - 1] || exercise.suggested_weights[0] || '';
+    const suggestedReps = exercise.reps || '';
+    
+    let html = '';
+    
+    // Header
+    html += `<div class="carousel-set-header">`;    
+    html += `<div class="carousel-set-title">`;    
+    if (isCompleted) {
+        html += `<i class="bi bi-check-circle-fill text-success"></i> `;
+    }
+    html += `Set ${setNumber} of ${numSets}`;    
+    html += `</div>`;    
+    if (isCompleted) {
+        html += `<div class="carousel-set-subtitle">`;        
+        html += `${loggedSet.weight}lbs × ${loggedSet.reps} reps${loggedSet.rpe ? ' @ RPE ' + loggedSet.rpe : ''}`;
+        html += `</div>`;        
+    }
+    html += `</div>`;    
+    
+    // Weight
+    html += `<div class="carousel-input-row">`;    
+    html += `<div class="carousel-input-label">Weight <small>lbs</small></div>`;    
+    html += `<div class="carousel-input-field">`;    
+    html += `<input type="number" class="form-control" `;    
+    html += `id="weight-carousel-${exercise.exercise_id}-${setNumber}" `;    
+    html += `placeholder="${suggestedWeight || 'Enter weight'}" `;    
+    html += `value="${loggedSet?.weight || ''}" step="0.5">`;    
+    if (suggestedWeight) {
+        html += `<button type="button" class="btn btn-outline-secondary" `;        
+        html += `onclick="applyWeightCarousel(${exercise.exercise_id}, ${setNumber}, ${suggestedWeight})">`;        
+        html += `Use ${suggestedWeight}</button>`;        
+    }
+    html += `</div></div>`;    
+    
+    // Reps
+    html += `<div class="carousel-input-row">`;    
+    html += `<div class="carousel-input-label">Reps</div>`;    
+    html += `<div class="carousel-input-field">`;    
+    html += `<input type="number" class="form-control" `;    
+    html += `id="reps-carousel-${exercise.exercise_id}-${setNumber}" `;    
+    html += `value="${loggedSet?.reps || suggestedReps}" `;    
+    html += `placeholder="${suggestedReps || 'Enter reps'}">`;    
+    html += `</div></div>`;    
+    
+    // RPE
+    html += `<div class="carousel-input-row">`;    
+    html += `<div class="carousel-input-label">RPE <small>optional</small></div>`;    
+    html += `<div class="carousel-rpe-buttons">`;    
+    const currentRpe = loggedSet?.rpe || '';
+    html += `<button type="button" class="btn ${currentRpe === '-' ? 'btn-danger' : 'btn-outline-danger'}" `;    
+    html += `onclick="setRpeCarousel(${exercise.exercise_id}, ${setNumber}, '-')" `;    
+    html += `id="rpe-carousel-btn-${exercise.exercise_id}-${setNumber}--">-</button>`;    
+    html += `<button type="button" class="btn ${currentRpe === '=' ? 'btn-success' : 'btn-outline-success'}" `;    
+    html += `onclick="setRpeCarousel(${exercise.exercise_id}, ${setNumber}, '=')" `;    
+    html += `id="rpe-carousel-btn-${exercise.exercise_id}-${setNumber}-=">=</button>`;    
+    html += `<button type="button" class="btn ${currentRpe === '+' ? 'btn-primary' : 'btn-outline-primary'}" `;    
+    html += `onclick="setRpeCarousel(${exercise.exercise_id}, ${setNumber}, '+')" `;    
+    html += `id="rpe-carousel-btn-${exercise.exercise_id}-${setNumber}-+">+</button>`;    
+    html += `</div>`;    
+    html += `<input type="hidden" id="rpe-carousel-${exercise.exercise_id}-${setNumber}" value="${currentRpe}">`;    
+    html += `</div>`;    
+    
+    // Log button
+    html += `<button type="button" class="btn btn-success carousel-log-btn" `;    
+    html += `onclick="logSetCarousel(${exercise.exercise_id}, ${setNumber}, ${exercise.rest_time_seconds || 0})" `;    
+    html += `${isCompleted ? 'disabled' : ''}>`;    
+    html += `<i class="bi bi-check-lg"></i> ${isCompleted ? 'Set Logged ✓' : 'Log Set ' + setNumber}`;    
+    html += `</button>`;    
+    
+    // Navigation
+    html += `<div class="carousel-navigation">`;    
+    html += `<button type="button" class="btn btn-outline-primary" `;    
+    html += `onclick="navigateCarousel(${exercise.exercise_id}, ${setNumber - 1})" `;    
+    html += `${setNumber <= 1 ? 'disabled' : ''}>`;    
+    html += `<i class="bi bi-chevron-left"></i> Previous`;    
+    html += `</button>`;    
+    html += `<button type="button" class="btn btn-outline-primary" `;    
+    html += `onclick="navigateCarousel(${exercise.exercise_id}, ${setNumber + 1})" `;    
+    html += `${setNumber >= numSets ? 'disabled' : ''}>`;    
+    html += `Next <i class="bi bi-chevron-right"></i>`;    
+    html += `</button>`;    
+    html += `</div>`;    
+    
+    return html;
+}
+
 function renderExerciseCard(exercise, label, color, seriesIndex) {
     const numSets = exercise.sets;
     const logged = loggedSets[exercise.exercise_id] || [];
+    
+    // Calculate first incomplete set early (needed for carousel)
+    let firstIncompleteSet = 1;
+    for (let setNum = 1; setNum <= numSets; setNum++) {
+        if (!logged.find(s => s.set_number === setNum)) {
+            firstIncompleteSet = setNum;
+            break;
+        }
+        if (setNum === numSets && logged.find(s => s.set_number === setNum)) {
+            firstIncompleteSet = numSets + 1; // All complete
+        }
+    }
     
     let html = `<div class="card exercise-card border-${color} border-3 mb-3">`;
     
     // Header
     html += `<div class="card-header bg-${color} text-white d-flex justify-content-between align-items-center">`;
     html += `<span>${label ? label + '. ' : ''}${exercise.exercise_name}</span>`;
-    html += `<div>`;
+    html += `<div class="d-flex align-items-center gap-2">`;
     if (logged.length > 0) {
         html += `<span class="badge bg-success me-2" id="logged-badge-${exercise.exercise_id}">✓ Logged</span>`;
     }
+    html += `<button class="btn btn-sm btn-light d-md-none" onclick="toggleMobileView(${exercise.exercise_id})" `;
+    html += `id="toggle-view-${exercise.exercise_id}" title="Show all sets">`;
+    html += `<i class="bi bi-grid-3x3"></i></button>`;
     if (exercise.previous_sets && exercise.previous_sets.length > 0) {
         html += `<button class="btn btn-sm btn-light" onclick="showPreviousSets(${exercise.exercise_id})">`;
         html += `<i class="bi bi-clock-history"></i></button>`;
@@ -248,8 +614,8 @@ function renderExerciseCard(exercise, label, color, seriesIndex) {
         html += `</div>`;
     }
     
-    // Body with column-based sets
-    html += `<div class="card-body p-3">`;
+    // Body with column-based sets (DESKTOP TABLE VIEW)
+    html += `<div class="card-body p-3 desktop-sets-table">`;
     html += `<div class="table-responsive">`;
     html += `<table class="table table-sm table-borderless mb-0">`;
     
@@ -319,6 +685,117 @@ function renderExerciseCard(exercise, label, color, seriesIndex) {
     html += `</tr>`;
     
     html += `</tbody></table></div>`;
+    html += `</div>`; // End desktop-sets-table
+    
+    // MOBILE VIEWS (Carousel + Accordion)
+    html += `<div class="card-body p-2 mobile-sets-carousel" style="display: none;">`;
+    
+    // Carousel container for current set
+    html += `<div id="carousel-${exercise.exercise_id}">`;    
+    html += renderCarouselSet(exercise, firstIncompleteSet, logged);
+    html += `</div>`;    
+    
+    html += `</div>`; // End mobile-sets-carousel
+    
+    // MOBILE ACCORDION VIEW (Show All)
+    html += `<div class="card-body p-3 mobile-sets-accordion" style="display: none;" id="accordion-view-${exercise.exercise_id}">`;    
+    
+    
+    // Render each set as accordion item (firstIncompleteSet already calculated above)
+    for (let setNum = 1; setNum <= numSets; setNum++) {
+        const loggedSet = logged.find(s => s.set_number === setNum);
+        const isCompleted = loggedSet !== undefined;
+        const isCurrent = setNum === firstIncompleteSet;
+        const suggestedWeight = exercise.suggested_weights[setNum - 1] || exercise.suggested_weights[0] || '';
+        const suggestedReps = exercise.reps || '';
+        
+        html += `<div class="set-accordion-item" id="accordion-${exercise.exercise_id}-${setNum}">`;
+        
+        // Header
+        let headerClass = 'set-accordion-header';
+        if (isCompleted) headerClass += ' completed';
+        if (isCurrent && !isCompleted) headerClass += ' current';
+        
+        html += `<div class="${headerClass}" onclick="toggleSetAccordion(${exercise.exercise_id}, ${setNum})">`;
+        html += `<div>`;
+        html += `<div class="set-accordion-title">`;
+        if (isCompleted) {
+            html += `<i class="bi bi-check-circle-fill text-success"></i>`;
+        }
+        html += `<span>Set ${setNum}</span>`;
+        html += `</div>`;
+        
+        // Summary for completed sets
+        if (isCompleted) {
+            html += `<div class="set-accordion-summary">`;
+            html += `${loggedSet.weight}lbs × ${loggedSet.reps} reps`;
+            if (loggedSet.rpe) html += ` @ RPE ${loggedSet.rpe}`;
+            html += `</div>`;
+        }
+        html += `</div>`;
+        
+        html += `<i class="bi bi-chevron-down set-accordion-icon ${isCurrent ? 'expanded' : ''}" `;
+        html += `id="icon-${exercise.exercise_id}-${setNum}"></i>`;
+        html += `</div>`; // End header
+        
+        // Body (expanded for current set)
+        html += `<div class="set-accordion-body ${isCurrent ? 'expanded' : ''}" `;
+        html += `id="body-${exercise.exercise_id}-${setNum}">`;
+        
+        // Weight input
+        html += `<div class="mobile-set-input-group">`;
+        html += `<label>Weight (lbs)</label>`;
+        html += `<div class="input-with-button">`;
+        html += `<input type="number" class="form-control" `;
+        html += `id="weight-mobile-${exercise.exercise_id}-${setNum}" `;
+        html += `placeholder="${suggestedWeight || 'Enter weight'}" `;
+        html += `value="${loggedSet?.weight || ''}" step="0.5">`;
+        if (suggestedWeight) {
+            html += `<button type="button" class="btn btn-outline-secondary" `;
+            html += `onclick="applySuggestedWeightMobile(${exercise.exercise_id}, ${setNum}, ${suggestedWeight})">`;
+            html += `Use ${suggestedWeight}</button>`;
+        }
+        html += `</div>`;
+        html += `</div>`;
+        
+        // Reps input
+        html += `<div class="mobile-set-input-group">`;
+        html += `<label>Reps</label>`;
+        html += `<input type="number" class="form-control" `;
+        html += `id="reps-mobile-${exercise.exercise_id}-${setNum}" `;
+        html += `value="${loggedSet?.reps || suggestedReps}" `;
+        html += `placeholder="${suggestedReps || 'Enter reps'}">`;
+        html += `</div>`;
+        
+        // RPE buttons
+        html += `<div class="mobile-set-input-group">`;
+        html += `<label>How did this set feel? <span class="text-muted">(optional)</span></label>`;
+        const currentRpe = loggedSet?.rpe || '';
+        html += `<div class="mobile-rpe-buttons">`;
+        html += `<button type="button" class="btn ${currentRpe === '-' ? 'btn-danger' : 'btn-outline-danger'}" `;
+        html += `onclick="setRpeMobile(${exercise.exercise_id}, ${setNum}, '-')" `;
+        html += `id="rpe-mobile-btn-${exercise.exercise_id}-${setNum}--">-</button>`;
+        html += `<button type="button" class="btn ${currentRpe === '=' ? 'btn-success' : 'btn-outline-success'}" `;
+        html += `onclick="setRpeMobile(${exercise.exercise_id}, ${setNum}, '=')" `;
+        html += `id="rpe-mobile-btn-${exercise.exercise_id}-${setNum}-=">=</button>`;
+        html += `<button type="button" class="btn ${currentRpe === '+' ? 'btn-primary' : 'btn-outline-primary'}" `;
+        html += `onclick="setRpeMobile(${exercise.exercise_id}, ${setNum}, '+')" `;
+        html += `id="rpe-mobile-btn-${exercise.exercise_id}-${setNum}-+">+</button>`;
+        html += `</div>`;
+        html += `<input type="hidden" id="rpe-mobile-${exercise.exercise_id}-${setNum}" value="${currentRpe}">`;
+        html += `</div>`;
+        
+        // Log Set button
+        html += `<button type="button" class="btn btn-success mobile-save-set-btn" `;
+        html += `onclick="logSingleSetMobile(${exercise.exercise_id}, ${setNum}, ${exercise.rest_time_seconds || 0})">`;
+        html += `<i class="bi bi-check-lg"></i> Log Set ${setNum}`;
+        html += `</button>`;
+        
+        html += `</div>`; // End body
+        html += `</div>`; // End accordion item
+    }
+    
+    html += `</div>`; // End mobile-sets-accordion
     
     // Overall exercise RPE section
     const anySetLogged = logged.length > 0;
@@ -408,32 +885,368 @@ function applySuggestedWeight(exerciseId, setNumber, suggestedWeight) {
     }
 }
 
+// Mobile-specific functions
+function toggleSetAccordion(exerciseId, setNumber) {
+    const body = document.getElementById(`body-${exerciseId}-${setNumber}`);
+    const icon = document.getElementById(`icon-${exerciseId}-${setNumber}`);
+    
+    if (body.classList.contains('expanded')) {
+        body.classList.remove('expanded');
+        icon.classList.remove('expanded');
+    } else {
+        body.classList.add('expanded');
+        icon.classList.add('expanded');
+    }
+}
+
+function applySuggestedWeightMobile(exerciseId, setNumber, suggestedWeight) {
+    const weightInput = document.getElementById(`weight-mobile-${exerciseId}-${setNumber}`);
+    if (weightInput) {
+        weightInput.value = suggestedWeight;
+        // Brief visual feedback
+        weightInput.classList.add('border-success');
+        setTimeout(() => {
+            weightInput.classList.remove('border-success');
+        }, 500);
+    }
+}
+
+function setRpeMobile(exerciseId, setNumber, rpeValue) {
+    // Update hidden input
+    const rpeInput = document.getElementById(`rpe-mobile-${exerciseId}-${setNumber}`);
+    if (rpeInput) {
+        rpeInput.value = rpeValue;
+    }
+    
+    // Update button styles
+    const buttons = ['-', '=', '+'];
+    buttons.forEach(btn => {
+        const btnElement = document.getElementById(`rpe-mobile-btn-${exerciseId}-${setNumber}-${btn}`);
+        if (!btnElement) return;
+        
+        if (btn === rpeValue) {
+            // Activate this button
+            if (btn === '-') {
+                btnElement.classList.remove('btn-outline-danger');
+                btnElement.classList.add('btn-danger');
+            } else if (btn === '=') {
+                btnElement.classList.remove('btn-outline-success');
+                btnElement.classList.add('btn-success');
+            } else if (btn === '+') {
+                btnElement.classList.remove('btn-outline-primary');
+                btnElement.classList.add('btn-primary');
+            }
+        } else {
+            // Deactivate other buttons
+            if (btn === '-') {
+                btnElement.classList.remove('btn-danger');
+                btnElement.classList.add('btn-outline-danger');
+            } else if (btn === '=') {
+                btnElement.classList.remove('btn-success');
+                btnElement.classList.add('btn-outline-success');
+            } else if (btn === '+') {
+                btnElement.classList.remove('btn-primary');
+                btnElement.classList.add('btn-outline-primary');
+            }
+        }
+    });
+}
+
+async function logSingleSetMobile(exerciseId, setNumber, restTime) {
+    const weight = parseFloat(document.getElementById(`weight-mobile-${exerciseId}-${setNumber}`)?.value);
+    const reps = parseInt(document.getElementById(`reps-mobile-${exerciseId}-${setNumber}`)?.value);
+    const rpeInput = document.getElementById(`rpe-mobile-${exerciseId}-${setNumber}`);
+    const rpe = rpeInput?.value || null;
+    
+    if (!weight || !reps) {
+        alert('Please enter both weight and reps.');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/workout/api/session/${sessionId}/log-set`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                exercise_id: exerciseId,
+                set_number: setNumber,
+                weight: weight,
+                reps: reps,
+                rpe: rpe
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Update logged sets
+            if (!loggedSets[exerciseId]) {
+                loggedSets[exerciseId] = [];
+            }
+            const existingIndex = loggedSets[exerciseId].findIndex(s => s.set_number === setNumber);
+            if (existingIndex >= 0) {
+                loggedSets[exerciseId][existingIndex] = data;
+            } else {
+                loggedSets[exerciseId].push(data);
+            }
+            
+            // Update accordion item to show as completed
+            const accordionItem = document.getElementById(`accordion-${exerciseId}-${setNumber}`);
+            const header = accordionItem.querySelector('.set-accordion-header');
+            const body = accordionItem.querySelector('.set-accordion-body');
+            const icon = accordionItem.querySelector('.set-accordion-icon');
+            
+            // Mark as completed
+            header.classList.remove('current');
+            header.classList.add('completed');
+            
+            // Update title with checkmark and summary
+            const titleDiv = header.querySelector('div');
+            titleDiv.innerHTML = `
+                <div>
+                    <div class="set-accordion-title">
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                        <span>Set ${setNumber}</span>
+                    </div>
+                    <div class="set-accordion-summary">
+                        ${weight}lbs × ${reps} reps${rpe ? ' @ RPE ' + rpe : ''}
+                    </div>
+                </div>
+            `;
+            
+            // Collapse this set
+            body.classList.remove('expanded');
+            icon.classList.remove('expanded');
+            
+            // Find and expand next set
+            const exercise = workoutData.series.flatMap(s => s.exercises).find(ex => ex.exercise_id === exerciseId);
+            if (exercise) {
+                const numSets = exercise.sets;
+                if (setNumber < numSets) {
+                    const nextBody = document.getElementById(`body-${exerciseId}-${setNumber + 1}`);
+                    const nextIcon = document.getElementById(`icon-${exerciseId}-${setNumber + 1}`);
+                    const nextHeader = document.getElementById(`accordion-${exerciseId}-${setNumber + 1}`)?.querySelector('.set-accordion-header');
+                    
+                    if (nextBody && nextIcon && nextHeader) {
+                        nextBody.classList.add('expanded');
+                        nextIcon.classList.add('expanded');
+                        nextHeader.classList.add('current');
+                        
+                        // Scroll to next set
+                        setTimeout(() => {
+                            nextHeader.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }, 200);
+                    }
+                }
+                
+                // Check if all sets are complete for this exercise
+                const allSetsLogged = loggedSets[exerciseId] && loggedSets[exerciseId].length === numSets;
+                if (allSetsLogged) {
+                    // Show overall feeling prompt
+                    setTimeout(() => {
+                        promptOverallFeeling(exerciseId);
+                    }, 500);
+                }
+            }
+            
+            // Start rest timer
+            if (restTime > 0 && setNumber < exercise.sets) {
+                startRestTimer(restTime);
+            }
+            
+        } else {
+            throw new Error('Failed to log set');
+        }
+    } catch (error) {
+        console.error('Error logging set:', error);
+        alert('Error logging set. Please try again.');
+    }
+}
+
+function promptOverallFeeling(exerciseId) {
+    // Scroll to overall feeling section
+    const overallSection = document.querySelector(`#overall-rpe-${exerciseId}`)?.closest('.border-top');
+    if (overallSection) {
+        overallSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Highlight briefly
+        overallSection.style.backgroundColor = '#fff3cd';
+        setTimeout(() => {
+            overallSection.style.backgroundColor = '';
+        }, 2000);
+    }
+    
+    // Show alert
+    setTimeout(() => {
+        alert('All sets complete! 💪\n\nPlease select how the exercise felt overall.');
+    }, 300);
+}
+
+// Carousel mode functions
+function toggleMobileView(exerciseId) {
+    const carouselView = document.querySelector(`#carousel-${exerciseId}`)?.closest('.mobile-sets-carousel');
+    const accordionView = document.getElementById(`accordion-view-${exerciseId}`);
+    const toggleBtn = document.getElementById(`toggle-view-${exerciseId}`);
+    
+    if (carouselView && accordionView && toggleBtn) {
+        const isCarouselVisible = carouselView.style.display !== 'none';
+        
+        if (isCarouselVisible) {
+            // Switch to accordion (show all)
+            carouselView.style.display = 'none';
+            accordionView.style.display = 'block';
+            accordionView.classList.add('active');
+            toggleBtn.innerHTML = '<i class="bi bi-arrow-left"></i>';
+            toggleBtn.title = 'One at a time';
+        } else {
+            // Switch to carousel (one at a time)
+            carouselView.style.display = 'block';
+            accordionView.style.display = 'none';
+            accordionView.classList.remove('active');
+            toggleBtn.innerHTML = '<i class="bi bi-grid-3x3"></i>';
+            toggleBtn.title = 'Show all sets';
+        }
+    }
+}
+
+function navigateCarousel(exerciseId, setNumber) {
+    const exercise = workoutData.series.flatMap(s => s.exercises).find(ex => ex.exercise_id === exerciseId);
+    if (!exercise) return;
+    
+    const logged = loggedSets[exerciseId] || [];
+    const carousel = document.getElementById(`carousel-${exerciseId}`);
+    
+    if (carousel) {
+        carousel.innerHTML = renderCarouselSet(exercise, setNumber, logged);
+    }
+}
+
+function applyWeightCarousel(exerciseId, setNumber, weight) {
+    const input = document.getElementById(`weight-carousel-${exerciseId}-${setNumber}`);
+    if (input) {
+        input.value = weight;
+        input.classList.add('border-success');
+        setTimeout(() => input.classList.remove('border-success'), 500);
+    }
+}
+
+function setRpeCarousel(exerciseId, setNumber, rpeValue) {
+    const rpeInput = document.getElementById(`rpe-carousel-${exerciseId}-${setNumber}`);
+    if (rpeInput) {
+        rpeInput.value = rpeValue;
+    }
+    
+    const buttons = ['-', '=', '+'];
+    buttons.forEach(btn => {
+        const btnElement = document.getElementById(`rpe-carousel-btn-${exerciseId}-${setNumber}-${btn}`);
+        if (!btnElement) return;
+        
+        if (btn === rpeValue) {
+            if (btn === '-') {
+                btnElement.classList.remove('btn-outline-danger');
+                btnElement.classList.add('btn-danger');
+            } else if (btn === '=') {
+                btnElement.classList.remove('btn-outline-success');
+                btnElement.classList.add('btn-success');
+            } else if (btn === '+') {
+                btnElement.classList.remove('btn-outline-primary');
+                btnElement.classList.add('btn-primary');
+            }
+        } else {
+            if (btn === '-') {
+                btnElement.classList.remove('btn-danger');
+                btnElement.classList.add('btn-outline-danger');
+            } else if (btn === '=') {
+                btnElement.classList.remove('btn-success');
+                btnElement.classList.add('btn-outline-success');
+            } else if (btn === '+') {
+                btnElement.classList.remove('btn-primary');
+                btnElement.classList.add('btn-outline-primary');
+            }
+        }
+    });
+}
+
+async function logSetCarousel(exerciseId, setNumber, restTime) {
+    const weight = parseFloat(document.getElementById(`weight-carousel-${exerciseId}-${setNumber}`)?.value);
+    const reps = parseInt(document.getElementById(`reps-carousel-${exerciseId}-${setNumber}`)?.value);
+    const rpeInput = document.getElementById(`rpe-carousel-${exerciseId}-${setNumber}`);
+    const rpe = rpeInput?.value || null;
+    
+    if (!weight || !reps) {
+        alert('Please enter both weight and reps.');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/workout/api/session/${sessionId}/log-set`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                exercise_id: exerciseId,
+                set_number: setNumber,
+                weight: weight,
+                reps: reps,
+                rpe: rpe
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Update logged sets
+            if (!loggedSets[exerciseId]) {
+                loggedSets[exerciseId] = [];
+            }
+            const existingIndex = loggedSets[exerciseId].findIndex(s => s.set_number === setNumber);
+            if (existingIndex >= 0) {
+                loggedSets[exerciseId][existingIndex] = data;
+            } else {
+                loggedSets[exerciseId].push(data);
+            }
+            
+            const exercise = workoutData.series.flatMap(s => s.exercises).find(ex => ex.exercise_id === exerciseId);
+            if (exercise) {
+                const numSets = exercise.sets;
+                
+                // Check if all sets complete
+                if (loggedSets[exerciseId].length === numSets) {
+                    promptOverallFeeling(exerciseId);
+                } else if (setNumber < numSets) {
+                    // Move to next set
+                    setTimeout(() => {
+                        navigateCarousel(exerciseId, setNumber + 1);
+                    }, 300);
+                    
+                    // Start rest timer
+                    if (restTime > 0) {
+                        startRestTimer(restTime);
+                    }
+                } else {
+                    // Refresh current set to show as completed
+                    navigateCarousel(exerciseId, setNumber);
+                }
+            }
+        } else {
+            throw new Error('Failed to log set');
+        }
+    } catch (error) {
+        console.error('Error logging set:', error);
+        alert('Error logging set. Please try again.');
+    }
+}
+
 function setOverallRpe(exerciseId, rpeValue) {
-    // First, log all sets for this exercise
     const exercise = workoutData.series.flatMap(s => s.exercises).find(ex => ex.exercise_id === exerciseId);
     if (!exercise) return;
     
     const numSets = exercise.sets;
-    const setsToLog = [];
+    const logged = loggedSets[exerciseId] || [];
     
-    // Collect all set data
-    for (let setNum = 1; setNum <= numSets; setNum++) {
-        const weight = parseFloat(document.getElementById(`weight-${exerciseId}-${setNum}`)?.value);
-        const reps = parseInt(document.getElementById(`reps-${exerciseId}-${setNum}`)?.value);
-        const rpeInput = document.getElementById(`rpe-${exerciseId}-${setNum}`);
-        const rpe = rpeInput?.value || null;
-        
-        if (!weight || !reps) {
-            alert(`Please enter weight and reps for all sets before selecting overall feeling.\n\nMissing data for Set ${setNum}.`);
-            return;
-        }
-        
-        setsToLog.push({
-            set_number: setNum,
-            weight: weight,
-            reps: reps,
-            rpe: rpe
-        });
+    // Check if all sets are logged
+    if (logged.length !== numSets) {
+        alert(`Please log all sets before selecting overall feeling.\n\nYou have logged ${logged.length} of ${numSets} sets.`);
+        return;
     }
     
     // Update hidden input
@@ -442,8 +1255,8 @@ function setOverallRpe(exerciseId, rpeValue) {
         overallRpeInput.value = rpeValue;
     }
     
-    // Log all sets then save overall RPE
-    logAllSetsForExercise(exerciseId, setsToLog, rpeValue, exercise.rest_time_seconds || 0);
+    // Just save overall RPE (sets already logged)
+    saveOverallRpe(exerciseId, rpeValue);
 }
 
 async function logAllSetsForExercise(exerciseId, setsToLog, overallRpe, restTime) {

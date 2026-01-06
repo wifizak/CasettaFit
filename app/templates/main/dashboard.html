@@ -36,13 +36,13 @@
                         <small class="text-muted"><i>{{ todays_workout.gym.name }}</i></small><br>
                     {% endif %}
                     {% if not todays_workout.is_completed %}
-                        <a href="{{ url_for('workout.start_workout', scheduled_day_id=todays_workout.id) }}" class="btn btn-primary mt-2">
+                        <a href="{{ url_for('workout.start_workout', scheduled_day_id=todays_workout.id) }}" class="btn btn-primary mt-2" onclick="window.location.href='{{ url_for('workout.start_workout', scheduled_day_id=todays_workout.id) }}'; return false;">
                             <i class="cil-play-circle"></i> Start Workout
                         </a>
                     {% endif %}
                 {% else %}
                     <p class="card-text text-body-secondary">No workout scheduled for today</p>
-                    <a href="{{ url_for('calendar.index') }}" class="btn btn-outline-primary">View Calendar</a>
+                    <a href="{{ url_for('calendar.index') }}" class="btn btn-outline-primary" onclick="window.location.href='{{ url_for('calendar.index') }}'; return false;">View Calendar</a>
                 {% endif %}
             </div>
         </div>
@@ -70,7 +70,7 @@
                 {% else %}
                     <p class="card-text text-body-secondary">No recent workouts</p>
                 {% endif %}
-                <a href="{{ url_for('history.index') }}" class="btn btn-outline-success mt-3">View History</a>
+                <a href="{{ url_for('history.index') }}" class="btn btn-outline-success mt-3" onclick="window.location.href='{{ url_for('history.index') }}'; return false;">View History</a>
             </div>
         </div>
     </div>
@@ -105,7 +105,7 @@
                 {% else %}
                     <p class="card-text text-body-secondary">No workouts scheduled</p>
                 {% endif %}
-                <a href="{{ url_for('calendar.index') }}" class="btn btn-outline-info mt-3">View Calendar</a>
+                <a href="{{ url_for('calendar.index') }}" class="btn btn-outline-info mt-3" onclick="window.location.href='{{ url_for('calendar.index') }}'; return false;">View Calendar</a>
             </div>
         </div>
     </div>
@@ -149,13 +149,13 @@
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
-                    <a href="#" class="btn btn-primary">
+                    <a href="{{ url_for('calendar.index') }}" class="btn btn-primary" onclick="window.location.href='{{ url_for('calendar.index') }}'; return false;">
                         <i class="cil-plus me-2"></i>Start Workout
                     </a>
-                    <a href="#" class="btn btn-outline-primary">
+                    <a href="{{ url_for('programs.index') }}" class="btn btn-outline-primary" onclick="window.location.href='{{ url_for('programs.index') }}'; return false;">
                         <i class="cil-notes me-2"></i>Manage Programs
                     </a>
-                    <a href="#" class="btn btn-outline-primary">
+                    <a href="{{ url_for('gym.index') }}" class="btn btn-outline-primary" onclick="window.location.href='{{ url_for('gym.index') }}'; return false;">
                         <i class="cil-dumbbell me-2"></i>Configure Gym
                     </a>
                 </div>
