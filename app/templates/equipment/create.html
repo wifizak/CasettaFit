@@ -91,7 +91,8 @@
                         {% endif %}
                     </div>
                     
-                    <!-- Variations Section (both Create and Edit) -->
+                    <!-- Variations Section (Create only - use modal for editing) -->
+                    {% if not equipment %}
                     <div class="mb-3">
                         <label class="form-label">Equipment Variations <small class="text-muted">(optional)</small></label>
                         <div id="variations-container">
@@ -102,6 +103,7 @@
                         </button>
                         <small class="d-block text-body-secondary mt-1">Add variations like "Rack Position" or "Handle Orientation" to track different equipment settings</small>
                     </div>
+                    {% endif %}
                     
                     <div class="d-flex gap-2">
                         {{ form.submit(class="btn btn-primary") }}
