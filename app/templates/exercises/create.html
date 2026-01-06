@@ -61,7 +61,8 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             {{ form.secondary_muscles.label(class="form-label") }}
-                            {{ form.secondary_muscles(class="form-control", id="secondary_muscles_input", autocomplete="off") }}
+                            <input type="text" class="form-control" id="secondary_muscles_typing" autocomplete="off" placeholder="e.g., Triceps, Front Delts">
+                            {{ form.secondary_muscles(class="form-control d-none", id="secondary_muscles_input") }}
                             <datalist id="musclesSuggestions"></datalist>
                             <div id="muscleTagsContainer" class="mt-2"></div>
                             <small class="text-body-secondary">Type and select from suggestions, press comma or Enter to add</small>
@@ -311,15 +312,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
     // Initialize selected muscles from form value on load
-    const musclesInput = document.getElementById('secondary_muscles_input');
+    const musclesInput = document.getElementById('secondary_muscles_input'); // Hidden field
+    const musclesTyping = document.getElementById('secondary_muscles_typing'); // Visible typing field
 const initialValue = musclesInput.value.trim();
 if (initialValue) {
     selectedMuscles = initialValue.split(',').map(m => m.trim()).filter(m => m);
     updateMuscleDisplay();
 }
 
-// Handle input with autocomplete
-musclesInput.addEventListener('input', function(e) {
+// Handle input with autocomplete on the typing field
+musclesTyping.addEventListener('input', function(e) {
     const value = this.value;
     const lastComma = value.lastIndexOf(',');
     const currentWord = lastComma >= 0 ? value.substring(lastComma + 1).trim() : value.trim();
@@ -331,8 +333,8 @@ musclesInput.addEventListener('input', function(e) {
     }
 });
 
-// Handle comma or Enter to add muscle
-musclesInput.addEventListener('keydown', function(e) {
+// Handle comma or Enter to add muscle on typing field
+musclesTyping.addEventListener('keydown', function(e) {
     if (e.key === ',' || e.key === 'Enter') {
         e.preventDefault();
         const value = this.value.trim();
@@ -344,8 +346,8 @@ musclesInput.addEventListener('keydown', function(e) {
     }
 });
 
-// Handle blur to add remaining text
-musclesInput.addEventListener('blur', function(e) {
+// Handle blur to add remaining text from typing field
+musclesTyping.addEventListener('blur', function(e) {
     setTimeout(() => {
         const value = this.value.trim();
         if (value) {
@@ -393,8 +395,8 @@ function hideMuscleSuggestions() {
 
 function selectMuscle(muscle, prefix) {
     addMuscle(muscle);
-    musclesInput.value = '';
-    musclesInput.focus();
+    musclesTyping.value = '';
+    musclesTyping.focus();
     hideMuscleSuggestions();
 }
 
@@ -424,7 +426,9 @@ function updateMuscleDisplay() {
 }
 
 function updateHiddenInput() {
-    musclesInput.value = selectedMuscles.join(', ');
+    const newValue = selectedMuscles.join(', ');
+    musclesInput.value = newValue;
+    console.log('Updated secondary_muscles field:', newValue, 'selectedMuscles:', selectedMuscles);
 }
 
 // Load equipment variations data from JSON script tag
@@ -542,11 +546,13 @@ function showVariationSelector(equipId, equipName, variations) {
     document.getElementById('exerciseForm').addEventListener('submit', function(e) {
         const equipIds = document.querySelectorAll('input[name="equipment_ids[]"]');
         const variations = document.querySelectorAll('input[name="variations[]"]');
+        const secondaryMuscles = document.getElementById('secondary_muscles_input').value;
         console.log('Submitting form with:', {
             equipmentCount: equipIds.length,
             equipmentIds: Array.from(equipIds).map(i => i.value),
             variationsCount: variations.length,
-            variations: Array.from(variations).map(v => v.value)
+            variations: Array.from(variations).map(v => v.value),
+            secondaryMuscles: secondaryMuscles
         });
     });
 }); // End DOMContentLoaded
