@@ -83,6 +83,22 @@ def create():
         db.session.add(equipment)
         db.session.flush()
         
+        # Handle variations during creation
+        variation_names = request.form.getlist('variation_names[]')
+        variation_options = request.form.getlist('variation_options[]')
+        
+        for name, options_text in zip(variation_names, variation_options):
+            if name and options_text:
+                # Parse options from textarea (one per line) to JSON
+                options = [opt.strip() for opt in options_text.split('\n') if opt.strip()]
+                if options:  # Only create if there are valid options
+                    variation = EquipmentVariation(
+                        equipment_id=equipment.id,
+                        name=name.strip(),
+                        options=json.dumps(options)
+                    )
+                    db.session.add(variation)
+        
         # Handle gym associations
         gym_ids = request.form.getlist('gym_ids[]')
         affected_gym_ids = []

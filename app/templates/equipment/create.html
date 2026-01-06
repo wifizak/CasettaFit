@@ -91,6 +91,18 @@
                         {% endif %}
                     </div>
                     
+                    <!-- Variations Section (both Create and Edit) -->
+                    <div class="mb-3">
+                        <label class="form-label">Equipment Variations <small class="text-muted">(optional)</small></label>
+                        <div id="variations-container">
+                            <!-- Variations will be added here -->
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="addVariationField()">
+                            <i class="bi bi-plus-circle"></i> Add Variation
+                        </button>
+                        <small class="d-block text-body-secondary mt-1">Add variations like "Rack Position" or "Handle Orientation" to track different equipment settings</small>
+                    </div>
+                    
                     <div class="d-flex gap-2">
                         {{ form.submit(class="btn btn-primary") }}
                         <a href="{{ url_for('equipment.index') }}" class="btn btn-outline-secondary">Cancel</a>
@@ -99,14 +111,11 @@
             </div>
         </div>
         
-        <!-- Variations Section (Edit only) -->
+        <!-- Variations Section for Edit only -->
         {% if equipment %}
         <div class="card mt-3">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Equipment Variations</h5>
-                <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('addVariationModal').classList.add('show'); document.getElementById('addVariationModal').style.display='block';">
-                    <i class="bi bi-plus-circle"></i> Add Variation
-                </button>
+                <h5 class="mb-0">Existing Variations</h5>
             </div>
             <div class="card-body">
                 {% if equipment.variations %}
@@ -130,114 +139,77 @@
                     {% endfor %}
                 </div>
                 {% else %}
-                <p class="text-muted">No variations defined. Add variations like "Rack Position" or "Handle Orientation" to track different equipment settings.</p>
+                <p class="text-muted">No variations defined yet.</p>
                 {% endif %}
             </div>
         </div>
-        
-        <!-- Add Variation Modal -->
-        <div class="modal fade" id="addVariationModal" tabindex="-1" role="dialog">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Add Equipment Variation</h5>
-                        <button type="button" class="btn-close" onclick="document.getElementById('addVariationModal').classList.remove('show'); document.getElementById('addVariationModal').style.display='none';"></button>
-                    </div>
-                    <form method="POST" action="{{ url_for('equipment.add_variation', equipment_id=equipment.id) }}">
-                        {{ form.hidden_tag() }}
-                        <div class="modal-body">
-                            {% if variation_templates %}
-                            <div class="mb-3">
-                                <label class="form-label">Use Existing Variation Template</label>
-                                <select id="variationTemplate" class="form-select" onchange="fillVariationTemplate(this.value)">
-                                    <option value="">-- Select a template or create new --</option>
-                                    {% for template in variation_templates %}
-                                    <option value="{{ loop.index0 }}" data-name="{{ template.name }}" data-options="{{ template.options }}">
-                                        {{ template.name }}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                                <small class="text-muted">Select an existing variation type to maintain consistency</small>
-                            </div>
-                            <hr>
-                            {% endif %}
-                            <div class="mb-3">
-                                <label class="form-label">Variation Name</label>
-                                <input type="text" id="variationName" name="name" class="form-control" placeholder="e.g., Rack Position, Handle Orientation" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Options (one per line)</label>
-                                <textarea id="variationOptions" name="options" class="form-control" rows="4" placeholder="High&#10;Mid&#10;Low" required></textarea>
-                                <small class="text-muted">Enter each option on a new line</small>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" onclick="document.getElementById('addVariationModal').classList.remove('show'); document.getElementById('addVariationModal').style.display='none';">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Add Variation</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-        
-        <script>
-        function fillVariationTemplate(index) {
-            if (!index) {
-                // Clear fields if "create new" is selected
-                document.getElementById('variationName').value = '';
-                document.getElementById('variationOptions').value = '';
-                return;
-            }
-            
-            const select = document.getElementById('variationTemplate');
-            const option = select.options[select.selectedIndex];
-            const name = option.dataset.name;
-            const options = option.dataset.options;
-            
-            // Fill in the fields
-            document.getElementById('variationName').value = name;
-            
-            // Parse JSON and convert to newline-separated
-            try {
-                const optionsArray = JSON.parse(options);
-                document.getElementById('variationOptions').value = optionsArray.join('\n');
-            } catch (e) {
-                document.getElementById('variationOptions').value = options;
-            }
-        }
-        
-        // Autocomplete for Manufacturer and Model
-        let availableManufacturers = [];
-        let availableModels = [];
-        
-        // Fetch manufacturers using shared utility
-        apiGet('{{ url_for("equipment.get_manufacturers") }}')
-            .then(data => {
-                availableManufacturers = data;
-            })
-            .catch(error => {
-                console.error('Error loading manufacturers:', error);
-            });
-        
-        // Fetch models using shared utility
-        apiGet('{{ url_for("equipment.get_models") }}')
-            .then(data => {
-                availableModels = data;
-            })
-            .catch(error => {
-                console.error('Error loading models:', error);
-            });
-        
-        // Setup autocomplete for manufacturer using shared utility
-        const manufacturerInput = document.getElementById('manufacturer');
-        setupAutocomplete(manufacturerInput, () => availableManufacturers);
-        
-        // Setup autocomplete for model using shared utility
-        const modelInput = document.getElementById('model');
-        setupAutocomplete(modelInput, () => availableModels);
-        
-        </script>
         {% endif %}
     </div>
 </div>
+
+<script>
+let variationCount = 0;
+
+function addVariationField() {
+    variationCount++;
+    const container = document.getElementById('variations-container');
+    const div = document.createElement('div');
+    div.className = 'card mb-2';
+    div.id = `variation-${variationCount}`;
+    div.innerHTML = `
+        <div class="card-body p-3">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <h6 class="mb-0">Variation ${variationCount}</h6>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeVariation(${variationCount})">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+            <div class="mb-2">
+                <input type="text" name="variation_names[]" class="form-control form-control-sm" placeholder="e.g., Rack Position, Handle Orientation" required>
+            </div>
+            <div>
+                <textarea name="variation_options[]" class="form-control form-control-sm" rows="2" placeholder="Options (one per line)&#10;High&#10;Mid&#10;Low" required></textarea>
+            </div>
+        </div>
+    `;
+    container.appendChild(div);
+}
+
+function removeVariation(id) {
+    const elem = document.getElementById(`variation-${id}`);
+    if (elem) {
+        elem.remove();
+    }
+}
+
+// Autocomplete for Manufacturer and Model
+let availableManufacturers = [];
+let availableModels = [];
+
+// Fetch manufacturers using shared utility
+apiGet('{{ url_for("equipment.get_manufacturers") }}')
+    .then(data => {
+        availableManufacturers = data;
+    })
+    .catch(error => {
+        console.error('Error loading manufacturers:', error);
+    });
+
+// Fetch models using shared utility
+apiGet('{{ url_for("equipment.get_models") }}')
+    .then(data => {
+        availableModels = data;
+    })
+    .catch(error => {
+        console.error('Error loading models:', error);
+    });
+
+// Setup autocomplete for manufacturer using shared utility
+const manufacturerInput = document.getElementById('manufacturer');
+setupAutocomplete(manufacturerInput, () => availableManufacturers);
+
+// Setup autocomplete for model using shared utility
+const modelInput = document.getElementById('model');
+setupAutocomplete(modelInput, () => availableModels);
+</script>
 {% endblock %}
