@@ -222,6 +222,30 @@ class UserExercisePreference(db.Model):
         return f'<UserExercisePreference user_id={self.user_id} exercise_id={self.exercise_id}>'
 
 
+class UserExerciseTier(db.Model):
+    """Per-user tier rankings for exercises (S, A, B, C, D, F)"""
+    __tablename__ = 'user_exercise_tiers'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    exercise_id = db.Column(db.Integer, db.ForeignKey('master_exercises.id'), nullable=False)
+    tier = db.Column(db.String(1), nullable=False)  # 'S', 'A', 'B', 'C', 'D', 'F'
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Unique constraint - one tier per user per exercise
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'exercise_id', name='unique_user_exercise_tier'),
+    )
+    
+    # Relationships
+    user = db.relationship('User', backref='exercise_tiers')
+    exercise = db.relationship('MasterExercise', backref='user_tiers')
+    
+    def __repr__(self):
+        return f'<UserExerciseTier user_id={self.user_id} exercise_id={self.exercise_id} tier={self.tier}>'
+
+
 class UserGym(db.Model):
     __tablename__ = 'user_gyms'
     

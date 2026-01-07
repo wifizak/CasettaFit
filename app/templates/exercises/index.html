@@ -47,7 +47,7 @@
                         <input type="text" name="search" class="form-control" placeholder="Search by name, muscle, category, or difficulty..." value="{{ search }}" id="searchInput">
                         <small class="text-body-secondary">Search across exercise name, muscles, category, and difficulty</small>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <select name="category" class="form-select">
                             <option value="">All Categories</option>
                             {% for category in categories %}
@@ -55,6 +55,17 @@
                                 {{ category }}
                             </option>
                             {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select name="tier" class="form-select">
+                            <option value="">All Tiers</option>
+                            {% for tier in tiers %}
+                            <option value="{{ tier }}" {% if tier_filter == tier %}selected{% endif %}>
+                                Tier {{ tier }}
+                            </option>
+                            {% endfor %}
+                            <option value="untiered" {% if tier_filter == 'untiered' %}selected{% endif %}>Untiered</option>
                         </select>
                     </div>
                     <div class="col-md-2">
@@ -114,6 +125,16 @@
                                         {% endif %}
                                     </a>
                                 </th>
+                                <th class="sortable {% if sort_by == 'tier' %}table-active{% endif %}">
+                                    <a href="{{ url_for('exercises.index', search=search, category=selected_category, tier=tier_filter, sort_by='tier', sort_dir='desc' if sort_by == 'tier' and sort_dir == 'asc' else 'asc', page=1) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+                                        <span>Tier</span>
+                                        {% if sort_by == 'tier' %}
+                                            <i class="cil-chevron-{{ 'bottom' if sort_dir == 'desc' else 'top' }} ms-1"></i>
+                                        {% else %}
+                                            <i class="cil-chevron-bottom ms-1 text-muted" style="opacity: 0.3;"></i>
+                                        {% endif %}
+                                    </a>
+                                </th>
                                 <th>Equipment</th>
                                 <th class="sortable {% if sort_by == 'difficulty_level' %}table-active{% endif %}">
                                     <a href="{{ url_for('exercises.index', search=search, category=selected_category, sort_by='difficulty_level', sort_dir='desc' if sort_by == 'difficulty_level' and sort_dir == 'asc' else 'asc', page=1) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
@@ -133,7 +154,9 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for exercise in exercises %}
+                            {% for item in exercises_with_tiers %}
+                            {% set exercise = item.exercise %}
+                            {% set user_tier = item.tier %}
                             <tr>
                                 <td><strong>{{ exercise.name }}</strong></td>
                                 <td>
@@ -144,6 +167,14 @@
                                     {% endif %}
                                 </td>
                                 <td>{{ exercise.primary_muscle or '-' }}</td>
+                                <td>
+                                    <select class="form-select form-select-sm tier-select" data-exercise-id="{{ exercise.id }}" style="width: auto; min-width: 80px;">
+                                        <option value="" {% if not user_tier %}selected{% endif %}>-</option>
+                                        {% for tier in tiers %}
+                                        <option value="{{ tier }}" {% if user_tier == tier %}selected{% endif %}>{{ tier }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
                                 <td>
                                     {% if exercise.equipment %}
                                         {% for eq in exercise.equipment[:2] %}
@@ -271,6 +302,36 @@ let historyModal;
 
 document.addEventListener('DOMContentLoaded', function() {
     historyModal = new coreui.Modal(document.getElementById('exerciseHistoryModal'));
+    
+    // Tier select change handler
+    document.querySelectorAll('.tier-select').forEach(select => {
+        select.addEventListener('change', function() {
+            const exerciseId = this.dataset.exerciseId;
+            const tier = this.value;
+            
+            // Save tier
+            fetch(`/exercises/${exerciseId}/tier`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ tier: tier })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    alert('Error updating tier: ' + (data.error || 'Unknown error'));
+                    // Reload to reset the dropdown
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error updating tier');
+                location.reload();
+            });
+        });
+    });
 });
 
 function showExerciseHistory(exerciseId) {

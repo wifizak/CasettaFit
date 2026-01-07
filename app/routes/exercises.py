@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from app import db
-from app.models import MasterExercise, MasterEquipment, ExerciseEquipmentMapping, UserExercisePreference, ExerciseEquipmentVariation, EquipmentVariation, UserGym, GymExercise, GymEquipment, sync_exercise_gym_associations, WorkoutSet
+from app.models import MasterExercise, MasterEquipment, ExerciseEquipmentMapping, UserExercisePreference, ExerciseEquipmentVariation, EquipmentVariation, UserGym, GymExercise, GymEquipment, sync_exercise_gym_associations, WorkoutSet, UserExerciseTier
 from app.forms import MasterExerciseForm, UserExercisePreferenceForm
 from sqlalchemy import func, desc
 import json
@@ -16,11 +16,19 @@ def index():
     page = request.args.get('page', 1, type=int)
     search = request.args.get('search', '', type=str)
     category = request.args.get('category', '', type=str)
+    tier_filter = request.args.get('tier', '', type=str)
     sort_by = request.args.get('sort_by', 'name', type=str)
     sort_dir = request.args.get('sort_dir', 'asc', type=str)
     per_page = 20
     
-    query = MasterExercise.query
+    # Left join with user_exercise_tiers to include tier data
+    query = db.session.query(MasterExercise, UserExerciseTier.tier).outerjoin(
+        UserExerciseTier,
+        db.and_(
+            UserExerciseTier.exercise_id == MasterExercise.id,
+            UserExerciseTier.user_id == current_user.id
+        )
+    )
     
     # Search filter - search across name, primary_muscle, and category
     if search:
@@ -36,7 +44,14 @@ def index():
     
     # Category filter
     if category:
-        query = query.filter_by(category=category)
+        query = query.filter(MasterExercise.category == category)
+    
+    # Tier filter
+    if tier_filter:
+        if tier_filter == 'untiered':
+            query = query.filter(UserExerciseTier.tier.is_(None))
+        else:
+            query = query.filter(UserExerciseTier.tier == tier_filter.upper())
     
     # Sorting
     valid_sort_fields = {
@@ -44,22 +59,37 @@ def index():
         'category': MasterExercise.category,
         'primary_muscle': MasterExercise.primary_muscle,
         'difficulty_level': MasterExercise.difficulty_level,
-        'created_at': MasterExercise.created_at
+        'created_at': MasterExercise.created_at,
+        'tier': UserExerciseTier.tier
     }
     
     sort_field = valid_sort_fields.get(sort_by, MasterExercise.name)
     if sort_dir == 'desc':
         sort_field = desc(sort_field)
     
-    query = query.order_by(sort_field)
+    # For tier sorting, handle nulls (put untiered at end for ascending, beginning for descending)
+    if sort_by == 'tier':
+        if sort_dir == 'asc':
+            query = query.order_by(UserExerciseTier.tier.asc().nullslast(), MasterExercise.name)
+        else:
+            query = query.order_by(UserExerciseTier.tier.desc().nullsfirst(), MasterExercise.name)
+    else:
+        query = query.order_by(sort_field)
+    
+    # Paginate
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     
-    # Get exercise history stats for current user
+    # Extract exercises and tiers from pagination
+    exercises_with_tiers = []
     exercise_stats = {}
-    if pagination.items:
-        exercise_ids = [ex.id for ex in pagination.items]
-        
-        # Get max weight and last performed date for each exercise
+    exercise_ids = []
+    
+    for exercise, tier in pagination.items:
+        exercises_with_tiers.append({'exercise': exercise, 'tier': tier})
+        exercise_ids.append(exercise.id)
+    
+    # Get exercise history stats for current user
+    if exercise_ids:
         stats_query = db.session.query(
             WorkoutSet.exercise_id,
             func.max(WorkoutSet.weight).label('max_weight'),
@@ -77,13 +107,16 @@ def index():
     
     # Fixed categories list
     categories = ['Strength', 'Cardio', 'Stretch', 'Resistance', 'Bodyweight']
+    tiers = ['S', 'A', 'B', 'C', 'D', 'F']
     
     return render_template('exercises/index.html', 
-                         exercises=pagination.items, 
+                         exercises_with_tiers=exercises_with_tiers,
                          pagination=pagination,
                          categories=categories,
+                         tiers=tiers,
                          search=search,
                          selected_category=category,
+                         tier_filter=tier_filter,
                          exercise_stats=exercise_stats,
                          sort_by=sort_by,
                          sort_dir=sort_dir)
@@ -264,6 +297,13 @@ def edit(exercise_id):
     gyms = UserGym.query.filter_by(user_id=current_user.id).order_by(UserGym.name).all()
     current_gym_ids = [ge.gym_id for ge in GymExercise.query.filter_by(exercise_id=exercise.id).all()]
     
+    # Get user's current tier for this exercise
+    user_tier_record = UserExerciseTier.query.filter_by(
+        user_id=current_user.id,
+        exercise_id=exercise.id
+    ).first()
+    user_tier = user_tier_record.tier if user_tier_record else None
+    
     return render_template('exercises/edit.html', 
                          form=form, 
                          exercise=exercise,
@@ -272,7 +312,8 @@ def edit(exercise_id):
                          current_variations=current_variations,
                          gyms=gyms,
                          current_gym_ids=current_gym_ids,
-                         gym_equipment_map=gym_equipment_map)
+                         gym_equipment_map=gym_equipment_map,
+                         user_tier=user_tier)
 
 
 @bp.route('/<int:exercise_id>/delete', methods=['POST'])
@@ -444,3 +485,49 @@ def get_exercise_history(exercise_id):
         'exercise_name': exercise.name,
         'history': history_list
     })
+
+
+@bp.route('/<int:exercise_id>/tier', methods=['POST'])
+@login_required
+def update_tier(exercise_id):
+    """Update user's tier for an exercise"""
+    exercise = MasterExercise.query.get_or_404(exercise_id)
+    data = request.get_json()
+    
+    tier_value = data.get('tier', '').upper()
+    
+    # Validate tier value
+    valid_tiers = ['S', 'A', 'B', 'C', 'D', 'F', '']
+    if tier_value not in valid_tiers:
+        return jsonify({'success': False, 'error': 'Invalid tier value'}), 400
+    
+    # If empty string, remove the tier
+    if tier_value == '':
+        existing_tier = UserExerciseTier.query.filter_by(
+            user_id=current_user.id,
+            exercise_id=exercise_id
+        ).first()
+        if existing_tier:
+            db.session.delete(existing_tier)
+            db.session.commit()
+        return jsonify({'success': True, 'tier': None})
+    
+    # Otherwise, upsert the tier
+    tier_record = UserExerciseTier.query.filter_by(
+        user_id=current_user.id,
+        exercise_id=exercise_id
+    ).first()
+    
+    if tier_record:
+        tier_record.tier = tier_value
+        tier_record.updated_at = db.func.current_timestamp()
+    else:
+        tier_record = UserExerciseTier(
+            user_id=current_user.id,
+            exercise_id=exercise_id,
+            tier=tier_value
+        )
+        db.session.add(tier_record)
+    
+    db.session.commit()
+    return jsonify({'success': True, 'tier': tier_value})

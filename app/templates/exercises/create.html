@@ -74,6 +74,23 @@
                         {{ form.difficulty_level(class="form-select") }}
                     </div>
                     
+                    {% if exercise %}
+                    <!-- Tier Selection (only on edit) -->
+                    <div class="mb-3">
+                        <label class="form-label">Your Tier Rating</label>
+                        <select class="form-select" id="tierSelect" style="max-width: 200px;">
+                            <option value="" {% if not user_tier %}selected{% endif %}>No tier</option>
+                            <option value="S" {% if user_tier == 'S' %}selected{% endif %}>S - Exceptional</option>
+                            <option value="A" {% if user_tier == 'A' %}selected{% endif %}>A - Excellent</option>
+                            <option value="B" {% if user_tier == 'B' %}selected{% endif %}>B - Good</option>
+                            <option value="C" {% if user_tier == 'C' %}selected{% endif %}>C - Average</option>
+                            <option value="D" {% if user_tier == 'D' %}selected{% endif %}>D - Below Average</option>
+                            <option value="F" {% if user_tier == 'F' %}selected{% endif %}>F - Poor</option>
+                        </select>
+                        <small class="text-body-secondary">Your personal rating for this exercise</small>
+                    </div>
+                    {% endif %}
+                    
                     <!-- Equipment Section -->
                     <div class="mb-3">
                         <label class="form-label">Equipment Required</label>
@@ -569,6 +586,41 @@ function showVariationSelector(equipId, equipName, variations) {
             secondaryMuscles: secondaryMuscles
         });
     });
+    
+    {% if exercise %}
+    // Tier select change handler (edit mode only)
+    const tierSelect = document.getElementById('tierSelect');
+    if (tierSelect) {
+        tierSelect.addEventListener('change', function() {
+            const tier = this.value;
+            
+            fetch('/exercises/{{ exercise.id }}/tier', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ tier: tier })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success feedback briefly
+                    const originalBg = this.style.backgroundColor;
+                    this.style.backgroundColor = '#d1e7dd';
+                    setTimeout(() => {
+                        this.style.backgroundColor = originalBg;
+                    }, 500);
+                } else {
+                    alert('Error updating tier: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error updating tier');
+            });
+        });
+    }
+    {% endif %}
 }); // End DOMContentLoaded
 </script>
 {% endblock %}
