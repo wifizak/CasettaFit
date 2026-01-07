@@ -159,8 +159,9 @@ def create():
     # Get gym equipment mappings to show which gyms have which equipment
     gym_equipment_map = {}
     for equip in equipment_list:
-        gym_equip = GymEquipment.query.filter_by(equipment_id=equip.id).join(UserGym).filter(UserGym.user_id == current_user.id).all()
-        gym_equipment_map[equip.id] = [{'gym_id': ge.gym_id, 'gym_name': ge.gym.name} for ge in gym_equip]
+        # Filter gyms to only show those owned by current user
+        user_gyms = [gym for gym in equip.gyms if gym.user_id == current_user.id]
+        gym_equipment_map[equip.id] = [{'gym_id': gym.id, 'gym_name': gym.name} for gym in user_gyms]
     
     # Get all gyms for current user
     gyms = UserGym.query.filter_by(user_id=current_user.id).order_by(UserGym.name).all()

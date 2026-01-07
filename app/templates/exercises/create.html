@@ -397,13 +397,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
     // Initialize selected muscles from form value on load
-    const musclesInput = document.getElementById('secondary_muscles_input'); // Hidden field
-    const musclesTyping = document.getElementById('secondary_muscles_typing'); // Visible typing field
-const initialValue = musclesInput.value.trim();
-if (initialValue) {
-    selectedMuscles = initialValue.split(',').map(m => m.trim()).filter(m => m);
-    updateMuscleDisplay();
-}
+    const initialValue = musclesInput.value.trim();
+    if (initialValue) {
+        selectedMuscles = initialValue.split(',').map(m => m.trim()).filter(m => m);
+        updateMuscleDisplay();
+    }
 
 // Handle input with autocomplete on the typing field
 musclesTyping.addEventListener('input', function(e) {
