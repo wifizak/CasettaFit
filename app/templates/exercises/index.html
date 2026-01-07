@@ -43,7 +43,7 @@
         <div class="card">
             <div class="card-body">
                 <form method="GET" action="{{ url_for('exercises.index') }}" class="row g-3" id="filterForm">
-                    <div class="col-md-5">
+                    <div class="col-md-4">
                         <input type="text" name="search" class="form-control" placeholder="Search by name, muscle, category, or difficulty..." value="{{ search }}" id="searchInput">
                         <small class="text-body-secondary">Search across exercise name, muscles, category, and difficulty</small>
                     </div>
@@ -53,6 +53,16 @@
                             {% for category in categories %}
                             <option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>
                                 {{ category }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select name="primary_muscle" class="form-select">
+                            <option value="">All Muscles</option>
+                            {% for muscle in primary_muscles %}
+                            <option value="{{ muscle }}" {% if selected_primary_muscle == muscle %}selected{% endif %}>
+                                {{ muscle }}
                             </option>
                             {% endfor %}
                         </select>
@@ -78,7 +88,7 @@
                             <i class="bi bi-x-circle"></i> Clear
                         </a>
                     </div>
-                    <!-- Hidden fields to preserve sorting -->
+                    <!-- Hidden fields to preserve sorting and filters -->
                     <input type="hidden" name="sort_by" value="{{ sort_by }}">
                     <input type="hidden" name="sort_dir" value="{{ sort_dir }}">
                 </form>
@@ -96,7 +106,7 @@
                         <thead>
                             <tr>
                                 <th class="sortable {% if sort_by == 'name' %}table-active{% endif %}">
-                                    <a href="{{ url_for('exercises.index', search=search, category=selected_category, sort_by='name', sort_dir='desc' if sort_by == 'name' and sort_dir == 'asc' else 'asc', page=1) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+                                    <a href="{{ url_for('exercises.index', search=search, category=selected_category, primary_muscle=selected_primary_muscle, tier=tier_filter, sort_by='name', sort_dir='desc' if sort_by == 'name' and sort_dir == 'asc' else 'asc', page=1) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
                                         <span>Exercise Name</span>
                                         {% if sort_by == 'name' %}
                                             <i class="cil-chevron-{{ 'bottom' if sort_dir == 'desc' else 'top' }} ms-1"></i>
@@ -106,7 +116,7 @@
                                     </a>
                                 </th>
                                 <th class="sortable {% if sort_by == 'category' %}table-active{% endif %}">
-                                    <a href="{{ url_for('exercises.index', search=search, category=selected_category, sort_by='category', sort_dir='desc' if sort_by == 'category' and sort_dir == 'asc' else 'asc', page=1) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+                                    <a href="{{ url_for('exercises.index', search=search, category=selected_category, primary_muscle=selected_primary_muscle, tier=tier_filter, sort_by='category', sort_dir='desc' if sort_by == 'category' and sort_dir == 'asc' else 'asc', page=1) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
                                         <span>Category</span>
                                         {% if sort_by == 'category' %}
                                             <i class="cil-chevron-{{ 'bottom' if sort_dir == 'desc' else 'top' }} ms-1"></i>
@@ -116,7 +126,7 @@
                                     </a>
                                 </th>
                                 <th class="sortable {% if sort_by == 'primary_muscle' %}table-active{% endif %}">
-                                    <a href="{{ url_for('exercises.index', search=search, category=selected_category, sort_by='primary_muscle', sort_dir='desc' if sort_by == 'primary_muscle' and sort_dir == 'asc' else 'asc', page=1) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+                                    <a href="{{ url_for('exercises.index', search=search, category=selected_category, primary_muscle=selected_primary_muscle, tier=tier_filter, sort_by='primary_muscle', sort_dir='desc' if sort_by == 'primary_muscle' and sort_dir == 'asc' else 'asc', page=1) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
                                         <span>Primary Muscle</span>
                                         {% if sort_by == 'primary_muscle' %}
                                             <i class="cil-chevron-{{ 'bottom' if sort_dir == 'desc' else 'top' }} ms-1"></i>
@@ -126,7 +136,7 @@
                                     </a>
                                 </th>
                                 <th class="sortable {% if sort_by == 'tier' %}table-active{% endif %}">
-                                    <a href="{{ url_for('exercises.index', search=search, category=selected_category, tier=tier_filter, sort_by='tier', sort_dir='desc' if sort_by == 'tier' and sort_dir == 'asc' else 'asc', page=1) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+                                    <a href="{{ url_for('exercises.index', search=search, category=selected_category, primary_muscle=selected_primary_muscle, tier=tier_filter, sort_by='tier', sort_dir='desc' if sort_by == 'tier' and sort_dir == 'asc' else 'asc', page=1) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
                                         <span>Tier</span>
                                         {% if sort_by == 'tier' %}
                                             <i class="cil-chevron-{{ 'bottom' if sort_dir == 'desc' else 'top' }} ms-1"></i>
@@ -137,7 +147,7 @@
                                 </th>
                                 <th>Equipment</th>
                                 <th class="sortable {% if sort_by == 'difficulty_level' %}table-active{% endif %}">
-                                    <a href="{{ url_for('exercises.index', search=search, category=selected_category, sort_by='difficulty_level', sort_dir='desc' if sort_by == 'difficulty_level' and sort_dir == 'asc' else 'asc', page=1) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
+                                    <a href="{{ url_for('exercises.index', search=search, category=selected_category, primary_muscle=selected_primary_muscle, tier=tier_filter, sort_by='difficulty_level', sort_dir='desc' if sort_by == 'difficulty_level' and sort_dir == 'asc' else 'asc', page=1) }}" class="text-decoration-none text-dark d-flex align-items-center justify-content-between">
                                         <span>Difficulty</span>
                                         {% if sort_by == 'difficulty_level' %}
                                             <i class="cil-chevron-{{ 'bottom' if sort_dir == 'desc' else 'top' }} ms-1"></i>
@@ -256,19 +266,19 @@
                 <nav>
                     <ul class="pagination justify-content-center">
                         <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
-                            <a class="page-link" href="{{ url_for('exercises.index', page=pagination.prev_num, search=search, category=selected_category, sort_by=sort_by, sort_dir=sort_dir) if pagination.has_prev else '#' }}">Previous</a>
+                            <a class="page-link" href="{{ url_for('exercises.index', page=pagination.prev_num, search=search, category=selected_category, primary_muscle=selected_primary_muscle, tier=tier_filter, sort_by=sort_by, sort_dir=sort_dir) if pagination.has_prev else '#' }}">Previous</a>
                         </li>
                         {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
                             {% if page_num %}
                                 <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
-                                    <a class="page-link" href="{{ url_for('exercises.index', page=page_num, search=search, category=selected_category, sort_by=sort_by, sort_dir=sort_dir) }}">{{ page_num }}</a>
+                                    <a class="page-link" href="{{ url_for('exercises.index', page=page_num, search=search, category=selected_category, primary_muscle=selected_primary_muscle, tier=tier_filter, sort_by=sort_by, sort_dir=sort_dir) }}">{{ page_num }}</a>
                                 </li>
                             {% else %}
                                 <li class="page-item disabled"><span class="page-link">...</span></li>
                             {% endif %}
                         {% endfor %}
                         <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
-                            <a class="page-link" href="{{ url_for('exercises.index', page=pagination.next_num, search=search, category=selected_category, sort_by=sort_by, sort_dir=sort_dir) if pagination.has_next else '#' }}">Next</a>
+                            <a class="page-link" href="{{ url_for('exercises.index', page=pagination.next_num, search=search, category=selected_category, primary_muscle=selected_primary_muscle, tier=tier_filter, sort_by=sort_by, sort_dir=sort_dir) if pagination.has_next else '#' }}">Next</a>
                         </li>
                     </ul>
                 </nav>

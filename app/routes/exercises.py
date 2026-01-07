@@ -16,6 +16,7 @@ def index():
     page = request.args.get('page', 1, type=int)
     search = request.args.get('search', '', type=str)
     category = request.args.get('category', '', type=str)
+    primary_muscle = request.args.get('primary_muscle', '', type=str)
     tier_filter = request.args.get('tier', '', type=str)
     sort_by = request.args.get('sort_by', 'name', type=str)
     sort_dir = request.args.get('sort_dir', 'asc', type=str)
@@ -45,6 +46,10 @@ def index():
     # Category filter
     if category:
         query = query.filter(MasterExercise.category == category)
+    
+    # Primary muscle filter
+    if primary_muscle:
+        query = query.filter(MasterExercise.primary_muscle == primary_muscle)
     
     # Tier filter
     if tier_filter:
@@ -109,13 +114,21 @@ def index():
     categories = ['Strength', 'Cardio', 'Stretch', 'Resistance', 'Bodyweight']
     tiers = ['S', 'A', 'B', 'C', 'D', 'F']
     
+    # Get unique primary muscles for filter
+    primary_muscles = db.session.query(MasterExercise.primary_muscle).distinct().filter(
+        MasterExercise.primary_muscle.isnot(None)
+    ).order_by(MasterExercise.primary_muscle).all()
+    primary_muscles = [pm[0] for pm in primary_muscles]
+    
     return render_template('exercises/index.html', 
                          exercises_with_tiers=exercises_with_tiers,
                          pagination=pagination,
                          categories=categories,
                          tiers=tiers,
+                         primary_muscles=primary_muscles,
                          search=search,
                          selected_category=category,
+                         selected_primary_muscle=primary_muscle,
                          tier_filter=tier_filter,
                          exercise_stats=exercise_stats,
                          sort_by=sort_by,
