@@ -99,7 +99,8 @@ class MasterExerciseForm(FlaskForm):
     
     primary_muscle = SelectField('Primary Muscle', 
                                  choices=[('', 'Select...'), ('Chest', 'Chest'), ('Back', 'Back'), 
-                                         ('Shoulders', 'Shoulders'), ('Arms', 'Arms'), ('Legs', 'Legs'),
+                                         ('Shoulders', 'Shoulders'), ('Arms', 'Arms'), ('Bicep', 'Bicep'),
+                                         ('Tricep', 'Tricep'), ('Forearm', 'Forearm'), ('Legs', 'Legs'),
                                          ('Core', 'Core'), ('Full Body', 'Full Body'), ('Cardio', 'Cardio')],
                                  validators=[Optional()])
     secondary_muscles = StringField('Secondary Muscles', validators=[Optional()],
