@@ -278,7 +278,11 @@
     </div>
     {% endif %}
     
-    <!-- Metric History Table (Collapsible, Open by Default) -->
+    <!-- Recent Metrics (Removed - replaced by full history below) -->
+    
+    {% endif %}
+    
+    <!-- Metric History Table (Collapsible, Open by Default) - Shows regardless of goals -->
     <div class="row mb-4">
         <div class="col-12">
             <div class="card">
@@ -338,9 +342,6 @@
         </div>
     </div>
     
-    <!-- Recent Metrics (Removed - replaced by full history above) -->
-    
-    {% endif %}
 </div>
 
 {% if metric_history %}
