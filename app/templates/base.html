@@ -36,22 +36,22 @@
             <li class="nav-title">Training</li>
             <li class="nav-item">
                 <a class="nav-link" href="{{ url_for('gym.index') }}">
-                    <i class="nav-icon cil-dumbbell"></i> My Gym
+                    <i class="nav-icon cil-home"></i> My Gym
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="{{ url_for('exercises.index') }}">
-                    <i class="nav-icon cil-list"></i> Exercises
+                    <i class="nav-icon cil-weightlifting"></i> Exercises
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="{{ url_for('equipment.index') }}">
-                    <i class="nav-icon cil-building"></i> Equipment
+                    <i class="nav-icon cil-settings"></i> Equipment
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="{{ url_for('programs.index') }}">
-                    <i class="nav-icon cil-notes"></i> Programs
+                    <i class="nav-icon cil-list-numbered"></i> Programs
                 </a>
             </li>
             <li class="nav-item">
@@ -72,7 +72,7 @@
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="{{ url_for('goals.index') }}">
-                    <i class="nav-icon cil-target"></i> Goals
+                    <i class="nav-icon cil-task"></i> Goals
                 </a>
             </li>
             {% if current_user.is_admin %}
@@ -168,7 +168,7 @@
             <span>Home</span>
         </a>
         <a href="{{ url_for('programs.index') }}" class="bottom-nav-item {% if request.endpoint and request.endpoint.startswith('programs') %}active{% endif %}" onclick="window.location.href='{{ url_for('programs.index') }}'; return false;">
-            <i class="icon cil-notes"></i>
+            <i class="icon cil-list-numbered"></i>
             <span>Programs</span>
         </a>
         <a href="{{ url_for('calendar.index') }}" class="bottom-nav-item {% if request.endpoint and request.endpoint.startswith('calendar') %}active{% endif %}" onclick="window.location.href='{{ url_for('calendar.index') }}'; return false;">
@@ -196,15 +196,15 @@
             </div>
             <div class="mobile-menu-content">
                 <a href="{{ url_for('gym.index') }}" class="mobile-menu-item" onclick="window.location.href='{{ url_for('gym.index') }}'; return false;">
-                    <i class="icon cil-dumbbell"></i>
+                    <i class="icon cil-home"></i>
                     <span>My Gym</span>
                 </a>
                 <a href="{{ url_for('exercises.index') }}" class="mobile-menu-item" onclick="window.location.href='{{ url_for('exercises.index') }}'; return false;">
-                    <i class="icon cil-list"></i>
+                    <i class="icon cil-weightlifting"></i>
                     <span>Exercises</span>
                 </a>
                 <a href="{{ url_for('equipment.index') }}" class="mobile-menu-item" onclick="window.location.href='{{ url_for('equipment.index') }}'; return false;">
-                    <i class="icon cil-building"></i>
+                    <i class="icon cil-settings"></i>
                     <span>Equipment</span>
                 </a>
                 <a href="{{ url_for('history.index') }}" class="mobile-menu-item" onclick="window.location.href='{{ url_for('history.index') }}'; return false;">
@@ -212,7 +212,7 @@
                     <span>History</span>
                 </a>
                 <a href="{{ url_for('goals.index') }}" class="mobile-menu-item" onclick="window.location.href='{{ url_for('goals.index') }}'; return false;">
-                    <i class="icon cil-target"></i>
+                    <i class="icon cil-task"></i>
                     <span>Goals</span>
                 </a>
                 {% if current_user.is_admin %}
