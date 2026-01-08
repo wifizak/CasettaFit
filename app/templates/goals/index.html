@@ -345,14 +345,16 @@
     </div>
     
 </div>
+{% endblock %}
 
-{% if metric_history %}
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% if metric_history %}
+    // Initialize chart if canvas exists
     const chartCanvas = document.getElementById('progressChart');
     
-    // Only initialize chart if canvas exists
     if (chartCanvas) {
         const metricData = {{ metric_history | tojson }};
         
@@ -410,6 +412,7 @@
             }
         });
     }
+    {% endif %}
     
     // Toggle collapse icon
     const collapseElement = document.getElementById('metricHistoryCollapse');
@@ -430,7 +433,7 @@
         document.querySelectorAll('.timestamp[data-timestamp]').forEach(element => {
             const isoTimestamp = element.getAttribute('data-timestamp');
             if (isoTimestamp) {
-                const date = new Date(isoTimestamp);
+                const date = new Date(isoTimestamp + 'Z'); // Add Z to treat as UTC
                 // Format: Jan 08, 2026 at 12:33 PM
                 const options = { 
                     year: 'numeric', 
@@ -440,55 +443,15 @@
                     minute: '2-digit',
                     hour12: true
                 };
-                element.textContent = date.toLocaleDateString('en-US', options).replace(',', ' at');
+                const formatted = date.toLocaleString('en-US', options);
+                // Convert "Jan 08, 2026, 12:33 PM" to "Jan 08, 2026 at 12:33 PM"
+                element.textContent = formatted.replace(/,([^,]*)$/, ' at$1');
             }
         });
     }
     
     // Run on page load
     convertTimestampsToLocal();
+});
 </script>
-{% endblock %}
-{% else %}
-<script>
-    // Convert UTC timestamps to local timezone (when no chart)
-    document.addEventListener('DOMContentLoaded', function() {
-        // Toggle collapse icon
-        const collapseElement = document.getElementById('metricHistoryCollapse');
-        const collapseIcon = document.getElementById('collapseIcon');
-        
-        if (collapseElement && collapseIcon) {
-            collapseElement.addEventListener('shown.coreui.collapse', function () {
-                collapseIcon.className = 'cil-chevron-top';
-            });
-            
-            collapseElement.addEventListener('hidden.coreui.collapse', function () {
-                collapseIcon.className = 'cil-chevron-bottom';
-            });
-        }
-        
-        // Convert UTC timestamps to local timezone
-        function convertTimestampsToLocal() {
-            document.querySelectorAll('.timestamp[data-timestamp]').forEach(element => {
-                const isoTimestamp = element.getAttribute('data-timestamp');
-                if (isoTimestamp) {
-                    const date = new Date(isoTimestamp);
-                    // Format: Jan 08, 2026 at 12:33 PM
-                    const options = { 
-                        year: 'numeric', 
-                        month: 'short', 
-                        day: '2-digit',
-                        hour: 'numeric',
-                        minute: '2-digit',
-                        hour12: true
-                    };
-                    element.textContent = date.toLocaleDateString('en-US', options).replace(',', ' at');
-                }
-            });
-        }
-        
-        convertTimestampsToLocal();
-    });
-</script>
-{% endif %}
 {% endblock %}
