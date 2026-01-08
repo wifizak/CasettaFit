@@ -207,25 +207,37 @@ def duplicate(program_id):
                 day_number=day.day_number,
                 day_name=day.day_name,
                 is_rest_day=day.is_rest_day,
+                has_superset=day.has_superset,
                 notes=day.notes
             )
             db.session.add(new_day)
             db.session.flush()
             
-            for exercise in day.exercises:
-                new_exercise = ProgramExercise(
+            for series in day.series:
+                new_series = ProgramSeries(
                     day_id=new_day.id,
-                    exercise_id=exercise.exercise_id,
-                    order_index=exercise.order_index,
-                    sets=exercise.sets,
-                    reps=exercise.reps,
-                    lift_time_seconds=exercise.lift_time_seconds,
-                    rest_time_seconds=exercise.rest_time_seconds,
-                    starting_weight=exercise.starting_weight,
-                    target_rpe=exercise.target_rpe,
-                    notes=exercise.notes
+                    order_index=series.order_index,
+                    series_type=series.series_type,
+                    time_seconds=series.time_seconds,
+                    notes=series.notes
                 )
-                db.session.add(new_exercise)
+                db.session.add(new_series)
+                db.session.flush()
+                
+                for exercise in series.exercises:
+                    new_exercise = ProgramExercise(
+                        series_id=new_series.id,
+                        exercise_id=exercise.exercise_id,
+                        superset_position=exercise.superset_position,
+                        sets=exercise.sets,
+                        reps=exercise.reps,
+                        lift_time_seconds=exercise.lift_time_seconds,
+                        rest_time_seconds=exercise.rest_time_seconds,
+                        starting_weights=exercise.starting_weights,
+                        target_rpe=exercise.target_rpe,
+                        notes=exercise.notes
+                    )
+                    db.session.add(new_exercise)
     
     db.session.commit()
     
