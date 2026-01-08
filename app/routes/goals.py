@@ -78,18 +78,23 @@ def index():
                 progress['body_fat_remaining'] = goal.target_body_fat - (profile.current_body_fat or 0)
     
     # Get metric history for charts (last 30 entries)
-    metric_history = BodyMetricHistory.query.filter_by(
+    metric_history_chart = BodyMetricHistory.query.filter_by(
         user_id=current_user.id
     ).order_by(BodyMetricHistory.recorded_at.desc()).limit(30).all()
-    metric_history.reverse()  # Show oldest to newest for chart
+    metric_history_chart.reverse()  # Show oldest to newest for chart
     
-    # Convert metric history to JSON-serializable format
+    # Convert metric history to JSON-serializable format for charts
     metric_history_data = [{
         'id': m.id,
         'weight': m.weight,
         'body_fat': m.body_fat,
         'recorded_at': m.recorded_at.isoformat() if m.recorded_at else None
-    } for m in metric_history]
+    } for m in metric_history_chart]
+    
+    # Get ALL metric history for table (most recent first)
+    all_metric_history = BodyMetricHistory.query.filter_by(
+        user_id=current_user.id
+    ).order_by(BodyMetricHistory.recorded_at.desc()).all()
     
     return render_template('goals/index.html',
                          goal=goal,
@@ -98,6 +103,7 @@ def index():
                          first_metric=first_metric,
                          progress=progress,
                          metric_history=metric_history_data,
+                         all_metric_history=all_metric_history,
                          today=date.today())
 
 
