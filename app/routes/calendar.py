@@ -13,9 +13,21 @@ bp = Blueprint('calendar', __name__, url_prefix='/calendar')
 @login_required
 def index():
     """Main calendar view"""
-    from app.models import UserGym
+    from app.models import UserGym, GymMembership
+    from sqlalchemy import or_
+    
     programs = Program.query.filter_by(created_by=current_user.id).order_by(Program.name).all()
-    gyms = UserGym.query.filter_by(user_id=current_user.id).order_by(UserGym.name).all()
+    
+    # Get gyms user owns or is a member of
+    gyms = UserGym.query.filter(
+        or_(
+            UserGym.user_id == current_user.id,
+            UserGym.id.in_(
+                db.session.query(GymMembership.gym_id).filter_by(user_id=current_user.id)
+            )
+        )
+    ).order_by(UserGym.name).all()
+    
     instances = ProgramInstance.query.filter_by(user_id=current_user.id).order_by(ProgramInstance.scheduled_date.desc()).all()
     return render_template('calendar/index.html', programs=programs, gyms=gyms, instances=instances)
 
