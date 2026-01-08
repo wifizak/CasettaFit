@@ -8,7 +8,7 @@ from app.utils import save_uploaded_file, delete_uploaded_file
 bp = Blueprint('profile', __name__, url_prefix='/profile')
 
 # File upload configuration
-UPLOAD_FOLDER = 'static/uploads/profiles'
+UPLOAD_FOLDER = 'app/static/uploads/profiles'
 
 
 @bp.route('/')
