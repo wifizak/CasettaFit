@@ -709,9 +709,8 @@ function scheduleProgram() {
     .then(data => {
         if (data.success) {
             scheduleProgramModal.hide();
-            calendar.refetchEvents();
-            loadMissingDays();
             alert('Program scheduled successfully!');
+            location.reload();  // Reload to update Scheduled Programs card
         } else if (data.conflicts) {
             handleConflicts(data.conflicts, mappings);
         }
