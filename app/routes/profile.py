@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from app import db
-from app.models import UserProfile, User
+from app.models import UserProfile, User, GymMembership
 from app.forms import UserProfileForm
 from app.utils import save_uploaded_file, delete_uploaded_file
 
@@ -22,7 +22,10 @@ def index():
         db.session.add(profile)
         db.session.commit()
     
-    return render_template('profile/index.html', profile=profile, user=current_user)
+    # Count gym memberships (gyms user has joined but doesn't own)
+    gym_memberships_count = GymMembership.query.filter_by(user_id=current_user.id).count()
+    
+    return render_template('profile/index.html', profile=profile, user=current_user, gym_memberships_count=gym_memberships_count)
 
 
 @bp.route('/edit', methods=['GET', 'POST'])

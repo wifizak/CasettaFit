@@ -130,10 +130,17 @@
                         </div>
                     </div>
                     
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-body-secondary">Gyms (Owned)</span>
+                            <strong>{{ user.gyms|length }}</strong>
+                        </div>
+                    </div>
+                    
                     <div>
                         <div class="d-flex justify-content-between mb-1">
-                            <span class="text-body-secondary">Gyms</span>
-                            <strong>{{ user.gyms|length }}</strong>
+                            <span class="text-body-secondary">Gyms (Member)</span>
+                            <strong>{{ gym_memberships_count }}</strong>
                         </div>
                     </div>
                 </div>
