@@ -12,8 +12,14 @@ bp = Blueprint('gym', __name__, url_prefix='/gym')
 @bp.route('/')
 @login_required
 def index():
-    """List user's gyms"""
-    gyms = UserGym.query.filter_by(user_id=current_user.id).order_by(UserGym.name).all()
+    """List user's gyms and shared gyms"""
+    from sqlalchemy import or_
+    gyms = UserGym.query.filter(
+        or_(
+            UserGym.user_id == current_user.id,
+            UserGym.is_shared == True
+        )
+    ).order_by(UserGym.name).all()
     return render_template('gym/index.html', gyms=gyms)
 
 
