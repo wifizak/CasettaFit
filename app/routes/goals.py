@@ -83,13 +83,21 @@ def index():
     ).order_by(BodyMetricHistory.recorded_at.desc()).limit(30).all()
     metric_history.reverse()  # Show oldest to newest for chart
     
+    # Convert metric history to JSON-serializable format
+    metric_history_data = [{
+        'id': m.id,
+        'weight': m.weight,
+        'body_fat': m.body_fat,
+        'recorded_at': m.recorded_at.isoformat() if m.recorded_at else None
+    } for m in metric_history]
+    
     return render_template('goals/index.html',
                          goal=goal,
                          profile=profile,
                          latest_metric=latest_metric,
                          first_metric=first_metric,
                          progress=progress,
-                         metric_history=metric_history,
+                         metric_history=metric_history_data,
                          today=date.today())
 
 
