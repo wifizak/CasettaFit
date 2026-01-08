@@ -308,7 +308,9 @@
                                 <tbody>
                                     {% for metric in all_metric_history %}
                                     <tr>
-                                        <td>{{ metric.recorded_at.strftime('%b %d, %Y at %I:%M %p') if metric.recorded_at else '-' }}</td>
+                                        <td class="timestamp" data-timestamp="{{ metric.recorded_at.isoformat() if metric.recorded_at else '' }}">
+                                            {{ metric.recorded_at.strftime('%b %d, %Y at %I:%M %p') if metric.recorded_at else '-' }}
+                                        </td>
                                         <td>
                                             {% if metric.weight %}
                                                 {{ "%.1f"|format(metric.weight) }} {{ profile.weight_unit if profile else 'lbs' }}
@@ -418,6 +420,29 @@
             collapseIcon.className = 'cil-chevron-bottom';
         });
     }
+    
+    // Convert UTC timestamps to local timezone
+    function convertTimestampsToLocal() {
+        document.querySelectorAll('.timestamp[data-timestamp]').forEach(element => {
+            const isoTimestamp = element.getAttribute('data-timestamp');
+            if (isoTimestamp) {
+                const date = new Date(isoTimestamp);
+                // Format: Jan 08, 2026 at 12:33 PM
+                const options = { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: '2-digit',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                };
+                element.textContent = date.toLocaleDateString('en-US', options).replace(',', ' at');
+            }
+        });
+    }
+    
+    // Run on page load
+    convertTimestampsToLocal();
 </script>
 {% endblock %}
 {% endif %}
