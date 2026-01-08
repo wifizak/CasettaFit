@@ -350,62 +350,66 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-    const ctx = document.getElementById('progressChart');
-    const metricData = {{ metric_history | tojson }};
+    const chartCanvas = document.getElementById('progressChart');
     
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: metricData.map(m => new Date(m.recorded_at).toLocaleDateString()),
-            datasets: [
-                {
-                    label: 'Weight ({{ profile.weight_unit if profile else "lbs" }})',
-                    data: metricData.map(m => m.weight),
-                    borderColor: '#321fdb',
-                    backgroundColor: 'rgba(50, 31, 219, 0.1)',
-                    yAxisID: 'y',
-                },
-                {
-                    label: 'Body Fat (%)',
-                    data: metricData.map(m => m.body_fat),
-                    borderColor: '#e55353',
-                    backgroundColor: 'rgba(229, 83, 83, 0.1)',
-                    yAxisID: 'y1',
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: {
-                mode: 'index',
-                intersect: false,
-            },
-            scales: {
-                y: {
-                    type: 'linear',
-                    display: true,
-                    position: 'left',
-                    title: {
-                        display: true,
-                        text: 'Weight'
+    // Only initialize chart if canvas exists
+    if (chartCanvas) {
+        const metricData = {{ metric_history | tojson }};
+        
+        new Chart(chartCanvas, {
+            type: 'line',
+            data: {
+                labels: metricData.map(m => new Date(m.recorded_at).toLocaleDateString()),
+                datasets: [
+                    {
+                        label: 'Weight ({{ profile.weight_unit if profile else "lbs" }})',
+                        data: metricData.map(m => m.weight),
+                        borderColor: '#321fdb',
+                        backgroundColor: 'rgba(50, 31, 219, 0.1)',
+                        yAxisID: 'y',
+                    },
+                    {
+                        label: 'Body Fat (%)',
+                        data: metricData.map(m => m.body_fat),
+                        borderColor: '#e55353',
+                        backgroundColor: 'rgba(229, 83, 83, 0.1)',
+                        yAxisID: 'y1',
                     }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
                 },
-                y1: {
-                    type: 'linear',
-                    display: true,
-                    position: 'right',
-                    title: {
+                scales: {
+                    y: {
+                        type: 'linear',
                         display: true,
-                        text: 'Body Fat %'
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Weight'
+                        }
                     },
-                    grid: {
-                        drawOnChartArea: false,
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Body Fat %'
+                        },
+                        grid: {
+                            drawOnChartArea: false,
+                        },
                     },
-                },
+                }
             }
-        }
-    });
+        });
+    }
     
     // Toggle collapse icon
     const collapseElement = document.getElementById('metricHistoryCollapse');
@@ -445,5 +449,46 @@
     convertTimestampsToLocal();
 </script>
 {% endblock %}
+{% else %}
+<script>
+    // Convert UTC timestamps to local timezone (when no chart)
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle collapse icon
+        const collapseElement = document.getElementById('metricHistoryCollapse');
+        const collapseIcon = document.getElementById('collapseIcon');
+        
+        if (collapseElement && collapseIcon) {
+            collapseElement.addEventListener('shown.coreui.collapse', function () {
+                collapseIcon.className = 'cil-chevron-top';
+            });
+            
+            collapseElement.addEventListener('hidden.coreui.collapse', function () {
+                collapseIcon.className = 'cil-chevron-bottom';
+            });
+        }
+        
+        // Convert UTC timestamps to local timezone
+        function convertTimestampsToLocal() {
+            document.querySelectorAll('.timestamp[data-timestamp]').forEach(element => {
+                const isoTimestamp = element.getAttribute('data-timestamp');
+                if (isoTimestamp) {
+                    const date = new Date(isoTimestamp);
+                    // Format: Jan 08, 2026 at 12:33 PM
+                    const options = { 
+                        year: 'numeric', 
+                        month: 'short', 
+                        day: '2-digit',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true
+                    };
+                    element.textContent = date.toLocaleDateString('en-US', options).replace(',', ' at');
+                }
+            });
+        }
+        
+        convertTimestampsToLocal();
+    });
+</script>
 {% endif %}
 {% endblock %}
