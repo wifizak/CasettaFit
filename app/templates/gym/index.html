@@ -35,7 +35,10 @@
                 <div class="mb-3">
                     {% if gym.user_id == current_user.id %}
                     <span class="badge bg-success">My Gym</span>
-                    {% else %}
+                    {% elif gym.id in user_memberships %}
+                    <span class="badge bg-primary">Member</span>
+                    {% endif %}
+                    {% if gym.user_id != current_user.id %}
                     <span class="badge bg-secondary">Owner: {{ gym.creator.username }}</span>
                     {% endif %}
                     {% if gym.is_shared %}
@@ -44,6 +47,13 @@
                 </div>
                 <div class="d-grid gap-2">
                     <a href="{{ url_for('gym.view', gym_id=gym.id) }}" class="btn btn-primary">View Gym</a>
+                    {% if gym.user_id != current_user.id and gym.id not in user_memberships and gym.is_shared %}
+                    <form action="{{ url_for('gym.join', gym_id=gym.id) }}" method="POST">
+                        <button type="submit" class="btn btn-outline-success w-100">
+                            <i class="cil-user-follow me-2"></i>Join Gym
+                        </button>
+                    </form>
+                    {% endif %}
                 </div>
             </div>
         </div>

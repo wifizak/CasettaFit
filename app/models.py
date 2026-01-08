@@ -280,6 +280,26 @@ class UserGym(db.Model):
         return f'<UserGym {self.name}>'
 
 
+class GymMembership(db.Model):
+    """Many-to-many relationship between Users and Gyms for gym memberships"""
+    __tablename__ = 'gym_memberships'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    gym_id = db.Column(db.Integer, db.ForeignKey('user_gyms.id'), nullable=False)
+    joined_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    
+    # Unique constraint: a user can only join a gym once
+    __table_args__ = (db.UniqueConstraint('user_id', 'gym_id', name='unique_user_gym_membership'),)
+    
+    # Relationships
+    user = db.relationship('User', backref='gym_memberships')
+    gym = db.relationship('UserGym', backref='members')
+    
+    def __repr__(self):
+        return f'<GymMembership user_id={self.user_id} gym_id={self.gym_id}>'
+
+
 # Association table for MasterEquipment and UserGym many-to-many relationship
 equipment_gym_association = db.Table('equipment_gym_association',
     db.Column('equipment_id', db.Integer, db.ForeignKey('master_equipment.id'), primary_key=True),

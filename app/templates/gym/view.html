@@ -15,12 +15,17 @@
             <div>
                 <h2>{{ gym.name }}</h2>
                 {% if gym.is_shared %}<span class="badge bg-info">Shared</span>{% endif %}
+                {% if gym.user_id == current_user.id %}
+                <span class="badge bg-success">My Gym</span>
+                {% elif is_member %}
+                <span class="badge bg-primary">Member</span>
+                {% endif %}
                 {% if gym.address %}
                     <p class="text-muted mb-0"><i class="cil-location-pin me-1"></i>{{ gym.address }}</p>
                 {% endif %}
             </div>
-            {% if gym.user_id == current_user.id %}
             <div class="btn-group">
+                {% if gym.user_id == current_user.id %}
                 <a href="{{ url_for('gym.edit', gym_id=gym.id) }}" class="btn btn-outline-primary">
                     <i class="cil-pencil me-2"></i>Edit
                 </a>
@@ -29,8 +34,21 @@
                     <i class="cil-trash me-2"></i>Delete
                 </button>
                 <form id="delete-gym" action="{{ url_for('gym.delete', gym_id=gym.id) }}" method="POST" style="display:none;"></form>
+                {% elif is_member %}
+                <form action="{{ url_for('gym.leave', gym_id=gym.id) }}" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-outline-warning" 
+                            onclick="return confirm('Leave this gym?')">
+                        <i class="cil-account-logout me-2"></i>Leave Gym
+                    </button>
+                </form>
+                {% elif gym.is_shared %}
+                <form action="{{ url_for('gym.join', gym_id=gym.id) }}" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="cil-user-follow me-2"></i>Join Gym
+                    </button>
+                </form>
+                {% endif %}
             </div>
-            {% endif %}
         </div>
     </div>
 </div>

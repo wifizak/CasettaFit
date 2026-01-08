@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, send_from_directory
 from flask_login import login_required, current_user
 from app import db
-from app.models import UserGym, GymEquipment, GymExercise, MasterExercise, MasterEquipment
+from app.models import UserGym, GymEquipment, GymExercise, MasterExercise, MasterEquipment, GymMembership
 from app.forms import UserGymForm, GymEquipmentForm, GymExerciseForm
 from app.utils import save_uploaded_file, delete_uploaded_file
 import json
@@ -12,15 +12,21 @@ bp = Blueprint('gym', __name__, url_prefix='/gym')
 @bp.route('/')
 @login_required
 def index():
-    """List user's gyms and shared gyms"""
+    """List user's gyms, shared gyms, and gyms user is a member of"""
     from sqlalchemy import or_
+    
+    # Get all gyms that the user owns or that are shared
     gyms = UserGym.query.filter(
         or_(
             UserGym.user_id == current_user.id,
             UserGym.is_shared == True
         )
     ).order_by(UserGym.name).all()
-    return render_template('gym/index.html', gyms=gyms)
+    
+    # Get user's memberships to check membership status
+    user_memberships = {m.gym_id for m in GymMembership.query.filter_by(user_id=current_user.id).all()}
+    
+    return render_template('gym/index.html', gyms=gyms, user_memberships=user_memberships)
 
 
 @bp.route('/create', methods=['GET', 'POST'])
@@ -60,12 +66,18 @@ def view(gym_id):
     """View gym details"""
     gym = UserGym.query.get_or_404(gym_id)
     
-    # Check permissions
-    if gym.user_id != current_user.id and not gym.is_shared:
+    # Check membership
+    is_member = GymMembership.query.filter_by(
+        user_id=current_user.id,
+        gym_id=gym_id
+    ).first() is not None
+    
+    # Check permissions: owner, member, or shared gym
+    if gym.user_id != current_user.id and not is_member and not gym.is_shared:
         flash('You do not have access to this gym.', 'danger')
         return redirect(url_for('gym.index'))
     
-    return render_template('gym/view.html', gym=gym)
+    return render_template('gym/view.html', gym=gym, is_member=is_member)
 
 
 @bp.route('/<int:gym_id>/edit', methods=['GET', 'POST'])
@@ -124,6 +136,73 @@ def delete(gym_id):
     db.session.commit()
     
     flash(f'Gym "{name}" deleted successfully.', 'success')
+    return redirect(url_for('gym.index'))
+
+
+@bp.route('/<int:gym_id>/join', methods=['POST'])
+@login_required
+def join(gym_id):
+    """Join a shared gym"""
+    gym = UserGym.query.get_or_404(gym_id)
+    
+    # Check if gym is shared
+    if not gym.is_shared:
+        flash('This gym is not available for joining.', 'danger')
+        return redirect(url_for('gym.index'))
+    
+    # Check if user is the owner
+    if gym.user_id == current_user.id:
+        flash('You already own this gym.', 'info')
+        return redirect(url_for('gym.view', gym_id=gym_id))
+    
+    # Check if already a member
+    existing_membership = GymMembership.query.filter_by(
+        user_id=current_user.id,
+        gym_id=gym_id
+    ).first()
+    
+    if existing_membership:
+        flash('You are already a member of this gym.', 'info')
+        return redirect(url_for('gym.view', gym_id=gym_id))
+    
+    # Create membership
+    membership = GymMembership(
+        user_id=current_user.id,
+        gym_id=gym_id
+    )
+    db.session.add(membership)
+    db.session.commit()
+    
+    flash(f'Successfully joined "{gym.name}"!', 'success')
+    return redirect(url_for('gym.view', gym_id=gym_id))
+
+
+@bp.route('/<int:gym_id>/leave', methods=['POST'])
+@login_required
+def leave(gym_id):
+    """Leave a gym"""
+    gym = UserGym.query.get_or_404(gym_id)
+    
+    # Check if user is the owner
+    if gym.user_id == current_user.id:
+        flash('You cannot leave a gym you own. Delete it instead.', 'warning')
+        return redirect(url_for('gym.view', gym_id=gym_id))
+    
+    # Find membership
+    membership = GymMembership.query.filter_by(
+        user_id=current_user.id,
+        gym_id=gym_id
+    ).first()
+    
+    if not membership:
+        flash('You are not a member of this gym.', 'info')
+        return redirect(url_for('gym.index'))
+    
+    # Delete membership
+    db.session.delete(membership)
+    db.session.commit()
+    
+    flash(f'You have left "{gym.name}".', 'success')
     return redirect(url_for('gym.index'))
 
 
