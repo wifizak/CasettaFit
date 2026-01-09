@@ -629,7 +629,7 @@ function renderExerciseCard(exercise, label, color, seriesIndex) {
     html += `<span>${label ? label + '. ' : ''}${exercise.exercise_name}</span>`;
     html += `<div class="d-flex align-items-center gap-2">`;
     // Add Set X of Y badge for mobile carousel view
-    html += `<span class="badge bg-light text-dark d-md-none" id="set-progress-badge-${exercise.exercise_id}">Set ${firstIncompleteSet} of ${numSets}</span>`;
+    html += `<span class="badge bg-light text-dark d-md-none" id="set-progress-badge-${exercise.exercise_id}" style="font-size: 0.875rem;">Set ${firstIncompleteSet} of ${numSets}</span>`;
     if (logged.length > 0) {
         html += `<span class="badge bg-success me-2" id="logged-badge-${exercise.exercise_id}">✓ Logged</span>`;
     }
