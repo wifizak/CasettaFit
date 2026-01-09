@@ -502,10 +502,12 @@ def get_instance_workout_data(instance_id):
     for ws in workout_sets:
         key = (ws.workout_session_id, ws.exercise_id, ws.set_number)
         logged_sets_map[key] = {
+            'set_id': ws.id,
             'weight': ws.weight,
             'reps': ws.reps,
             'rpe': ws.rpe,
-            'overall_rpe': ws.overall_rpe
+            'overall_rpe': ws.overall_rpe,
+            'completed_at': ws.completed_at.isoformat() if ws.completed_at else None
         }
     
     # Build map of which session has actual logged sets for each scheduled_day
@@ -546,24 +548,35 @@ def get_instance_workout_data(instance_id):
                     # Get actual logged weights if session exists
                     logged_weights = []
                     logged_reps = []
+                    logged_set_ids = []
+                    logged_rpes = []
                     if session:
                         for i in range(prog_ex.sets):
                             key = (session.id, prog_ex.exercise_id, i + 1)
                             if key in logged_sets_map:
                                 logged_weights.append(logged_sets_map[key]['weight'])
                                 logged_reps.append(logged_sets_map[key]['reps'])
+                                logged_set_ids.append(logged_sets_map[key]['set_id'])
+                                logged_rpes.append(logged_sets_map[key]['rpe'])
                             else:
                                 logged_weights.append(None)
                                 logged_reps.append(None)
+                                logged_set_ids.append(None)
+                                logged_rpes.append(None)
                     
                     exercises_data.append({
                         'id': prog_ex.id,
+                        'exercise_id': prog_ex.exercise_id,
                         'exercise_name': prog_ex.exercise.name,
                         'sets': prog_ex.sets,
                         'reps': prog_ex.reps,
                         'weights': weights,
                         'logged_weights': logged_weights if session else None,
                         'logged_reps': logged_reps if session else None,
+                        'logged_set_ids': logged_set_ids if session else None,
+                        'logged_rpes': logged_rpes if session else None,
+                        'session_id': session.id if session else None,
+                        'session_completed_at': session.completed_at.isoformat() if session and session.completed_at else None,
                         'notes': notes,
                         'superset_position': prog_ex.superset_position
                     })
@@ -635,4 +648,39 @@ def update_instance_weights(instance_id):
     
     db.session.commit()
     return jsonify({'success': True})
+
+
+@bp.route('/workout-set/<int:set_id>/update', methods=['POST'])
+@login_required
+def update_workout_set(set_id):
+    """Update a logged workout set"""
+    workout_set = WorkoutSet.query.get_or_404(set_id)
+    
+    # Verify the user owns this workout set through the session
+    session = WorkoutSession.query.get(workout_set.workout_session_id)
+    if not session or session.user_id != current_user.id:
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+    
+    data = request.get_json()
+    
+    # Update the fields
+    if 'weight' in data:
+        workout_set.weight = float(data['weight']) if data['weight'] else None
+    if 'reps' in data:
+        workout_set.reps = int(data['reps']) if data['reps'] else None
+    if 'rpe' in data:
+        workout_set.rpe = data['rpe'] if data['rpe'] else None
+    
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'set': {
+            'id': workout_set.id,
+            'weight': workout_set.weight,
+            'reps': workout_set.reps,
+            'rpe': workout_set.rpe
+        }
+    })
+
 
