@@ -321,6 +321,15 @@
         border: 2px solid #ffc107;
     }
     
+    .set-accordion-item.editing-mode {
+        border: 2px solid #fd7e14;
+        box-shadow: 0 0 0 0.2rem rgba(253, 126, 20, 0.25);
+    }
+    
+    .carousel-item.editing-mode {
+        box-shadow: 0 0 0 0.25rem rgba(253, 126, 20, 0.25);
+    }
+    
     .set-accordion-title {
         font-weight: 600;
         font-size: 1rem;
@@ -600,12 +609,22 @@ function renderCarouselSet(exercise, setNumber, logged) {
     html += `onclick="setRpeCarousel(${exercise.exercise_id}, ${setNumber}, '+')" `;    
     html += `id="rpe-carousel-btn-${exercise.exercise_id}-${setNumber}-+">+</button>`;    
     html += `</div>`;    
-    // Log button next to RPE buttons
-    html += `<button type="button" class="btn btn-success carousel-log-btn" `;    
-    html += `onclick="logSetCarousel(${exercise.exercise_id}, ${setNumber}, ${exercise.rest_time_seconds || 0})" `;    
-    html += `${isCompleted ? 'disabled' : ''}>`;    
-    html += `<i class="bi bi-check-lg"></i> ${isCompleted ? 'Logged ✓' : 'Log Set'}`;    
-    html += `</button>`;    
+    // Log/Update button next to RPE buttons
+    if (isCompleted) {
+        // Show Edit button when set is logged
+        html += `<button type="button" class="btn btn-warning carousel-log-btn" `;    
+        html += `onclick="enableEditCarousel(${exercise.exercise_id}, ${setNumber})" `;    
+        html += `id="edit-btn-carousel-${exercise.exercise_id}-${setNumber}">`;    
+        html += `<i class="bi bi-pencil"></i> Edit`;    
+        html += `</button>`;    
+    } else {
+        // Show Log button when set is not logged
+        html += `<button type="button" class="btn btn-success carousel-log-btn" `;    
+        html += `onclick="logSetCarousel(${exercise.exercise_id}, ${setNumber}, ${exercise.rest_time_seconds || 0})" `;    
+        html += `id="log-btn-carousel-${exercise.exercise_id}-${setNumber}">`;    
+        html += `<i class="bi bi-check-lg"></i> Log Set`;    
+        html += `</button>`;    
+    }
     html += `</div>`;    
     html += `<input type="hidden" id="rpe-carousel-${exercise.exercise_id}-${setNumber}" value="${currentRpe}">`;    
     html += `</div>`;    
@@ -845,11 +864,20 @@ function renderExerciseCard(exercise, label, color, seriesIndex) {
         html += `<input type="hidden" id="rpe-mobile-${exercise.exercise_id}-${setNum}" value="${currentRpe}">`;
         html += `</div>`;
         
-        // Log Set button
-        html += `<button type="button" class="btn btn-success mobile-save-set-btn" `;
-        html += `onclick="logSingleSetMobile(${exercise.exercise_id}, ${setNum}, ${exercise.rest_time_seconds || 0})">`;
-        html += `<i class="bi bi-check-lg"></i> Log Set ${setNum}`;
-        html += `</button>`;
+        // Log Set or Edit button
+        if (isCompleted) {
+            html += `<button type="button" class="btn btn-warning mobile-save-set-btn" `;
+            html += `id="edit-btn-mobile-${exercise.exercise_id}-${setNum}" `;
+            html += `onclick="enableEditMobile(${exercise.exercise_id}, ${setNum})">`;
+            html += `<i class="cil-pencil"></i> Edit Set ${setNum}`;
+            html += `</button>`;
+        } else {
+            html += `<button type="button" class="btn btn-success mobile-save-set-btn" `;
+            html += `id="log-btn-mobile-${exercise.exercise_id}-${setNum}" `;
+            html += `onclick="logSingleSetMobile(${exercise.exercise_id}, ${setNum}, ${exercise.rest_time_seconds || 0})">`;
+            html += `<i class="bi bi-check-lg"></i> Log Set ${setNum}`;
+            html += `</button>`;
+        }
         
         html += `</div>`; // End body
         html += `</div>`; // End accordion item
@@ -1074,6 +1102,18 @@ async function logSingleSetMobile(exerciseId, setNumber, restTime) {
                 </div>
             `;
             
+            // Update button to Edit button
+            const logBtn = body.querySelector('.mobile-save-set-btn');
+            if (logBtn) {
+                logBtn.id = `edit-btn-mobile-${exerciseId}-${setNumber}`;
+                logBtn.className = 'btn btn-warning mobile-save-set-btn';
+                logBtn.innerHTML = `<i class="cil-pencil"></i> Edit Set ${setNumber}`;
+                logBtn.setAttribute('onclick', `enableEditMobile(${exerciseId}, ${setNumber})`);
+            }
+            
+            // Remove editing mode class if present
+            accordionItem.classList.remove('editing-mode');
+            
             // Collapse this set
             body.classList.remove('expanded');
             icon.classList.remove('expanded');
@@ -1120,6 +1160,24 @@ async function logSingleSetMobile(exerciseId, setNumber, restTime) {
     } catch (error) {
         console.error('Error logging set:', error);
         alert('Error logging set. Please try again.');
+    }
+}
+
+function enableEditMobile(exerciseId, setNumber) {
+    // Change Edit button to Update button
+    const editBtn = document.getElementById(`edit-btn-mobile-${exerciseId}-${setNumber}`);
+    if (editBtn) {
+        editBtn.innerHTML = '<i class="bi bi-check-lg"></i> Update Set ' + setNumber;
+        editBtn.classList.remove('btn-warning');
+        editBtn.classList.add('btn-success');
+        editBtn.setAttribute('id', `log-btn-mobile-${exerciseId}-${setNumber}`);
+        editBtn.setAttribute('onclick', `logSingleSetMobile(${exerciseId}, ${setNumber}, 0)`);
+    }
+    
+    // Show visual feedback that editing is enabled
+    const accordionItem = document.getElementById(`accordion-${exerciseId}-${setNumber}`);
+    if (accordionItem) {
+        accordionItem.classList.add('editing-mode');
     }
 }
 
@@ -1281,6 +1339,12 @@ async function logSetCarousel(exerciseId, setNumber, restTime) {
             if (exercise) {
                 const numSets = exercise.sets;
                 
+                // Remove editing mode class
+                const carouselItem = document.querySelector(`.carousel-item[data-exercise-id="${exerciseId}"][data-set-number="${setNumber}"]`);
+                if (carouselItem) {
+                    carouselItem.classList.remove('editing-mode');
+                }
+                
                 // Check if all sets complete
                 if (loggedSets[exerciseId].length === numSets) {
                     promptOverallFeeling(exerciseId);
@@ -1305,6 +1369,23 @@ async function logSetCarousel(exerciseId, setNumber, restTime) {
     } catch (error) {
         console.error('Error logging set:', error);
         alert('Error logging set. Please try again.');
+    }
+}
+
+function enableEditCarousel(exerciseId, setNumber) {
+    // Change Edit button to Update button
+    const editBtn = document.getElementById(`edit-btn-carousel-${exerciseId}-${setNumber}`);
+    if (editBtn) {
+        editBtn.innerHTML = '<i class="cil-check"></i> Update Set';
+        editBtn.classList.remove('btn-warning');
+        editBtn.classList.add('btn-success');
+        editBtn.setAttribute('onclick', `logSetCarousel(${exerciseId}, ${setNumber})`);
+    }
+    
+    // Show visual feedback that editing is enabled
+    const carouselItem = document.querySelector(`.carousel-item[data-exercise-id="${exerciseId}"][data-set-number="${setNumber}"]`);
+    if (carouselItem) {
+        carouselItem.classList.add('editing-mode');
     }
 }
 
