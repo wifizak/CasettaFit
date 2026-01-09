@@ -527,20 +527,17 @@ function renderCarouselSet(exercise, setNumber, logged) {
     
     let html = '';
     
-    // Header
-    html += `<div class="carousel-set-header">`;    
-    html += `<div class="carousel-set-title">`;    
+    // Header - only show completion info if set is already logged
     if (isCompleted) {
-        html += `<i class="bi bi-check-circle-fill text-success"></i> `;
-    }
-    html += `Set ${setNumber} of ${numSets}`;    
-    html += `</div>`;    
-    if (isCompleted) {
-        html += `<div class="carousel-set-subtitle">`;        
+        html += `<div class="carousel-set-header">`;
+        html += `<div class="carousel-set-title">`;
+        html += `<i class="bi bi-check-circle-fill text-success"></i> Completed`;
+        html += `</div>`;
+        html += `<div class="carousel-set-subtitle">`;
         html += `${loggedSet.weight}lbs × ${loggedSet.reps} reps${loggedSet.rpe ? ' @ RPE ' + loggedSet.rpe : ''}`;
-        html += `</div>`;        
-    }
-    html += `</div>`;    
+        html += `</div>`;
+        html += `</div>`;
+    }    
     
     // Weight
     html += `<div class="carousel-input-row">`;    
@@ -631,6 +628,8 @@ function renderExerciseCard(exercise, label, color, seriesIndex) {
     html += `<div class="card-header bg-${color} text-white d-flex justify-content-between align-items-center">`;
     html += `<span>${label ? label + '. ' : ''}${exercise.exercise_name}</span>`;
     html += `<div class="d-flex align-items-center gap-2">`;
+    // Add Set X of Y badge for mobile carousel view
+    html += `<span class="badge bg-light text-dark d-md-none" id="set-progress-badge-${exercise.exercise_id}">Set ${firstIncompleteSet} of ${numSets}</span>`;
     if (logged.length > 0) {
         html += `<span class="badge bg-success me-2" id="logged-badge-${exercise.exercise_id}">✓ Logged</span>`;
     }
@@ -1158,6 +1157,12 @@ function navigateCarousel(exerciseId, setNumber) {
     
     if (carousel) {
         carousel.innerHTML = renderCarouselSet(exercise, setNumber, logged);
+        
+        // Update the set progress badge in the card header
+        const progressBadge = document.getElementById(`set-progress-badge-${exerciseId}`);
+        if (progressBadge) {
+            progressBadge.textContent = `Set ${setNumber} of ${exercise.sets}`;
+        }
     }
 }
 
