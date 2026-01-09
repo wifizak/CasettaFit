@@ -404,12 +404,52 @@ let workoutStartTime = new Date();
 let timerInterval = null;
 let restTimerInterval = null;
 let restTimerModal = null;
+let wakeLock = null;
+
+// Request wake lock to keep screen on during workout
+async function requestWakeLock() {
+    try {
+        if ('wakeLock' in navigator) {
+            wakeLock = await navigator.wakeLock.request('screen');
+            console.log('Wake Lock active - screen will stay on');
+            
+            // Re-request wake lock if visibility changes (e.g., tab switch)
+            wakeLock.addEventListener('release', () => {
+                console.log('Wake Lock released');
+            });
+        }
+    } catch (err) {
+        console.log('Wake Lock not supported or failed:', err);
+    }
+}
+
+// Release wake lock when leaving page
+function releaseWakeLock() {
+    if (wakeLock !== null) {
+        wakeLock.release()
+            .then(() => {
+                wakeLock = null;
+                console.log('Wake Lock released manually');
+            });
+    }
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     restTimerModal = new coreui.Modal(document.getElementById('restTimerModal'));
+    requestWakeLock();  // Keep screen on during workout
     loadWorkoutData();
     startWorkoutTimer();
 });
+
+// Re-acquire wake lock when page becomes visible again
+document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState === 'visible') {
+        requestWakeLock();
+    }
+});
+
+// Release wake lock when page is unloaded
+window.addEventListener('beforeunload', releaseWakeLock);
 
 function startWorkoutTimer() {
     timerInterval = setInterval(() => {
@@ -1480,6 +1520,7 @@ async function finishWorkout() {
         
         if (data.success) {
             clearInterval(timerInterval);
+            releaseWakeLock();  // Release wake lock when workout is finished
             alert('Workout completed! Great job! 💪');
             window.location.href = '/calendar';
         }
