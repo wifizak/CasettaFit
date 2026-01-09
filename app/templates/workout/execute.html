@@ -69,6 +69,18 @@
             <div id="exerciseSearchResults"></div>
         </div>
     </div>
+
+    <!-- Bottom Timer & Finish Button -->
+    <div class="row mt-4 mb-3">
+        <div class="col">
+            <div class="d-flex justify-content-center align-items-center gap-3">
+                <span id="timerDisplayBottom" class="badge bg-secondary fs-6">0:00</span>
+                <button class="btn btn-danger" onclick="finishWorkout()">
+                    <i class="bi bi-check-circle"></i> Finish Workout
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Previous Sets Modal -->
@@ -463,8 +475,9 @@ function startWorkoutTimer() {
         const elapsed = Math.floor((new Date() - workoutStartTime) / 1000);
         const minutes = Math.floor(elapsed / 60);
         const seconds = elapsed % 60;
-        document.getElementById('timerDisplay').textContent = 
-            `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        document.getElementById('timerDisplay').textContent = timeString;
+        document.getElementById('timerDisplayBottom').textContent = timeString;
     }, 1000);
 }
 
