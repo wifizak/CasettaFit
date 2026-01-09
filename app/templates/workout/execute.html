@@ -228,6 +228,7 @@
     .carousel-rpe-buttons {
         display: flex;
         gap: 0.5rem;
+        flex: 1;
     }
     
     .carousel-rpe-buttons button {
@@ -237,12 +238,18 @@
         font-weight: 600;
     }
     
+    .carousel-rpe-row {
+        display: flex;
+        gap: 0.75rem;
+        align-items: stretch;
+    }
+    
     .carousel-log-btn {
-        width: 100%;
         min-height: 38px;
         font-size: 0.95rem;
         font-weight: 600;
-        margin-top: 0.75rem;
+        min-width: 120px;
+        flex-shrink: 0;
     }
     
     .carousel-navigation {
@@ -564,9 +571,10 @@ function renderCarouselSet(exercise, setNumber, logged) {
     html += `placeholder="${suggestedReps || 'Enter reps'}">`;    
     html += `</div></div>`;    
     
-    // RPE
+    // RPE + Log button row
     html += `<div class="carousel-input-row">`;    
     html += `<div class="carousel-input-label">RPE <small>optional</small></div>`;    
+    html += `<div class="carousel-rpe-row">`;    
     html += `<div class="carousel-rpe-buttons">`;    
     const currentRpe = loggedSet?.rpe || '';
     html += `<button type="button" class="btn ${currentRpe === '-' ? 'btn-danger' : 'btn-outline-danger'}" `;    
@@ -579,15 +587,15 @@ function renderCarouselSet(exercise, setNumber, logged) {
     html += `onclick="setRpeCarousel(${exercise.exercise_id}, ${setNumber}, '+')" `;    
     html += `id="rpe-carousel-btn-${exercise.exercise_id}-${setNumber}-+">+</button>`;    
     html += `</div>`;    
-    html += `<input type="hidden" id="rpe-carousel-${exercise.exercise_id}-${setNumber}" value="${currentRpe}">`;    
-    html += `</div>`;    
-    
-    // Log button
+    // Log button next to RPE buttons
     html += `<button type="button" class="btn btn-success carousel-log-btn" `;    
     html += `onclick="logSetCarousel(${exercise.exercise_id}, ${setNumber}, ${exercise.rest_time_seconds || 0})" `;    
     html += `${isCompleted ? 'disabled' : ''}>`;    
-    html += `<i class="bi bi-check-lg"></i> ${isCompleted ? 'Set Logged ✓' : 'Log Set ' + setNumber}`;    
+    html += `<i class="bi bi-check-lg"></i> ${isCompleted ? 'Logged ✓' : 'Log Set'}`;    
     html += `</button>`;    
+    html += `</div>`;    
+    html += `<input type="hidden" id="rpe-carousel-${exercise.exercise_id}-${setNumber}" value="${currentRpe}">`;    
+    html += `</div>`;    
     
     // Navigation
     html += `<div class="carousel-navigation">`;    
