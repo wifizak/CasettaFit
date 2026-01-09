@@ -388,8 +388,9 @@ function openEditModal(exercise) {
     
     document.getElementById('editSetsContent').innerHTML = html;
     
-    // Show the modal
-    const modal = new bootstrap.Modal(document.getElementById('editSetsModal'));
+    // Show the modal using CoreUI
+    const modalElement = document.getElementById('editSetsModal');
+    const modal = coreui.Modal.getOrCreateInstance(modalElement);
     modal.show();
 }
 
@@ -477,7 +478,9 @@ async function saveAllLoggedSets() {
         }
         
         // Close modal and reload data
-        bootstrap.Modal.getInstance(document.getElementById('editSetsModal')).hide();
+        const modalElement = document.getElementById('editSetsModal');
+        const modal = coreui.Modal.getInstance(modalElement);
+        if (modal) modal.hide();
         loadWorkoutPlan();
         
         // Show success message
