@@ -1161,6 +1161,12 @@ function navigateCarousel(exerciseId, setNumber) {
     if (!exercise) return;
     
     const logged = loggedSets[exerciseId] || [];
+    const numSets = exercise.sets;
+    
+    // Bounds check: ensure setNumber is within valid range
+    if (setNumber < 1) setNumber = 1;
+    if (setNumber > numSets) setNumber = numSets;
+    
     const carousel = document.getElementById(`carousel-${exerciseId}`);
     
     if (carousel) {
