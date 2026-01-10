@@ -9,26 +9,34 @@
 {% block content %}
 <div class="container-fluid px-2 py-3" id="workoutApp">
     <!-- Header -->
+    <div class="row mb-2">
+        <div class="col">
+            <h4 class="mb-0" id="workoutTitle">Loading...</h4>
+            <small class="text-muted" id="workoutSubtitle"></small>
+        </div>
+    </div>
+    
+    <div class="row mb-2">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="form-check form-switch form-switch-lg">
+                    <input class="form-check-input" type="checkbox" role="switch" id="skipRestsToggle" onchange="toggleSkipRests()">
+                    <label class="form-check-label" for="skipRestsToggle">
+                        <small>Skip Rests</small>
+                    </label>
+                </div>
+                <span id="workoutProgress" class="badge bg-info fs-6">0 / 0 exercises</span>
+            </div>
+        </div>
+    </div>
+    
     <div class="row mb-3">
         <div class="col">
             <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h4 class="mb-0" id="workoutTitle">Loading...</h4>
-                    <small class="text-muted" id="workoutSubtitle"></small>
-                </div>
-                <div class="d-flex align-items-center gap-2">
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="skipRestsToggle" onchange="toggleSkipRests()">
-                        <label class="form-check-label" for="skipRestsToggle">
-                            <small>Skip Rests</small>
-                        </label>
-                    </div>
-                    <span id="workoutProgress" class="badge bg-info fs-6">0 / 0 exercises</span>
-                    <span id="timerDisplay" class="badge bg-secondary fs-6">0:00</span>
-                    <button class="btn btn-sm btn-danger" onclick="finishWorkout()">
-                        <i class="bi bi-check-circle"></i> Finish
-                    </button>
-                </div>
+                <span id="timerDisplay" class="badge bg-secondary fs-6">0:00</span>
+                <button class="btn btn-sm btn-danger" onclick="finishWorkout()">
+                    <i class="bi bi-check-circle"></i> Finish
+                </button>
             </div>
         </div>
     </div>
