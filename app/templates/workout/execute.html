@@ -800,8 +800,8 @@ function renderExerciseCard(exercise, label, color, seriesIndex) {
     }
     html += `</tr>`;
     
-    // RPE row
-    html += `<tr><td class="align-middle"><strong>RPE</strong><br><small class="text-muted">optional</small></td>`;
+    // RPE row (clicking RPE logs the set)
+    html += `<tr><td class="align-middle"><strong>RPE</strong><br><small class="text-muted">click to log</small></td>`;
     for (let setNum = 1; setNum <= numSets; setNum++) {
         const loggedSet = logged.find(s => s.set_number === setNum);
         const currentRpe = loggedSet?.rpe || '';
@@ -1014,6 +1014,101 @@ function setRpe(exerciseId, setNumber, rpeValue) {
                 }
             }
         });
+    }
+    
+    // Automatically log the set when RPE is selected
+    logSingleSet(exerciseId, setNumber);
+}
+
+async function logSingleSet(exerciseId, setNumber) {
+    // Get weight and reps from desktop view inputs
+    const weightInput = document.getElementById(`weight-${exerciseId}-${setNumber}`);
+    const repsInput = document.getElementById(`reps-${exerciseId}-${setNumber}`);
+    const rpeInput = document.getElementById(`rpe-${exerciseId}-${setNumber}`);
+    
+    const weight = parseFloat(weightInput?.value);
+    const reps = parseInt(repsInput?.value);
+    const rpe = rpeInput?.value || null;
+    
+    if (!weight || !reps || isNaN(weight) || isNaN(reps)) {
+        alert('Please enter both weight and reps before selecting RPE.');
+        // Reset RPE if validation fails
+        if (rpeInput) rpeInput.value = '';
+        // Reset button styles
+        const buttonGroup = rpeInput?.parentElement;
+        if (buttonGroup) {
+            buttonGroup.querySelectorAll('button').forEach(btn => {
+                btn.classList.remove('btn-danger', 'btn-success', 'btn-primary');
+                const btnValue = btn.textContent.trim();
+                if (btnValue === '-') btn.classList.add('btn-outline-danger');
+                else if (btnValue === '=') btn.classList.add('btn-outline-success');
+                else if (btnValue === '+') btn.classList.add('btn-outline-primary');
+            });
+        }
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/workout/api/session/${sessionId}/log-set`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                exercise_id: exerciseId,
+                set_number: setNumber,
+                weight: weight,
+                reps: reps,
+                rpe: rpe
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Update logged sets
+            if (!loggedSets[exerciseId]) {
+                loggedSets[exerciseId] = [];
+            }
+            const existingIndex = loggedSets[exerciseId].findIndex(s => s.set_number === setNumber);
+            if (existingIndex >= 0) {
+                loggedSets[exerciseId][existingIndex] = data;
+            } else {
+                loggedSets[exerciseId].push(data);
+            }
+            
+            // Update workout progress
+            updateWorkoutProgress();
+            
+            // Update the set header to show it's completed
+            const exercise = workoutData.series.flatMap(s => s.exercises).find(ex => ex.exercise_id === exerciseId);
+            if (exercise) {
+                const setHeader = document.querySelector(`th:has(+ th):nth-child(${setNumber + 1})`);
+                // Find the correct header by traversing the table
+                const card = document.querySelector(`#overall-rpe-${exerciseId}`)?.closest('.card');
+                if (card) {
+                    const table = card.querySelector('.desktop-sets-table table');
+                    if (table) {
+                        const headers = table.querySelectorAll('thead th');
+                        if (headers[setNumber]) {
+                            headers[setNumber].classList.add('text-success');
+                            if (!headers[setNumber].querySelector('.bi-check-circle-fill')) {
+                                headers[setNumber].innerHTML += ` <i class="bi bi-check-circle-fill"></i>`;
+                            }
+                        }
+                    }
+                }
+                
+                // Check if all sets complete
+                const numSets = exercise.sets;
+                if (loggedSets[exerciseId].length === numSets) {
+                    promptOverallFeeling(exerciseId);
+                }
+            }
+        } else {
+            throw new Error('Failed to log set');
+        }
+    } catch (error) {
+        console.error('Error logging set:', error);
+        alert('Error logging set. Please try again.');
     }
 }
 
