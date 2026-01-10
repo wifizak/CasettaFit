@@ -16,9 +16,15 @@
                     <h4 class="mb-0" id="workoutTitle">Loading...</h4>
                     <small class="text-muted" id="workoutSubtitle"></small>
                 </div>
-                <div>
-                    <span id="workoutProgress" class="badge bg-info fs-6 me-2">0 / 0 exercises</span>
-                    <span id="timerDisplay" class="badge bg-secondary fs-6 me-2">0:00</span>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="skipRestsToggle" onchange="toggleSkipRests()">
+                        <label class="form-check-label" for="skipRestsToggle">
+                            <small>Skip Rests</small>
+                        </label>
+                    </div>
+                    <span id="workoutProgress" class="badge bg-info fs-6">0 / 0 exercises</span>
+                    <span id="timerDisplay" class="badge bg-secondary fs-6">0:00</span>
                     <button class="btn btn-sm btn-danger" onclick="finishWorkout()">
                         <i class="bi bi-check-circle"></i> Finish
                     </button>
@@ -507,6 +513,12 @@ let overallFeelingModal = null;
 let finishWorkoutModal = null;
 let currentOverallFeelingExerciseId = null;
 let wakeLock = null;
+let skipRests = false;
+
+function toggleSkipRests() {
+    skipRests = document.getElementById('skipRestsToggle').checked;
+    console.log('Skip rests:', skipRests);
+}
 
 // Request wake lock to keep screen on during workout
 async function requestWakeLock() {
@@ -1175,6 +1187,13 @@ async function logSingleSet(exerciseId, setNumber) {
                 const numSets = exercise.sets;
                 if (loggedSets[exerciseId].length === numSets) {
                     promptOverallFeeling(exerciseId);
+                } else if (setNumber < numSets) {
+                    // Start rest timer if not the last set
+                    const restTime = exercise.rest_time_seconds || 0;
+                    console.log(`Desktop view: Starting rest timer for ${restTime} seconds`);
+                    if (restTime > 0) {
+                        startRestTimer(restTime);
+                    }
                 }
             }
         } else {
@@ -1778,6 +1797,12 @@ async function saveOverallRpe(exerciseId, overallRpe) {
 }
 
 function startRestTimer(seconds) {
+    // Check if rest timer is disabled
+    if (skipRests) {
+        console.log('Rest timer skipped by user preference');
+        return;
+    }
+    
     const totalSeconds = seconds;
     let remaining = seconds;
     
