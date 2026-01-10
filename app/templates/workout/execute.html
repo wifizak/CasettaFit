@@ -51,6 +51,41 @@
         </div>
     </div>
 
+    <!-- Overall Exercise Feeling Modal -->
+    <div class="modal fade" id="overallFeelingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h6 class="modal-title mb-0">
+                        <i class="bi bi-check-circle-fill"></i> All Sets Complete!
+                    </h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <p class="mb-3">How did this feel overall?</p>
+                    <div id="overallFeelingExerciseName" class="mb-3 text-muted small"></div>
+                    <div class="d-flex justify-content-center gap-2">
+                        <button type="button" class="btn btn-danger" style="min-width: 70px;" 
+                                onclick="selectOverallFeeling('-')">
+                            <div class="fs-3">-</div>
+                            <small>Too Heavy</small>
+                        </button>
+                        <button type="button" class="btn btn-success" style="min-width: 70px;" 
+                                onclick="selectOverallFeeling('=')">
+                            <div class="fs-3">=</div>
+                            <small>Good</small>
+                        </button>
+                        <button type="button" class="btn btn-primary" style="min-width: 70px;" 
+                                onclick="selectOverallFeeling('+')">
+                            <div class="fs-3">+</div>
+                            <small>Too Easy</small>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Workout Content -->
     <div id="workoutContent">
         <!-- Will be populated by JavaScript -->
@@ -434,6 +469,8 @@ let workoutStartTime = new Date();
 let timerInterval = null;
 let restTimerInterval = null;
 let restTimerModal = null;
+let overallFeelingModal = null;
+let currentOverallFeelingExerciseId = null;
 let wakeLock = null;
 
 // Request wake lock to keep screen on during workout
@@ -466,6 +503,7 @@ function releaseWakeLock() {
 
 document.addEventListener('DOMContentLoaded', function() {
     restTimerModal = new coreui.Modal(document.getElementById('restTimerModal'));
+    overallFeelingModal = new coreui.Modal(document.getElementById('overallFeelingModal'));
     requestWakeLock();  // Keep screen on during workout
     loadWorkoutData();
     startWorkoutTimer();
@@ -1336,6 +1374,16 @@ function enableEditMobile(exerciseId, setNumber) {
 }
 
 function promptOverallFeeling(exerciseId) {
+    // Store the exercise ID for later use
+    currentOverallFeelingExerciseId = exerciseId;
+    
+    // Get exercise name
+    const exercise = workoutData.series.flatMap(s => s.exercises).find(ex => ex.exercise_id === exerciseId);
+    const exerciseName = exercise ? exercise.exercise_name : 'Exercise';
+    
+    // Update modal content
+    document.getElementById('overallFeelingExerciseName').textContent = exerciseName;
+    
     // Scroll to overall feeling section
     const overallSection = document.querySelector(`#overall-rpe-${exerciseId}`)?.closest('.border-top');
     if (overallSection) {
@@ -1348,10 +1396,18 @@ function promptOverallFeeling(exerciseId) {
         }, 2000);
     }
     
-    // Show alert
+    // Show modal
     setTimeout(() => {
-        alert('All sets complete! 💪\n\nPlease select how the exercise felt overall.');
+        overallFeelingModal.show();
     }, 300);
+}
+
+function selectOverallFeeling(rpeValue) {
+    if (currentOverallFeelingExerciseId) {
+        setOverallRpe(currentOverallFeelingExerciseId, rpeValue);
+        overallFeelingModal.hide();
+        currentOverallFeelingExerciseId = null;
+    }
 }
 
 // Carousel mode functions
