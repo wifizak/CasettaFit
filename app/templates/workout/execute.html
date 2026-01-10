@@ -86,6 +86,40 @@
         </div>
     </div>
 
+    <!-- Finish Workout Modal -->
+    <div class="modal fade" id="finishWorkoutModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-check-circle-fill"></i> Finish Workout
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">Are you sure you want to finish this workout?</p>
+                    
+                    <div class="mb-3">
+                        <label for="workoutNotes" class="form-label">Workout Notes <small class="text-muted">(optional)</small></label>
+                        <textarea class="form-control" id="workoutNotes" rows="3" 
+                                  placeholder="How did the workout go? Any observations?"></textarea>
+                    </div>
+                    
+                    <div id="finishWorkoutWarning" class="alert alert-warning" style="display: none;">
+                        <strong>Missing Overall Feeling for:</strong>
+                        <ul id="missingRpeList" class="mb-0 mt-2"></ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="confirmFinishWorkout()">
+                        <i class="bi bi-check-circle"></i> Finish Workout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Workout Content -->
     <div id="workoutContent">
         <!-- Will be populated by JavaScript -->
@@ -470,6 +504,7 @@ let timerInterval = null;
 let restTimerInterval = null;
 let restTimerModal = null;
 let overallFeelingModal = null;
+let finishWorkoutModal = null;
 let currentOverallFeelingExerciseId = null;
 let wakeLock = null;
 
@@ -504,6 +539,7 @@ function releaseWakeLock() {
 document.addEventListener('DOMContentLoaded', function() {
     restTimerModal = new coreui.Modal(document.getElementById('restTimerModal'));
     overallFeelingModal = new coreui.Modal(document.getElementById('overallFeelingModal'));
+    finishWorkoutModal = new coreui.Modal(document.getElementById('finishWorkoutModal'));
     requestWakeLock();  // Keep screen on during workout
     loadWorkoutData();
     startWorkoutTimer();
@@ -1827,16 +1863,29 @@ async function finishWorkout() {
         });
         
         if (missingRpe.length > 0) {
-            alert(`Please set "Overall Exercise Feeling" for:\n\n${missingRpe.join('\n')}\n\nThis is required to track how exercises felt overall.`);
-            return;
+            // Show warning in modal
+            const warningDiv = document.getElementById('finishWorkoutWarning');
+            const listDiv = document.getElementById('missingRpeList');
+            listDiv.innerHTML = missingRpe.map(name => `<li>${name}</li>`).join('');
+            warningDiv.style.display = 'block';
+        } else {
+            // Hide warning if all RPEs are set
+            document.getElementById('finishWorkoutWarning').style.display = 'none';
         }
+    } else {
+        // Hide warning for standalone workouts
+        document.getElementById('finishWorkoutWarning').style.display = 'none';
     }
     
-    if (!confirm('Are you sure you want to finish this workout?')) {
-        return;
-    }
+    // Clear notes field
+    document.getElementById('workoutNotes').value = '';
     
-    const notes = prompt('Any notes about this workout?');
+    // Show modal
+    finishWorkoutModal.show();
+}
+
+async function confirmFinishWorkout() {
+    const notes = document.getElementById('workoutNotes').value;
     
     try {
         const response = await fetch(`/workout/api/session/${sessionId}/complete`, {
@@ -1850,8 +1899,16 @@ async function finishWorkout() {
         if (data.success) {
             clearInterval(timerInterval);
             releaseWakeLock();  // Release wake lock when workout is finished
-            alert('Workout completed! Great job! 💪');
-            window.location.href = '/calendar';
+            finishWorkoutModal.hide();
+            
+            // Show success message briefly before redirect
+            const modalBody = document.querySelector('#finishWorkoutModal .modal-body');
+            const originalContent = modalBody.innerHTML;
+            modalBody.innerHTML = '<div class="text-center py-4"><h4 class="text-success"><i class="bi bi-check-circle-fill"></i> Workout Completed!</h4><p>Great job! 💪</p></div>';
+            
+            setTimeout(() => {
+                window.location.href = '/calendar';
+            }, 1500);
         }
     } catch (error) {
         console.error('Error completing workout:', error);
