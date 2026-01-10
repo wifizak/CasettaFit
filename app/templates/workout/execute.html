@@ -17,6 +17,7 @@
                     <small class="text-muted" id="workoutSubtitle"></small>
                 </div>
                 <div>
+                    <span id="workoutProgress" class="badge bg-info fs-6 me-2">0 / 0 exercises</span>
                     <span id="timerDisplay" class="badge bg-secondary fs-6 me-2">0:00</span>
                     <button class="btn btn-sm btn-danger" onclick="finishWorkout()">
                         <i class="bi bi-check-circle"></i> Finish
@@ -74,6 +75,7 @@
     <div class="row mt-4 mb-3">
         <div class="col">
             <div class="d-flex justify-content-center align-items-center gap-3">
+                <span id="workoutProgressBottom" class="badge bg-info fs-6">0 / 0 exercises</span>
                 <span id="timerDisplayBottom" class="badge bg-secondary fs-6">0:00</span>
                 <button class="btn btn-danger" onclick="finishWorkout()">
                     <i class="bi bi-check-circle"></i> Finish Workout
@@ -509,9 +511,63 @@ async function loadWorkoutData() {
                 `${workoutData.calendar_date} • ${workoutData.gym_name || 'No gym'}`;
             renderWorkout();
         }
+        
+        // Update progress indicator
+        updateWorkoutProgress();
     } catch (error) {
         console.error('Error loading workout data:', error);
         alert('Error loading workout. Please try again.');
+    }
+}
+
+function updateWorkoutProgress() {
+    if (!workoutData || !workoutData.series) return;
+    
+    // Count total exercises
+    const allExercises = workoutData.series.flatMap(s => s.exercises);
+    const totalExercises = allExercises.length;
+    
+    // Count completed exercises (all sets logged)
+    let completedExercises = 0;
+    allExercises.forEach(exercise => {
+        const logged = loggedSets[exercise.exercise_id] || [];
+        if (logged.length === exercise.sets) {
+            completedExercises++;
+        }
+    });
+    
+    const progressText = `${completedExercises} / ${totalExercises} exercises`;
+    const progressTop = document.getElementById('workoutProgress');
+    const progressBottom = document.getElementById('workoutProgressBottom');
+    
+    if (progressTop) {
+        progressTop.textContent = progressText;
+        // Change color based on completion
+        if (completedExercises === totalExercises && totalExercises > 0) {
+            progressTop.classList.remove('bg-info', 'bg-warning');
+            progressTop.classList.add('bg-success');
+        } else if (completedExercises > 0) {
+            progressTop.classList.remove('bg-info', 'bg-success');
+            progressTop.classList.add('bg-warning');
+        } else {
+            progressTop.classList.remove('bg-warning', 'bg-success');
+            progressTop.classList.add('bg-info');
+        }
+    }
+    
+    if (progressBottom) {
+        progressBottom.textContent = progressText;
+        // Change color based on completion
+        if (completedExercises === totalExercises && totalExercises > 0) {
+            progressBottom.classList.remove('bg-info', 'bg-warning');
+            progressBottom.classList.add('bg-success');
+        } else if (completedExercises > 0) {
+            progressBottom.classList.remove('bg-info', 'bg-success');
+            progressBottom.classList.add('bg-warning');
+        } else {
+            progressBottom.classList.remove('bg-warning', 'bg-success');
+            progressBottom.classList.add('bg-info');
+        }
     }
 }
 
@@ -1078,6 +1134,9 @@ async function logSingleSetMobile(exerciseId, setNumber, restTime) {
                 loggedSets[exerciseId].push(data);
             }
             
+            // Update workout progress
+            updateWorkoutProgress();
+            
             // Update accordion item to show as completed
             const accordionItem = document.getElementById(`accordion-${exerciseId}-${setNumber}`);
             const header = accordionItem.querySelector('.set-accordion-header');
@@ -1335,6 +1394,9 @@ async function logSetCarousel(exerciseId, setNumber, restTime) {
                 loggedSets[exerciseId].push(data);
             }
             
+            // Update workout progress
+            updateWorkoutProgress();
+            
             const exercise = workoutData.series.flatMap(s => s.exercises).find(ex => ex.exercise_id === exerciseId);
             if (exercise) {
                 const numSets = exercise.sets;
@@ -1448,6 +1510,9 @@ async function logAllSetsForExercise(exerciseId, setsToLog, overallRpe, restTime
         
         // Now save overall RPE
         await saveOverallRpe(exerciseId, overallRpe);
+        
+        // Update workout progress
+        updateWorkoutProgress();
         
         // Show logged indicator
         const cardHeader = document.querySelector(`#logged-badge-${exerciseId}`);
