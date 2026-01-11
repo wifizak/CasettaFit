@@ -215,7 +215,15 @@
 }
 
 .form-switch .form-check-input:checked::before {
-    transform: translateX(1.5rem);
+    transform: translateX(1.5rem) !important;
+}
+
+.form-switch .form-check-input.is-checked {
+    background-color: #0d6efd !important;
+}
+
+.form-switch .form-check-input.is-checked::before {
+    transform: translateX(1.5rem) !important;
 }
 
 .form-switch .form-check-input:focus {
@@ -611,6 +619,16 @@ document.addEventListener('DOMContentLoaded', function() {
             // Manually toggle the state
             this.checked = !skipRests;
             skipRests = this.checked;
+            
+            // Add/remove class for mobile styling
+            if (skipRests) {
+                this.setAttribute('checked', 'checked');
+                this.classList.add('is-checked');
+            } else {
+                this.removeAttribute('checked');
+                this.classList.remove('is-checked');
+            }
+            
             console.log('Skip rests toggled to:', skipRests);
         });
     } else {
