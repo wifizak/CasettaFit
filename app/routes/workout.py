@@ -198,7 +198,8 @@ def log_set(session_id):
     """Log a set during workout"""
     session = WorkoutSession.query.filter_by(
         id=session_id,
-        user_id=current_user.id
+        user_id=current_user.id,
+        is_completed=False  # Prevent logging to completed sessions
     ).first_or_404()
     
     data = request.json
@@ -211,6 +212,10 @@ def log_set(session_id):
     
     if not exercise_id or not set_number:
         return jsonify({'success': False, 'error': 'Missing required fields'}), 400
+    
+    # Validate set_number is positive
+    if set_number < 1:
+        return jsonify({'success': False, 'error': 'Invalid set number'}), 400
     
     # Check if this set already exists (update case)
     existing_set = WorkoutSet.query.filter_by(
@@ -259,7 +264,8 @@ def save_overall_rpe(session_id):
     """Save overall RPE for an exercise in this session"""
     session = WorkoutSession.query.filter_by(
         id=session_id,
-        user_id=current_user.id
+        user_id=current_user.id,
+        is_completed=False  # Prevent updating completed sessions
     ).first_or_404()
     
     data = request.json
@@ -269,18 +275,20 @@ def save_overall_rpe(session_id):
     if not exercise_id or not overall_rpe:
         return jsonify({'success': False, 'error': 'Missing required fields'}), 400
     
-    # Update the first set of this exercise with overall_rpe
-    # (we use the first set to store overall feeling for the exercise)
-    first_set = WorkoutSet.query.filter_by(
-        workout_session_id=session_id,
-        exercise_id=exercise_id,
-        set_number=1
-    ).first()
+    # Validate RPE value
+    if overall_rpe not in ['-', '=', '+']:
+        return jsonify({'success': False, 'error': 'Invalid RPE value'}), 400
     
-    if not first_set:
+    # Update all sets of this exercise with overall_rpe
+    # This ensures the overall RPE is stored consistently across all sets
+    updated_count = WorkoutSet.query.filter_by(
+        workout_session_id=session_id,
+        exercise_id=exercise_id
+    ).update({'overall_rpe': overall_rpe})
+    
+    if updated_count == 0:
         return jsonify({'success': False, 'error': 'No sets logged for this exercise yet'}), 400
     
-    first_set.overall_rpe = overall_rpe
     db.session.commit()
     
     return jsonify({'success': True, 'overall_rpe': overall_rpe})

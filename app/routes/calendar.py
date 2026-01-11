@@ -663,13 +663,24 @@ def update_workout_set(set_id):
     
     data = request.get_json()
     
-    # Update the fields
+    # Update the fields with validation
     if 'weight' in data:
-        workout_set.weight = float(data['weight']) if data['weight'] else None
+        weight_val = data['weight']
+        if weight_val is not None and (not isinstance(weight_val, (int, float, str)) or float(weight_val) < 0):
+            return jsonify({'success': False, 'error': 'Invalid weight value'}), 400
+        workout_set.weight = float(weight_val) if weight_val else None
+        
     if 'reps' in data:
-        workout_set.reps = int(data['reps']) if data['reps'] else None
+        reps_val = data['reps']
+        if reps_val is not None and (not isinstance(reps_val, (int, str)) or int(reps_val) < 0):
+            return jsonify({'success': False, 'error': 'Invalid reps value'}), 400
+        workout_set.reps = int(reps_val) if reps_val else None
+        
     if 'rpe' in data:
-        workout_set.rpe = data['rpe'] if data['rpe'] else None
+        rpe_val = data['rpe']
+        if rpe_val and rpe_val not in ['-', '=', '+']:
+            return jsonify({'success': False, 'error': 'Invalid RPE value'}), 400
+        workout_set.rpe = rpe_val if rpe_val else None
     
     db.session.commit()
     

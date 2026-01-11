@@ -570,6 +570,73 @@ let currentOverallFeelingExerciseId = null;
 let wakeLock = null;
 let skipRests = false;
 
+// ============================================
+// Helper Functions
+// ============================================
+
+/**
+ * Get exercise data by ID from workout structure
+ */
+function getExerciseData(exerciseId) {
+    return workoutData?.series.flatMap(s => s.exercises).find(ex => ex.exercise_id === exerciseId);
+}
+
+/**
+ * Update RPE button styles consistently across all views
+ * @param {string} buttonPrefix - The ID prefix for buttons (e.g., 'rpe-btn', 'rpe-mobile-btn')
+ * @param {number} exerciseId - Exercise ID
+ * @param {number} setNumber - Set number
+ * @param {string} rpeValue - RPE value ('-', '=', '+')
+ */
+function updateRpeButtons(buttonPrefix, exerciseId, setNumber, rpeValue) {
+    const buttons = ['-', '=', '+'];
+    const colorMap = {
+        '-': { active: 'btn-danger', inactive: 'btn-outline-danger' },
+        '=': { active: 'btn-success', inactive: 'btn-outline-success' },
+        '+': { active: 'btn-primary', inactive: 'btn-outline-primary' }
+    };
+    
+    buttons.forEach(btn => {
+        const btnElement = document.getElementById(`${buttonPrefix}-${exerciseId}-${setNumber}-${btn}`);
+        if (!btnElement) return;
+        
+        const colors = colorMap[btn];
+        btnElement.classList.remove(colors.active, colors.inactive);
+        btnElement.classList.add(btn === rpeValue ? colors.active : colors.inactive);
+    });
+}
+
+/**
+ * Update the logged badge and progress for an exercise after logging sets
+ */
+function updateExerciseCompletionUI(exerciseId) {
+    const exercise = getExerciseData(exerciseId);
+    if (!exercise) return;
+    
+    const logged = loggedSets[exerciseId] || [];
+    const allSetsLogged = logged.length === exercise.sets;
+    
+    // Update logged badge
+    let badge = document.getElementById(`logged-badge-${exerciseId}`);
+    if (allSetsLogged && !badge) {
+        const cardHeader = document.querySelector(`#overall-rpe-${exerciseId}`)?.closest('.card')?.querySelector('.card-header');
+        if (cardHeader) {
+            badge = document.createElement('span');
+            badge.id = `logged-badge-${exerciseId}`;
+            badge.className = 'badge bg-success me-2';
+            badge.innerHTML = '✓ Logged';
+            cardHeader.querySelector('div')?.appendChild(badge);
+        }
+    }
+    
+    // Update progress badge in carousel mode
+    const progressBadge = document.getElementById(`set-progress-badge-${exerciseId}`);
+    if (progressBadge) {
+        const nextSet = logged.length + 1;
+        progressBadge.textContent = `Set ${nextSet > exercise.sets ? exercise.sets : nextSet} of ${exercise.sets}`;
+    }
+}
+
 function toggleSkipRests() {
     const checkbox = document.getElementById('skipRestsToggle');
     skipRests = checkbox.checked;
@@ -1149,41 +1216,8 @@ function setRpe(exerciseId, setNumber, rpeValue) {
         rpeInput.value = rpeValue;
     }
     
-    // Update button styles - find all buttons in this set's RPE group
-    const buttonGroup = rpeInput?.parentElement;
-    if (buttonGroup) {
-        const buttons = buttonGroup.querySelectorAll('button');
-        buttons.forEach(btn => {
-            const btnValue = btn.textContent.trim();
-            
-            // Handle each button's specific color
-            if (btnValue === '-') {
-                if (rpeValue === '-') {
-                    btn.classList.remove('btn-outline-danger');
-                    btn.classList.add('btn-danger');
-                } else {
-                    btn.classList.remove('btn-danger');
-                    btn.classList.add('btn-outline-danger');
-                }
-            } else if (btnValue === '=') {
-                if (rpeValue === '=') {
-                    btn.classList.remove('btn-outline-success');
-                    btn.classList.add('btn-success');
-                } else {
-                    btn.classList.remove('btn-success');
-                    btn.classList.add('btn-outline-success');
-                }
-            } else if (btnValue === '+') {
-                if (rpeValue === '+') {
-                    btn.classList.remove('btn-outline-primary');
-                    btn.classList.add('btn-primary');
-                } else {
-                    btn.classList.remove('btn-primary');
-                    btn.classList.add('btn-outline-primary');
-                }
-            }
-        });
-    }
+    // Update button styles using consolidated helper
+    updateRpeButtons('rpe-btn', exerciseId, setNumber, rpeValue);
     
     // Automatically log the set when RPE is selected
     logSingleSet(exerciseId, setNumber);
@@ -1333,38 +1367,8 @@ function setRpeMobile(exerciseId, setNumber, rpeValue) {
         rpeInput.value = rpeValue;
     }
     
-    // Update button styles
-    const buttons = ['-', '=', '+'];
-    buttons.forEach(btn => {
-        const btnElement = document.getElementById(`rpe-mobile-btn-${exerciseId}-${setNumber}-${btn}`);
-        if (!btnElement) return;
-        
-        if (btn === rpeValue) {
-            // Activate this button
-            if (btn === '-') {
-                btnElement.classList.remove('btn-outline-danger');
-                btnElement.classList.add('btn-danger');
-            } else if (btn === '=') {
-                btnElement.classList.remove('btn-outline-success');
-                btnElement.classList.add('btn-success');
-            } else if (btn === '+') {
-                btnElement.classList.remove('btn-outline-primary');
-                btnElement.classList.add('btn-primary');
-            }
-        } else {
-            // Deactivate other buttons
-            if (btn === '-') {
-                btnElement.classList.remove('btn-danger');
-                btnElement.classList.add('btn-outline-danger');
-            } else if (btn === '=') {
-                btnElement.classList.remove('btn-success');
-                btnElement.classList.add('btn-outline-success');
-            } else if (btn === '+') {
-                btnElement.classList.remove('btn-primary');
-                btnElement.classList.add('btn-outline-primary');
-            }
-        }
-    });
+    // Update button styles using shared helper
+    updateRpeButtons('rpe-mobile-btn', exerciseId, setNumber, rpeValue);
 }
 
 async function logSingleSetMobile(exerciseId, setNumber, restTime) {
@@ -1408,6 +1412,9 @@ async function logSingleSetMobile(exerciseId, setNumber, restTime) {
             // Update workout progress
             updateWorkoutProgress();
             
+            // Update UI for completion
+            updateExerciseCompletionUI(exerciseId);
+            
             // Update accordion item to show as completed
             const accordionItem = document.getElementById(`accordion-${exerciseId}-${setNumber}`);
             const header = accordionItem.querySelector('.set-accordion-header');
@@ -1449,7 +1456,7 @@ async function logSingleSetMobile(exerciseId, setNumber, restTime) {
             icon.classList.remove('expanded');
             
             // Find and expand next set
-            const exercise = workoutData.series.flatMap(s => s.exercises).find(ex => ex.exercise_id === exerciseId);
+            const exercise = getExerciseData(exerciseId);
             if (exercise) {
                 const numSets = exercise.sets;
                 if (setNumber < numSets) {
@@ -1516,7 +1523,7 @@ function promptOverallFeeling(exerciseId) {
     currentOverallFeelingExerciseId = exerciseId;
     
     // Get exercise name
-    const exercise = workoutData.series.flatMap(s => s.exercises).find(ex => ex.exercise_id === exerciseId);
+    const exercise = getExerciseData(exerciseId);
     const exerciseName = exercise ? exercise.exercise_name : 'Exercise';
     
     // Update modal content
@@ -1576,7 +1583,7 @@ function toggleMobileView(exerciseId) {
 }
 
 function navigateCarousel(exerciseId, setNumber) {
-    const exercise = workoutData.series.flatMap(s => s.exercises).find(ex => ex.exercise_id === exerciseId);
+    const exercise = getExerciseData(exerciseId);
     if (!exercise) return;
     
     const logged = loggedSets[exerciseId] || [];
@@ -1614,35 +1621,8 @@ function setRpeCarousel(exerciseId, setNumber, rpeValue) {
         rpeInput.value = rpeValue;
     }
     
-    const buttons = ['-', '=', '+'];
-    buttons.forEach(btn => {
-        const btnElement = document.getElementById(`rpe-carousel-btn-${exerciseId}-${setNumber}-${btn}`);
-        if (!btnElement) return;
-        
-        if (btn === rpeValue) {
-            if (btn === '-') {
-                btnElement.classList.remove('btn-outline-danger');
-                btnElement.classList.add('btn-danger');
-            } else if (btn === '=') {
-                btnElement.classList.remove('btn-outline-success');
-                btnElement.classList.add('btn-success');
-            } else if (btn === '+') {
-                btnElement.classList.remove('btn-outline-primary');
-                btnElement.classList.add('btn-primary');
-            }
-        } else {
-            if (btn === '-') {
-                btnElement.classList.remove('btn-danger');
-                btnElement.classList.add('btn-outline-danger');
-            } else if (btn === '=') {
-                btnElement.classList.remove('btn-success');
-                btnElement.classList.add('btn-outline-success');
-            } else if (btn === '+') {
-                btnElement.classList.remove('btn-primary');
-                btnElement.classList.add('btn-outline-primary');
-            }
-        }
-    });
+    // Update button styles using shared helper
+    updateRpeButtons('rpe-carousel-btn', exerciseId, setNumber, rpeValue);
 }
 
 async function logSetCarousel(exerciseId, setNumber, restTime) {
@@ -1686,7 +1666,10 @@ async function logSetCarousel(exerciseId, setNumber, restTime) {
             // Update workout progress
             updateWorkoutProgress();
             
-            const exercise = workoutData.series.flatMap(s => s.exercises).find(ex => ex.exercise_id === exerciseId);
+            // Update UI
+            updateExerciseCompletionUI(exerciseId);
+            
+            const exercise = getExerciseData(exerciseId);
             if (exercise) {
                 const numSets = exercise.sets;
                 
@@ -1741,7 +1724,7 @@ function enableEditCarousel(exerciseId, setNumber) {
 }
 
 function setOverallRpe(exerciseId, rpeValue) {
-    const exercise = workoutData.series.flatMap(s => s.exercises).find(ex => ex.exercise_id === exerciseId);
+    const exercise = getExerciseData(exerciseId);
     if (!exercise) return;
     
     const numSets = exercise.sets;
