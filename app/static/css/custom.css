@@ -109,31 +109,51 @@ body {
         bottom: 0 !important;
         left: 0 !important;
         right: auto !important;
-        width: 80px !important;
+        width: 65px !important;
         height: 100vh !important;
         flex-direction: column;
         justify-content: flex-start;
-        padding: 1rem 0;
+        padding: 0.75rem 0 1rem 0;
         border-top: none;
         border-right: 1px solid #d8dbe0;
         box-shadow: 2px 0 10px rgba(0,0,0,0.1);
     }
     
+    /* Add logo to top of nav in landscape */
+    .bottom-nav::before {
+        content: '';
+        display: block;
+        width: 40px;
+        height: 40px;
+        margin: 0 auto 0.75rem auto;
+        background-image: url('/static/images/logo-white.png');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        filter: brightness(0) saturate(100%) invert(29%) sepia(89%) saturate(2661%) hue-rotate(233deg) brightness(91%) contrast(95%);
+        flex-shrink: 0;
+    }
+    
     .bottom-nav-item {
-        min-height: 70px;
+        min-height: 60px;
+        font-size: 0.7rem;
+    }
+    
+    .bottom-nav-item i {
+        font-size: 1.3rem;
     }
     
     /* Adjust body padding for left sidebar in landscape */
     body {
         padding-bottom: 0 !important;
-        padding-left: 80px !important;
+        padding-left: 65px !important;
     }
     
     .body.flex-grow-1 {
         padding-bottom: 0 !important;
     }
     
-    /* Hide mobile header in landscape to give more vertical space */
+    /* Keep mobile header visible in landscape with logo */
     .mobile-header {
         display: none !important;
     }
