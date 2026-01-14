@@ -20,8 +20,8 @@
 </head>
 <body>
     {% if current_user.is_authenticated %}
-    <!-- Sidebar for desktop -->
-    <div class="sidebar sidebar-dark sidebar-fixed border-end d-none d-md-flex" id="sidebar">
+    <!-- Sidebar for desktop only (1024px+) -->
+    <div class="sidebar sidebar-dark sidebar-fixed border-end d-none d-lg-flex" id="sidebar">
         <div class="sidebar-header border-bottom">
             <div class="sidebar-brand d-flex align-items-center justify-content-center py-3">
                 <img src="{{ url_for('static', filename='images/logo-white.png') }}" alt="CasettaFit" style="height: 40px; width: auto;">
@@ -91,15 +91,15 @@
     
     <!-- Main content wrapper -->
     <div class="wrapper d-flex flex-column min-vh-100">
-        <!-- Mobile header with logo -->
-        <header class="mobile-header d-md-none">
+        <!-- Mobile header with logo (shown on mobile/tablet, hidden on desktop) -->
+        <header class="mobile-header d-lg-none">
             <div class="mobile-header-content">
                 <img src="{{ url_for('static', filename='images/logo-white.png') }}" alt="CasettaFit" class="mobile-logo">
             </div>
         </header>
         
-        <!-- Header for desktop -->
-        <header class="header header-sticky p-0 mb-4 d-none d-md-block">
+        <!-- Header for desktop only (1024px+) -->
+        <header class="header header-sticky p-0 mb-4 d-none d-lg-block">
             <div class="container-fluid border-bottom px-4">
                 <button class="header-toggler" type="button" onclick="coreui.Sidebar.getInstance(document.querySelector('#sidebar')).toggle()">
                     <i class="icon cil-menu"></i>
@@ -161,8 +161,8 @@
         </div>
     </div>
     
-    <!-- Bottom navigation for mobile (outside wrapper for proper fixed positioning) -->
-    <nav class="bottom-nav d-md-none">
+    <!-- Bottom navigation for mobile/tablet (outside wrapper for proper fixed positioning) -->
+    <nav class="bottom-nav d-lg-none">
         <a href="{{ url_for('main.index') }}" class="bottom-nav-item {% if request.endpoint == 'main.index' %}active{% endif %}" onclick="window.location.href='{{ url_for('main.index') }}'; return false;">
             <i class="icon cil-speedometer"></i>
             <span>Home</span>

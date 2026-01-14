@@ -22,7 +22,7 @@
 }
 
 /* Add top spacing for page titles on mobile */
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
     .body.flex-grow-1 .container-lg {
         padding-top: 1rem;
     }
@@ -67,7 +67,7 @@ body {
     padding-bottom: 70px !important; /* Space for bottom nav on mobile */
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
     body {
         padding-bottom: 0 !important;
     }
@@ -78,13 +78,13 @@ body {
     padding-bottom: 80px !important;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
     .body.flex-grow-1 {
         padding-bottom: 0 !important;
     }
 }
 
-/* Bottom navigation for mobile */
+/* Bottom navigation for mobile and tablet */
 .bottom-nav {
     position: fixed !important;
     bottom: 0 !important;
@@ -100,6 +100,50 @@ body {
     pointer-events: auto !important;
     height: 70px;
     box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+}
+
+/* In landscape mode (wider than tall), move nav to left side */
+@media (max-width: 1023px) and (orientation: landscape) {
+    .bottom-nav {
+        top: 0 !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: auto !important;
+        width: 80px !important;
+        height: 100vh !important;
+        flex-direction: column;
+        justify-content: flex-start;
+        padding: 1rem 0;
+        border-top: none;
+        border-right: 1px solid #d8dbe0;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    }
+    
+    .bottom-nav-item {
+        min-height: 70px;
+    }
+    
+    /* Adjust body padding for left sidebar in landscape */
+    body {
+        padding-bottom: 0 !important;
+        padding-left: 80px !important;
+    }
+    
+    .body.flex-grow-1 {
+        padding-bottom: 0 !important;
+    }
+    
+    /* Hide mobile header in landscape to give more vertical space */
+    .mobile-header {
+        display: none !important;
+    }
+}
+
+/* Desktop - hide bottom nav */
+@media (min-width: 1024px) {
+    .bottom-nav {
+        display: none !important;
+    }
 }
 
 .bottom-nav-item {
@@ -137,12 +181,6 @@ body {
 .bottom-nav-item i {
     font-size: 1.5rem;
     margin-bottom: 0.25rem;
-}
-
-@media (min-width: 768px) {
-    .bottom-nav {
-        display: none;
-    }
 }
 
 /* Mobile menu overlay */
@@ -235,16 +273,48 @@ body {
     margin: 0.5rem 1.5rem;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
     .mobile-menu,
     .mobile-menu-overlay {
         display: none;
     }
 }
 
-/* Hide sidebar on mobile */
-@media (max-width: 767px) {
+/* Hide sidebar on mobile AND tablet (portrait and landscape) */
+@media (max-width: 1023px) {
     .sidebar {
-        display: none;
+        display: none !important;
     }
+    
+    /* Hide desktop header on mobile/tablet */
+    .header.d-none.d-md-block {
+        display: none !important;
+    }
+}
+
+/* Mobile header with logo - visible on all mobile/tablet sizes */
+.mobile-header {
+    background: #292D3A;
+    padding: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 1040;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+@media (min-width: 1024px) {
+    .mobile-header {
+        display: none !important;
+    }
+}
+
+.mobile-header-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.mobile-logo {
+    height: 32px;
+    width: auto;
 }

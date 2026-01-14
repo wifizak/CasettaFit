@@ -4,6 +4,120 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<style>
+/* Hide sidebar on mobile and tablet devices (even in landscape) */
+@media (max-width: 1024px) {
+    .sidebar {
+        display: none !important;
+    }
+    
+    /* Expand main content to full width when sidebar is hidden */
+    body:not(.c-sidebar-show) .wrapper {
+        margin-left: 0 !important;
+    }
+    
+    .wrapper {
+        margin-left: 0 !important;
+    }
+}
+
+/* Landscape mode optimizations for mobile/tablet */
+@media (orientation: landscape) and (max-width: 1024px) {
+    /* Make exercises display in 2-column grid in landscape */
+    #workoutContent > .row {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    /* Individual exercise cards take up one column */
+    #workoutContent > .row > .col-12,
+    #workoutContent > .row > .col-md-6 {
+        grid-column: span 1;
+        max-width: 100%;
+        flex: none;
+    }
+    
+    /* Superset badge spans both columns */
+    #workoutContent > .row > .col-12:has(.superset-badge) {
+        grid-column: span 2;
+        margin-bottom: 0;
+    }
+    
+    /* Reduce card padding in landscape for more space */
+    .exercise-card .card-body {
+        padding: 0.5rem !important;
+    }
+    
+    .exercise-card .card-header {
+        padding: 0.5rem !important;
+        font-size: 0.9rem;
+    }
+    
+    /* Optimize mobile carousel in landscape */
+    .mobile-sets-carousel .carousel-input-row {
+        margin-bottom: 0.5rem;
+    }
+    
+    .mobile-sets-carousel .carousel-input-label {
+        font-size: 0.9rem;
+        min-width: 70px;
+    }
+    
+    /* Reduce accordion spacing in landscape */
+    .set-accordion-item {
+        margin-bottom: 0.35rem;
+    }
+    
+    .set-accordion-header {
+        padding: 0.5rem 0.75rem !important;
+    }
+    
+    .set-accordion-body {
+        padding: 0.75rem !important;
+    }
+    
+    /* Compact header in landscape */
+    #workoutApp > .row {
+        margin-bottom: 0.5rem !important;
+    }
+    
+    h4 {
+        font-size: 1.1rem;
+        margin-bottom: 0.25rem !important;
+    }
+    
+    small {
+        font-size: 0.75rem;
+    }
+    
+    /* Compact badges */
+    .badge {
+        font-size: 0.75rem !important;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    /* Reduce button sizes slightly */
+    .btn-sm {
+        padding: 0.2rem 0.4rem;
+        font-size: 0.8rem;
+    }
+    
+    /* Optimize input spacing */
+    .mobile-set-input-group {
+        margin-bottom: 0.75rem;
+    }
+    
+    /* Tighter modals in landscape */
+    .modal-body {
+        padding: 0.75rem;
+    }
+    
+    .modal-header {
+        padding: 0.75rem;
+    }
+}
+</style>
 {% endblock %}
 
 {% block content %}
@@ -811,30 +925,35 @@ function renderWorkout() {
     const container = document.getElementById('workoutContent');
     let html = '';
     
+    // Start a row container for grid layout in landscape
+    html += `<div class="row">`;
+    
     workoutData.series.forEach((series, seriesIndex) => {
         const isSuperset = series.series_type === 'superset';
         const colors = ['primary', 'success', 'danger', 'warning', 'info'];
         const color = colors[seriesIndex % 5];
         
         if (isSuperset) {
-            // Superset - render exercises side by side
-            html += `<div class="mb-3"><div class="badge superset-badge mb-2">SUPERSET</div></div>`;
-            html += `<div class="row mb-3">`;
+            // Superset - each exercise in the superset gets its own column
+            html += `<div class="col-12 mb-2"><div class="badge superset-badge mb-1">SUPERSET</div></div>`;
             
             series.exercises.forEach((exercise, exIndex) => {
                 const exerciseLabel = String.fromCharCode(65 + exIndex);
-                html += `<div class="col-md-6 mb-2">`;
+                html += `<div class="col-12 col-md-6 mb-2">`;
                 html += renderExerciseCard(exercise, exerciseLabel, color, seriesIndex);
                 html += `</div>`;
             });
-            
-            html += `</div>`;
         } else {
-            // Regular exercise
+            // Regular exercise - gets its own column
             const exercise = series.exercises[0];
+            html += `<div class="col-12 col-md-6 mb-2">`;
             html += renderExerciseCard(exercise, null, color, seriesIndex);
+            html += `</div>`;
         }
     });
+    
+    // Close row container
+    html += `</div>`;
     
     container.innerHTML = html;
 }
