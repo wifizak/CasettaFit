@@ -690,6 +690,7 @@ class WorkoutSession(db.Model):
     started_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     completed_at = db.Column(db.DateTime, nullable=True)
     is_completed = db.Column(db.Boolean, default=False, nullable=False)
+    duration_seconds = db.Column(db.Integer, default=0, nullable=False)  # Actual workout time in seconds
     notes = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     
@@ -765,3 +766,25 @@ class ScheduledDay(db.Model):
     
     def __repr__(self):
         return f'<ScheduledDay {self.program_day.name} on {self.calendar_date}>'
+
+
+class SkippedExercise(db.Model):
+    __tablename__ = 'skipped_exercise'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    workout_session_id = db.Column(db.Integer, db.ForeignKey('workout_sessions.id', ondelete='CASCADE'), nullable=False)
+    exercise_id = db.Column(db.Integer, db.ForeignKey('master_exercises.id'), nullable=False)
+    reason = db.Column(db.String(200), nullable=True)
+    skipped_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    
+    # Relationships
+    workout_session = db.relationship('WorkoutSession', backref='skipped_exercises')
+    exercise = db.relationship('MasterExercise', backref='skipped_in_sessions')
+    
+    # Composite unique constraint - can't skip same exercise twice in same session
+    __table_args__ = (
+        db.UniqueConstraint('workout_session_id', 'exercise_id', name='unique_session_exercise_skip'),
+    )
+    
+    def __repr__(self):
+        return f'<SkippedExercise session={self.workout_session_id} exercise={self.exercise_id}>'

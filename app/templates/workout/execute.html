@@ -69,6 +69,36 @@ div.exercise-col div.exercise-card {
     }
 }
 
+/* Weight input color coding */
+.weight-input-same {
+    color: #28a745 !important; /* Muted green */
+}
+
+.weight-input-more {
+    color: #6f42c1 !important; /* Muted purple */
+}
+
+.weight-input-less {
+    color: #dc3545 !important; /* Muted red */
+}
+
+/* Custom teal color for Log Set buttons and Logged badges */
+.btn-custom-teal {
+    background-color: #497D74 !important;
+    border-color: #497D74 !important;
+    color: white !important;
+}
+
+.btn-custom-teal:hover {
+    background-color: #3a655e !important;
+    border-color: #3a655e !important;
+}
+
+.bg-custom-teal {
+    background-color: #497D74 !important;
+    color: white !important;
+}
+
 /* Mobile carousel input styling - applies to both portrait and landscape */
 @media (max-width: 1024px) {
     .mobile-sets-carousel input.form-control {
@@ -107,6 +137,17 @@ div.exercise-col div.exercise-card {
     /* Reduce card padding in landscape for more space */
     .exercise-card .card-body {
         padding: 0.4rem !important;
+    }
+    
+    /* Keep previous sets indicator visible with proper padding */
+    .exercise-card .card-body.bg-light {
+        padding: 0.4rem 0.5rem !important;
+        display: block !important;
+    }
+    
+    .previous-indicator {
+        display: block !important;
+        font-size: 0.7rem !important;
     }
     
     .exercise-card .card-header {
@@ -158,6 +199,10 @@ div.exercise-col div.exercise-card {
     .carousel-set-title,
     .carousel-set-subtitle {
         font-size: 0.75rem !important;
+    }
+    
+    .carousel-set-subtitle.previous-indicator {
+        font-size: 0.8rem !important;
     }
     
     /* Reduce accordion spacing in landscape */
@@ -242,7 +287,7 @@ div.exercise-col div.exercise-card {
         </div>
     </div>
     
-    <div class="row mb-2">
+    <div class="row mb-3">
         <div class="col">
             <div class="d-flex justify-content-between align-items-center">
                 <div class="form-check form-switch">
@@ -251,15 +296,6 @@ div.exercise-col div.exercise-card {
                         Skip Rests
                     </label>
                 </div>
-                <span id="workoutProgress" class="badge bg-info fs-6">0 / 0 exercises</span>
-            </div>
-        </div>
-    </div>
-    
-    <div class="row mb-3">
-        <div class="col">
-            <div class="d-flex justify-content-between align-items-center">
-                <span id="timerDisplay" class="badge bg-secondary fs-6">0:00</span>
                 <button class="btn btn-sm btn-danger" onclick="finishWorkout()">
                     <i class="bi bi-check-circle"></i> Finish
                 </button>
@@ -360,6 +396,30 @@ div.exercise-col div.exercise-card {
         </div>
     </div>
 
+    <!-- Skip Exercise Modal -->
+    <div class="modal fade" id="skipExerciseModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title">
+                        <i class="bi bi-skip-forward-fill"></i> Skip Exercise
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">Are you sure you want to skip <strong id="skipExerciseName"></strong>?</p>
+                    <p class="text-muted small mb-0">This will mark the exercise as skipped for this workout.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-warning" onclick="doSkipExercise()">
+                        <i class="bi bi-skip-forward"></i> Skip Exercise
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Workout Content -->
     <div id="workoutContent">
         <!-- Will be populated by JavaScript -->
@@ -380,12 +440,10 @@ div.exercise-col div.exercise-card {
         </div>
     </div>
 
-    <!-- Bottom Timer & Finish Button -->
+    <!-- Bottom Finish Button -->
     <div class="row mt-4 mb-3">
         <div class="col">
-            <div class="d-flex justify-content-center align-items-center gap-3">
-                <span id="workoutProgressBottom" class="badge bg-info fs-6">0 / 0 exercises</span>
-                <span id="timerDisplayBottom" class="badge bg-secondary fs-6">0:00</span>
+            <div class="d-flex justify-content-center align-items-center">
                 <button class="btn btn-danger" onclick="finishWorkout()">
                     <i class="bi bi-check-circle"></i> Finish Workout
                 </button>
@@ -393,6 +451,30 @@ div.exercise-col div.exercise-card {
         </div>
     </div>
 </div>
+
+<!-- Floating Bottom Bar -->
+<div id="floatingBottomBar" style="
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10100;
+    display: block;
+">
+    <div class="d-flex justify-content-center align-items-center gap-3">
+        <span id="workoutProgressFloating" class="badge bg-info" style="font-size: 1rem !important; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);">0 / 0 exercises</span>
+        <span id="timerDisplayFloating" class="badge bg-secondary" style="font-size: 1rem !important; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);">0:00</span>
+    </div>
+</div>
+
+<style>
+/* Adjust floating bar for landscape mode - bottom nav moves to side, so bar goes to bottom */
+@media (orientation: landscape) and (max-width: 1023px) {
+    #floatingBottomBar {
+        bottom: 10px !important;
+    }
+}
+</style>
 
 <!-- Previous Sets Modal -->
 <div class="modal fade" id="previousSetsModal" tabindex="-1">
@@ -494,6 +576,20 @@ div.exercise-col div.exercise-card {
     min-width: 80px;
 }
 
+/* Skipped exercise styling */
+.exercise-card.skipped {
+    opacity: 0.6;
+}
+
+.exercise-card.skipped .card-header {
+    background-color: #6c757d !important;
+}
+
+.badge-skipped {
+    background-color: #6c757d !important;
+    color: white !important;
+}
+
 .previous-indicator {
     font-size: 0.85rem;
     color: #6c757d;
@@ -551,6 +647,16 @@ div.exercise-col div.exercise-card {
         font-size: 0.85rem;
         color: #198754;
         font-weight: 600;
+    }
+    
+    .carousel-set-subtitle.previous-indicator {
+        background-color: #f8f9fa;
+        padding: 0.4rem;
+        border-radius: 0.25rem;
+        font-size: 0.9rem;
+        color: #000;
+        font-style: normal;
+        font-weight: 500;
     }
     
     .carousel-input-row {
@@ -787,12 +893,16 @@ div.exercise-col div.exercise-card {
 const sessionId = {{ session.id }};
 let workoutData = null;
 let loggedSets = {};
+let skippedExercises = {};
 let workoutStartTime = new Date();
 let timerInterval = null;
+let durationSaveInterval = null;
 let restTimerInterval = null;
 let restTimerModal = null;
 let overallFeelingModal = null;
 let finishWorkoutModal = null;
+let skipExerciseModal = null;
+let pendingSkipExerciseId = null;
 let currentOverallFeelingExerciseId = null;
 let wakeLock = null;
 let skipRests = false;
@@ -860,7 +970,12 @@ function updateExerciseCompletionUI(exerciseId) {
     const progressBadge = document.getElementById(`set-progress-badge-${exerciseId}`);
     if (progressBadge) {
         const nextSet = logged.length + 1;
-        progressBadge.textContent = `Set ${nextSet > exercise.sets ? exercise.sets : nextSet} of ${exercise.sets}`;
+        const setNumber = nextSet > exercise.sets ? exercise.sets : nextSet;
+        progressBadge.textContent = `Set ${setNumber} of ${exercise.sets}`;
+        // Update colors based on set number
+        const colors = getSetProgressColor(setNumber);
+        progressBadge.style.backgroundColor = colors.bg;
+        progressBadge.style.color = colors.text;
     }
 }
 
@@ -868,6 +983,22 @@ function toggleSkipRests() {
     const checkbox = document.getElementById('skipRestsToggle');
     skipRests = checkbox.checked;
     console.log('Skip rests:', skipRests);
+}
+
+// Get heatmap color for set progress badge based on set number
+function getSetProgressColor(setNumber) {
+    switch(setNumber) {
+        case 1:
+            return { bg: '#360185', text: '#fff' }; // Deep Purple
+        case 2:
+            return { bg: '#8F0177', text: '#fff' }; // Magenta
+        case 3:
+            return { bg: '#DE1A58', text: '#fff' }; // Pink/Red
+        case 4:
+            return { bg: '#F4B342', text: '#000' }; // Yellow/Gold
+        default: // 5+
+            return { bg: '#F4B342', text: '#000' }; // Yellow/Gold
+    }
 }
 
 // Request wake lock to keep screen on during workout
@@ -902,6 +1033,7 @@ document.addEventListener('DOMContentLoaded', function() {
     restTimerModal = new coreui.Modal(document.getElementById('restTimerModal'));
     overallFeelingModal = new coreui.Modal(document.getElementById('overallFeelingModal'));
     finishWorkoutModal = new coreui.Modal(document.getElementById('finishWorkoutModal'));
+    skipExerciseModal = new coreui.Modal(document.getElementById('skipExerciseModal'));
     
     // Add event listener for skip rests toggle
     const skipRestsToggle = document.getElementById('skipRestsToggle');
@@ -950,9 +1082,25 @@ function startWorkoutTimer() {
         const minutes = Math.floor(elapsed / 60);
         const seconds = elapsed % 60;
         const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-        document.getElementById('timerDisplay').textContent = timeString;
-        document.getElementById('timerDisplayBottom').textContent = timeString;
+        const floatingTimer = document.getElementById('timerDisplayFloating');
+        if (floatingTimer) {
+            floatingTimer.textContent = timeString;
+        }
     }, 1000);
+    
+    // Save duration to backend every 10 seconds
+    durationSaveInterval = setInterval(async () => {
+        const elapsed = Math.floor((new Date() - workoutStartTime) / 1000);
+        try {
+            await fetch(`/workout/api/session/${sessionId}/update-duration`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ duration_seconds: elapsed })
+            });
+        } catch (error) {
+            console.error('Error saving duration:', error);
+        }
+    }, 10000);
 }
 
 async function loadWorkoutData() {
@@ -960,6 +1108,13 @@ async function loadWorkoutData() {
         const response = await fetch(`/workout/api/session/${sessionId}/data`);
         workoutData = await response.json();
         loggedSets = workoutData.logged_sets || {};
+        skippedExercises = workoutData.skipped_exercises || {};
+        
+        // Initialize workout timer from saved duration_seconds
+        // Timer starts from saved duration, not from started_at timestamp
+        if (workoutData.duration_seconds) {
+            workoutStartTime = new Date(Date.now() - (workoutData.duration_seconds * 1000));
+        }
         
         // Update header
         if (workoutData.is_standalone) {
@@ -990,46 +1145,31 @@ function updateWorkoutProgress() {
     const allExercises = workoutData.series.flatMap(s => s.exercises);
     const totalExercises = allExercises.length;
     
-    // Count completed exercises (all sets logged)
+    // Count completed exercises (all sets logged OR skipped)
     let completedExercises = 0;
     allExercises.forEach(exercise => {
         const logged = loggedSets[exercise.exercise_id] || [];
-        if (logged.length === exercise.sets) {
+        const isSkipped = skippedExercises[exercise.exercise_id] !== undefined;
+        if (logged.length === exercise.sets || isSkipped) {
             completedExercises++;
         }
     });
     
     const progressText = `${completedExercises} / ${totalExercises} exercises`;
-    const progressTop = document.getElementById('workoutProgress');
-    const progressBottom = document.getElementById('workoutProgressBottom');
+    const progressFloating = document.getElementById('workoutProgressFloating');
     
-    if (progressTop) {
-        progressTop.textContent = progressText;
+    if (progressFloating) {
+        progressFloating.textContent = progressText;
         // Change color based on completion
         if (completedExercises === totalExercises && totalExercises > 0) {
-            progressTop.classList.remove('bg-info', 'bg-warning');
-            progressTop.classList.add('bg-success');
+            progressFloating.classList.remove('bg-info', 'bg-warning');
+            progressFloating.classList.add('bg-success');
         } else if (completedExercises > 0) {
-            progressTop.classList.remove('bg-info', 'bg-success');
-            progressTop.classList.add('bg-warning');
+            progressFloating.classList.remove('bg-info', 'bg-success');
+            progressFloating.classList.add('bg-warning');
         } else {
-            progressTop.classList.remove('bg-warning', 'bg-success');
-            progressTop.classList.add('bg-info');
-        }
-    }
-    
-    if (progressBottom) {
-        progressBottom.textContent = progressText;
-        // Change color based on completion
-        if (completedExercises === totalExercises && totalExercises > 0) {
-            progressBottom.classList.remove('bg-info', 'bg-warning');
-            progressBottom.classList.add('bg-success');
-        } else if (completedExercises > 0) {
-            progressBottom.classList.remove('bg-info', 'bg-success');
-            progressBottom.classList.add('bg-warning');
-        } else {
-            progressBottom.classList.remove('bg-warning', 'bg-success');
-            progressBottom.classList.add('bg-info');
+            progressFloating.classList.remove('bg-warning', 'bg-success');
+            progressFloating.classList.add('bg-info');
         }
     }
 }
@@ -1075,6 +1215,9 @@ function renderWorkout() {
     // Replace the container's content
     container.innerHTML = '';
     container.appendChild(tempDiv);
+    
+    // Apply initial weight colors for any pre-existing values
+    setTimeout(() => initializeWeightColors(), 0);
 }
 
 function renderCarouselSet(exercise, setNumber, logged) {
@@ -1084,16 +1227,26 @@ function renderCarouselSet(exercise, setNumber, logged) {
     const suggestedWeight = exercise.suggested_weights[setNumber - 1] || exercise.suggested_weights[0] || '';
     const suggestedReps = exercise.reps || '';
     
+    // Get set-specific previous data
+    const previousSet = exercise.previous_sets?.find(p => p.set_number === setNumber);
+    
     let html = '';
     
-    // Header - only show completion info if set is already logged
+    // Header - show previous set info or completion info
     if (isCompleted) {
         html += `<div class="carousel-set-header">`;
         html += `<div class="carousel-set-title">`;
         html += `<i class="bi bi-check-circle-fill text-success"></i> Completed`;
         html += `</div>`;
         html += `<div class="carousel-set-subtitle">`;
-        html += `${loggedSet.weight}lbs × ${loggedSet.reps} reps${loggedSet.rpe ? ' @ RPE ' + loggedSet.rpe : ''}`;
+        html += `${loggedSet.weight} lbs × ${loggedSet.reps} reps${loggedSet.rpe ? ' @ RPE ' + loggedSet.rpe : ''}`;
+        html += `</div>`;
+        html += `</div>`;
+    } else if (previousSet) {
+        html += `<div class="carousel-set-header">`;
+        html += `<div class="carousel-set-subtitle previous-indicator">`;
+        html += `Last: <strong>${previousSet.weight}</strong> lbs × <strong>${previousSet.reps}</strong> reps`;
+        if (previousSet.rpe) html += ` @ RPE <span style="font-size: 1.2em; font-weight: 700;">${previousSet.rpe}</span>`;
         html += `</div>`;
         html += `</div>`;
     }    
@@ -1104,8 +1257,10 @@ function renderCarouselSet(exercise, setNumber, logged) {
     html += `<div class="carousel-input-field">`;    
     html += `<input type="number" class="form-control" `;    
     html += `id="weight-carousel-${exercise.exercise_id}-${setNumber}" `;    
+    html += `data-suggested="${suggestedWeight || ''}" `;
     html += `placeholder="${suggestedWeight || 'Enter weight'}" `;    
-    html += `value="${loggedSet?.weight || ''}" step="0.5">`;    
+    html += `value="${loggedSet?.weight || ''}" step="0.5" `;
+    html += `oninput="updateWeightColor(this, ${exercise.exercise_id}, ${setNumber}, 'carousel')">`;    
     if (suggestedWeight) {
         html += `<button type="button" class="btn btn-outline-secondary" `;        
         html += `onclick="applyWeightCarousel(${exercise.exercise_id}, ${setNumber}, ${suggestedWeight})">`;        
@@ -1149,7 +1304,7 @@ function renderCarouselSet(exercise, setNumber, logged) {
         html += `</button>`;    
     } else {
         // Show Log button when set is not logged
-        html += `<button type="button" class="btn btn-success carousel-log-btn" `;    
+        html += `<button type="button" class="btn btn-custom-teal carousel-log-btn" `;    
         html += `onclick="logSetCarousel(${exercise.exercise_id}, ${setNumber}, ${exercise.rest_time_seconds || 0})" `;    
         html += `id="log-btn-carousel-${exercise.exercise_id}-${setNumber}">`;    
         html += `<i class="bi bi-check-lg"></i> Log Set`;    
@@ -1179,6 +1334,7 @@ function renderCarouselSet(exercise, setNumber, logged) {
 function renderExerciseCard(exercise, label, color, seriesIndex) {
     const numSets = exercise.sets;
     const logged = loggedSets[exercise.exercise_id] || [];
+    const isSkipped = skippedExercises[exercise.exercise_id] !== undefined;
     
     // Calculate first incomplete set early (needed for carousel)
     let firstIncompleteSet = 1;
@@ -1192,17 +1348,27 @@ function renderExerciseCard(exercise, label, color, seriesIndex) {
         }
     }
     
-    let html = `<div class="card exercise-card border-${color} border-3 mb-3">`;
+    let html = `<div class="card exercise-card ${isSkipped ? 'skipped' : ''} border-${color} border-3 mb-3" id="card-${exercise.exercise_id}">`;
     
     // Header
     html += `<div class="card-header bg-${color} text-white d-flex justify-content-between align-items-center">`;
     html += `<span>${label ? label + '. ' : ''}${exercise.exercise_name}</span>`;
     html += `<div class="d-flex align-items-center gap-2">`;
-    // Add Set X of Y badge for mobile carousel view
-    html += `<span class="badge bg-light text-dark mobile-only" id="set-progress-badge-${exercise.exercise_id}" style="font-size: 0.875rem;">Set ${firstIncompleteSet} of ${numSets}</span>`;
-    if (logged.length > 0) {
-        html += `<span class="badge bg-success me-2" id="logged-badge-${exercise.exercise_id}">✓ Logged</span>`;
+    
+    // Show appropriate badge based on status
+    if (isSkipped) {
+        html += `<span class="badge badge-skipped" id="skipped-badge-${exercise.exercise_id}">Skipped</span>`;
+    } else {
+        // Add Set X of Y badge for mobile carousel view with heatmap colors
+        const progressColors = getSetProgressColor(firstIncompleteSet);
+        html += `<span class="badge mobile-only" id="set-progress-badge-${exercise.exercise_id}" `;
+        html += `style="font-size: 0.875rem; background-color: ${progressColors.bg}; color: ${progressColors.text};">`;
+        html += `Set ${firstIncompleteSet} of ${numSets}</span>`;
+        if (logged.length > 0 && logged.length === numSets) {
+            html += `<span class="badge bg-custom-teal me-2" id="logged-badge-${exercise.exercise_id}">✓ Logged</span>`;
+        }
     }
+    
     html += `<button class="btn btn-sm btn-light mobile-only" onclick="toggleMobileView(${exercise.exercise_id})" `;
     html += `id="toggle-view-${exercise.exercise_id}" title="Show all sets">`;
     html += `<i class="bi bi-grid-3x3"></i></button>`;
@@ -1210,18 +1376,17 @@ function renderExerciseCard(exercise, label, color, seriesIndex) {
         html += `<button class="btn btn-sm btn-light" onclick="showPreviousSets(${exercise.exercise_id})">`;
         html += `<i class="bi bi-clock-history"></i></button>`;
     }
-    html += `</div>`;
-    html += `</div>`;
-    
-    // Show previous set info if available
-    if (exercise.previous_sets && exercise.previous_sets.length > 0) {
-        const prev = exercise.previous_sets[0];
-        html += `<div class="card-body py-2 px-3 bg-light border-bottom">`;
-        html += `<small class="previous-indicator">Last: ${prev.weight}lbs × ${prev.reps} reps`;
-        if (prev.rpe) html += ` @ RPE ${prev.rpe}`;
-        html += ` (${prev.date})</small>`;
-        html += `</div>`;
+    // Add Skip button (or Un-skip if already skipped)
+    if (isSkipped) {
+        html += `<button class="btn btn-sm btn-warning" onclick="unskipExercise(${exercise.exercise_id})" title="Un-skip exercise">`;
+        html += `<i class="bi bi-arrow-counterclockwise"></i></button>`;
+    } else if (logged.length === 0) {
+        // Only show skip button if no sets have been logged
+        html += `<button class="btn btn-sm btn-outline-light" onclick="confirmSkipExercise(${exercise.exercise_id})" title="Skip exercise">`;
+        html += `<i class="bi bi-skip-forward"></i></button>`;
     }
+    html += `</div>`;
+    html += `</div>`;
     
     // Body with column-based sets (DESKTOP TABLE VIEW)
     html += `<div class="card-body p-3 desktop-sets-table">`;
@@ -1232,9 +1397,16 @@ function renderExerciseCard(exercise, label, color, seriesIndex) {
     html += `<thead><tr><th></th>`;
     for (let setNum = 1; setNum <= numSets; setNum++) {
         const isCompleted = logged.find(s => s.set_number === setNum) !== undefined;
+        const previousSet = exercise.previous_sets?.find(p => p.set_number === setNum);
         html += `<th class="text-center ${isCompleted ? 'text-success' : ''}">`;
         html += `<strong>Set ${setNum}</strong>`;
         if (isCompleted) html += ` <i class="bi bi-check-circle-fill"></i>`;
+        if (previousSet && !isCompleted) {
+            html += `<br><small class="previous-indicator" style="font-weight: normal;">`;
+            html += `${previousSet.weight}×${previousSet.reps}`;
+            if (previousSet.rpe) html += ` @${previousSet.rpe}`;
+            html += `</small>`;
+        }
         html += `</th>`;
     }
     html += `</tr></thead><tbody>`;
@@ -1248,8 +1420,10 @@ function renderExerciseCard(exercise, label, color, seriesIndex) {
         html += `<div class="d-flex align-items-center justify-content-center gap-1">`;
         html += `<input type="number" class="form-control form-control-sm text-center" `;
         html += `id="weight-${exercise.exercise_id}-${setNum}" `;
+        html += `data-suggested="${suggestedWeight || ''}" `;
         html += `placeholder="${suggestedWeight}" `;
-        html += `value="${loggedSet?.weight || ''}" step="0.5" style="width: 80px;">`;
+        html += `value="${loggedSet?.weight || ''}" step="0.5" style="width: 80px;" `;
+        html += `oninput="updateWeightColor(this, ${exercise.exercise_id}, ${setNum}, 'desktop')">`;
         if (suggestedWeight) {
             html += `<button type="button" class="btn btn-sm btn-outline-secondary" `;
             html += `onclick="applySuggestedWeight(${exercise.exercise_id}, ${setNum}, ${suggestedWeight})" `;
@@ -1316,6 +1490,7 @@ function renderExerciseCard(exercise, label, color, seriesIndex) {
         const isCurrent = setNum === firstIncompleteSet;
         const suggestedWeight = exercise.suggested_weights[setNum - 1] || exercise.suggested_weights[0] || '';
         const suggestedReps = exercise.reps || '';
+        const previousSet = exercise.previous_sets?.find(p => p.set_number === setNum);
         
         html += `<div class="set-accordion-item" id="accordion-${exercise.exercise_id}-${setNum}">`;
         
@@ -1333,11 +1508,16 @@ function renderExerciseCard(exercise, label, color, seriesIndex) {
         html += `<span>Set ${setNum}</span>`;
         html += `</div>`;
         
-        // Summary for completed sets
+        // Summary for completed sets or previous set data
         if (isCompleted) {
             html += `<div class="set-accordion-summary">`;
-            html += `${loggedSet.weight}lbs × ${loggedSet.reps} reps`;
+            html += `${loggedSet.weight} lbs × ${loggedSet.reps} reps`;
             if (loggedSet.rpe) html += ` @ RPE ${loggedSet.rpe}`;
+            html += `</div>`;
+        } else if (previousSet) {
+            html += `<div class="set-accordion-summary previous-indicator">`;
+            html += `Last: <strong>${previousSet.weight}</strong> lbs × <strong>${previousSet.reps}</strong> reps`;
+            if (previousSet.rpe) html += ` @ RPE <span style="font-size: 1.2em; font-weight: 700;">${previousSet.rpe}</span>`;
             html += `</div>`;
         }
         html += `</div>`;
@@ -1356,8 +1536,10 @@ function renderExerciseCard(exercise, label, color, seriesIndex) {
         html += `<div class="input-with-button">`;
         html += `<input type="number" class="form-control" `;
         html += `id="weight-mobile-${exercise.exercise_id}-${setNum}" `;
+        html += `data-suggested="${suggestedWeight || ''}" `;
         html += `placeholder="${suggestedWeight || 'Enter weight'}" `;
-        html += `value="${loggedSet?.weight || ''}" step="0.5">`;
+        html += `value="${loggedSet?.weight || ''}" step="0.5" `;
+        html += `oninput="updateWeightColor(this, ${exercise.exercise_id}, ${setNum}, 'mobile')">`;
         if (suggestedWeight) {
             html += `<button type="button" class="btn btn-outline-secondary" `;
             html += `onclick="applySuggestedWeightMobile(${exercise.exercise_id}, ${setNum}, ${suggestedWeight})">`;
@@ -1401,7 +1583,7 @@ function renderExerciseCard(exercise, label, color, seriesIndex) {
             html += `<i class="cil-pencil"></i> Edit Set ${setNum}`;
             html += `</button>`;
         } else {
-            html += `<button type="button" class="btn btn-success mobile-save-set-btn" `;
+            html += `<button type="button" class="btn btn-custom-teal mobile-save-set-btn" `;
             html += `id="log-btn-mobile-${exercise.exercise_id}-${setNum}" `;
             html += `onclick="logSingleSetMobile(${exercise.exercise_id}, ${setNum}, ${exercise.rest_time_seconds || 0})">`;
             html += `<i class="bi bi-check-lg"></i> Log Set ${setNum}`;
@@ -1559,10 +1741,69 @@ async function logSingleSet(exerciseId, setNumber) {
     }
 }
 
+// Initialize weight colors for all inputs with existing values
+function initializeWeightColors() {
+    // Find all weight inputs across all views
+    const allWeightInputs = document.querySelectorAll('input[id^="weight-"]');
+    
+    allWeightInputs.forEach(input => {
+        // Extract exercise ID and set number from the input ID
+        const idParts = input.id.split('-');
+        let viewType, exerciseId, setNumber;
+        
+        if (input.id.startsWith('weight-carousel-')) {
+            // Format: weight-carousel-{exerciseId}-{setNumber}
+            viewType = 'carousel';
+            exerciseId = idParts[2];
+            setNumber = idParts[3];
+        } else if (input.id.startsWith('weight-mobile-')) {
+            // Format: weight-mobile-{exerciseId}-{setNumber}
+            viewType = 'mobile';
+            exerciseId = idParts[2];
+            setNumber = idParts[3];
+        } else {
+            // Format: weight-{exerciseId}-{setNumber}
+            viewType = 'desktop';
+            exerciseId = idParts[1];
+            setNumber = idParts[2];
+        }
+        
+        // Only update color if there's an actual value
+        if (input.value) {
+            updateWeightColor(input, exerciseId, setNumber, viewType);
+        }
+    });
+}
+
+// Update weight input color based on comparison with suggested weight
+function updateWeightColor(inputElement, exerciseId, setNumber, viewType) {
+    const currentValue = parseFloat(inputElement.value);
+    const suggestedWeight = parseFloat(inputElement.dataset.suggested);
+    
+    // Remove all color classes
+    inputElement.classList.remove('weight-input-same', 'weight-input-more', 'weight-input-less');
+    
+    // If no value or no suggested weight, don't apply any color
+    if (!currentValue || !suggestedWeight) {
+        return;
+    }
+    
+    // Compare and apply appropriate color class
+    if (currentValue === suggestedWeight) {
+        inputElement.classList.add('weight-input-same'); // Muted green
+    } else if (currentValue > suggestedWeight) {
+        inputElement.classList.add('weight-input-more'); // Muted purple
+    } else {
+        inputElement.classList.add('weight-input-less'); // Muted red
+    }
+}
+
 function applySuggestedWeight(exerciseId, setNumber, suggestedWeight) {
     const weightInput = document.getElementById(`weight-${exerciseId}-${setNumber}`);
     if (weightInput) {
         weightInput.value = suggestedWeight;
+        // Update color based on comparison
+        updateWeightColor(weightInput, exerciseId, setNumber, 'desktop');
         // Brief visual feedback
         weightInput.classList.add('border-success');
         setTimeout(() => {
@@ -1589,6 +1830,8 @@ function applySuggestedWeightMobile(exerciseId, setNumber, suggestedWeight) {
     const weightInput = document.getElementById(`weight-mobile-${exerciseId}-${setNumber}`);
     if (weightInput) {
         weightInput.value = suggestedWeight;
+        // Update color based on comparison
+        updateWeightColor(weightInput, exerciseId, setNumber, 'mobile');
         // Brief visual feedback
         weightInput.classList.add('border-success');
         setTimeout(() => {
@@ -1671,7 +1914,7 @@ async function logSingleSetMobile(exerciseId, setNumber, restTime) {
                         <span>Set ${setNumber}</span>
                     </div>
                     <div class="set-accordion-summary">
-                        ${weight}lbs × ${reps} reps${rpe ? ' @ RPE ' + rpe : ''}
+                        ${weight} lbs × ${reps} reps${rpe ? ' @ RPE ' + rpe : ''}
                     </div>
                 </div>
             `;
@@ -1743,7 +1986,7 @@ function enableEditMobile(exerciseId, setNumber) {
     if (editBtn) {
         editBtn.innerHTML = '<i class="bi bi-check-lg"></i> Update Set ' + setNumber;
         editBtn.classList.remove('btn-warning');
-        editBtn.classList.add('btn-success');
+        editBtn.classList.add('btn-custom-teal');
         editBtn.setAttribute('id', `log-btn-mobile-${exerciseId}-${setNumber}`);
         editBtn.setAttribute('onclick', `logSingleSetMobile(${exerciseId}, ${setNumber}, 0)`);
     }
@@ -1839,6 +2082,10 @@ function navigateCarousel(exerciseId, setNumber) {
         const progressBadge = document.getElementById(`set-progress-badge-${exerciseId}`);
         if (progressBadge) {
             progressBadge.textContent = `Set ${setNumber} of ${exercise.sets}`;
+            // Update colors based on set number
+            const colors = getSetProgressColor(setNumber);
+            progressBadge.style.backgroundColor = colors.bg;
+            progressBadge.style.color = colors.text;
         }
     }
 }
@@ -1847,6 +2094,8 @@ function applyWeightCarousel(exerciseId, setNumber, weight) {
     const input = document.getElementById(`weight-carousel-${exerciseId}-${setNumber}`);
     if (input) {
         input.value = weight;
+        // Update color based on comparison
+        updateWeightColor(input, exerciseId, setNumber, 'carousel');
         input.classList.add('border-success');
         setTimeout(() => input.classList.remove('border-success'), 500);
     }
@@ -1949,7 +2198,7 @@ function enableEditCarousel(exerciseId, setNumber) {
     if (editBtn) {
         editBtn.innerHTML = '<i class="cil-check"></i> Update Set';
         editBtn.classList.remove('btn-warning');
-        editBtn.classList.add('btn-success');
+        editBtn.classList.add('btn-custom-teal');
         editBtn.setAttribute('onclick', `logSetCarousel(${exerciseId}, ${setNumber})`);
     }
     
@@ -2032,7 +2281,7 @@ async function logAllSetsForExercise(exerciseId, setsToLog, overallRpe, restTime
                 const header = exerciseCard.querySelector('.card-header > div');
                 if (header) {
                     const badge = document.createElement('span');
-                    badge.className = 'badge bg-success me-2';
+                    badge.className = 'badge bg-custom-teal me-2';
                     badge.id = `logged-badge-${exerciseId}`;
                     badge.textContent = '✓ Logged';
                     header.prepend(badge);
@@ -2213,6 +2462,17 @@ async function finishWorkout() {
 }
 
 async function confirmFinishWorkout() {
+    // Save final duration before completing
+    const finalDuration = Math.floor((new Date() - workoutStartTime) / 1000);
+    try {
+        await fetch(`/workout/api/session/${sessionId}/update-duration`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ duration_seconds: finalDuration })
+        });
+    } catch (error) {
+        console.error('Error saving final duration:', error);
+    }
     const notes = document.getElementById('workoutNotes').value;
     
     try {
@@ -2226,6 +2486,7 @@ async function confirmFinishWorkout() {
         
         if (data.success) {
             clearInterval(timerInterval);
+            clearInterval(durationSaveInterval);  // Stop periodic duration saves
             releaseWakeLock();  // Release wake lock when workout is finished
             finishWorkoutModal.hide();
             
@@ -2270,6 +2531,164 @@ async function searchExercises() {
 function addExerciseToWorkout(exerciseId, exerciseName) {
     // TODO: Implement adding exercise to standalone workout
     alert(`Adding ${exerciseName} to workout - feature coming soon!`);
+}
+
+// Skip/Unskip exercise functions
+function confirmSkipExercise(exerciseId) {
+    const exercise = getExerciseData(exerciseId);
+    if (!exercise) return;
+    
+    // Set the exercise name in the modal
+    document.getElementById('skipExerciseName').textContent = exercise.exercise_name;
+    
+    // Store the exercise ID for when user confirms
+    pendingSkipExerciseId = exerciseId;
+    
+    // Show the modal
+    skipExerciseModal.show();
+}
+
+function doSkipExercise() {
+    if (pendingSkipExerciseId !== null) {
+        // Hide the modal
+        skipExerciseModal.hide();
+        
+        // Skip the exercise
+        skipExercise(pendingSkipExerciseId, '');
+        
+        // Clear pending ID
+        pendingSkipExerciseId = null;
+    }
+}
+
+async function skipExercise(exerciseId, reason) {
+    try {
+        const response = await fetch(`/workout/api/session/${sessionId}/skip-exercise`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ exercise_id: exerciseId, reason: reason })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Update local state
+            skippedExercises[exerciseId] = { reason: reason, skipped_at: data.skipped_at };
+            
+            // Update just this exercise card instead of re-rendering everything
+            const card = document.getElementById(`card-${exerciseId}`);
+            if (card) {
+                card.classList.add('skipped');
+                
+                // Find and update the badge area
+                const badgeArea = card.querySelector('.card-header > div');
+                if (badgeArea) {
+                    // Remove progress badge if exists
+                    const progressBadge = document.getElementById(`set-progress-badge-${exerciseId}`);
+                    if (progressBadge) progressBadge.remove();
+                    
+                    // Remove logged badge if exists
+                    const loggedBadge = document.getElementById(`logged-badge-${exerciseId}`);
+                    if (loggedBadge) loggedBadge.remove();
+                    
+                    // Add skipped badge
+                    const skippedBadge = document.createElement('span');
+                    skippedBadge.className = 'badge badge-skipped';
+                    skippedBadge.id = `skipped-badge-${exerciseId}`;
+                    skippedBadge.textContent = 'Skipped';
+                    badgeArea.insertBefore(skippedBadge, badgeArea.firstChild);
+                    
+                    // Update skip button to un-skip button
+                    const skipBtn = badgeArea.querySelector('button[onclick*="confirmSkipExercise"]');
+                    if (skipBtn) {
+                        skipBtn.className = 'btn btn-sm btn-warning';
+                        skipBtn.setAttribute('onclick', `unskipExercise(${exerciseId})`);
+                        skipBtn.title = 'Un-skip exercise';
+                        skipBtn.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i>';
+                    }
+                }
+            }
+            
+            // Update progress
+            updateWorkoutProgress();
+        } else {
+            alert('Error skipping exercise: ' + (data.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error skipping exercise:', error);
+        alert('Error skipping exercise. Please try again.');
+    }
+}
+
+async function unskipExercise(exerciseId) {
+    try {
+        const response = await fetch(`/workout/api/session/${sessionId}/unskip-exercise`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ exercise_id: exerciseId })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Update local state
+            delete skippedExercises[exerciseId];
+            
+            // Update just this exercise card instead of re-rendering everything
+            const card = document.getElementById(`card-${exerciseId}`);
+            if (card) {
+                card.classList.remove('skipped');
+                
+                // Find and update the badge area
+                const badgeArea = card.querySelector('.card-header > div');
+                if (badgeArea) {
+                    // Remove skipped badge
+                    const skippedBadge = document.getElementById(`skipped-badge-${exerciseId}`);
+                    if (skippedBadge) skippedBadge.remove();
+                    
+                    // Re-add progress badge
+                    const exercise = getExerciseData(exerciseId);
+                    if (exercise) {
+                        const logged = loggedSets[exerciseId] || [];
+                        let firstIncompleteSet = 1;
+                        for (let setNum = 1; setNum <= exercise.sets; setNum++) {
+                            if (!logged.find(s => s.set_number === setNum)) {
+                                firstIncompleteSet = setNum;
+                                break;
+                            }
+                        }
+                        
+                        const progressColors = getSetProgressColor(firstIncompleteSet);
+                        const progressBadge = document.createElement('span');
+                        progressBadge.className = 'badge mobile-only';
+                        progressBadge.id = `set-progress-badge-${exerciseId}`;
+                        progressBadge.style.fontSize = '0.875rem';
+                        progressBadge.style.backgroundColor = progressColors.bg;
+                        progressBadge.style.color = progressColors.text;
+                        progressBadge.textContent = `Set ${firstIncompleteSet} of ${exercise.sets}`;
+                        badgeArea.insertBefore(progressBadge, badgeArea.firstChild);
+                    }
+                    
+                    // Update un-skip button back to skip button
+                    const unskipBtn = badgeArea.querySelector('button[onclick*="unskipExercise"]');
+                    if (unskipBtn) {
+                        unskipBtn.className = 'btn btn-sm btn-outline-light';
+                        unskipBtn.setAttribute('onclick', `confirmSkipExercise(${exerciseId})`);
+                        unskipBtn.title = 'Skip exercise';
+                        unskipBtn.innerHTML = '<i class="bi bi-skip-forward"></i>';
+                    }
+                }
+            }
+            
+            // Update progress
+            updateWorkoutProgress();
+        } else {
+            alert('Error un-skipping exercise: ' + (data.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error un-skipping exercise:', error);
+        alert('Error un-skipping exercise. Please try again.');
+    }
 }
 </script>
 {% endblock %}

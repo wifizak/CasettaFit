@@ -109,6 +109,7 @@ def get_session_data(session_id):
     data = {
         'session_id': session.id,
         'started_at': session.started_at.isoformat(),
+        'duration_seconds': session.duration_seconds,
         'is_completed': session.is_completed,
         'gym_name': session.gym.name if session.gym else None,
         'is_standalone': session.scheduled_day_id is None
@@ -188,6 +189,17 @@ def get_session_data(session_id):
         })
     
     data['logged_sets'] = logged_sets
+    
+    # Get skipped exercises for this session
+    from app.models import SkippedExercise
+    skipped_exercises = {}
+    for skip in session.skipped_exercises:
+        skipped_exercises[skip.exercise_id] = {
+            'reason': skip.reason,
+            'skipped_at': skip.skipped_at.isoformat()
+        }
+    
+    data['skipped_exercises'] = skipped_exercises
     
     return jsonify(data)
 
@@ -294,6 +306,28 @@ def save_overall_rpe(session_id):
     return jsonify({'success': True, 'overall_rpe': overall_rpe})
 
 
+@bp.route('/api/session/<int:session_id>/update-duration', methods=['POST'])
+@login_required
+def update_duration(session_id):
+    """Update workout duration in seconds (called periodically)"""
+    session = WorkoutSession.query.filter_by(
+        id=session_id,
+        user_id=current_user.id,
+        is_completed=False
+    ).first_or_404()
+    
+    data = request.json
+    duration_seconds = data.get('duration_seconds')
+    
+    if duration_seconds is None or not isinstance(duration_seconds, int):
+        return jsonify({'success': False, 'error': 'Invalid duration value'}), 400
+    
+    session.duration_seconds = duration_seconds
+    db.session.commit()
+    
+    return jsonify({'success': True, 'duration_seconds': duration_seconds})
+
+
 @bp.route('/api/session/<int:session_id>/complete', methods=['POST'])
 @login_required
 def complete_workout(session_id):
@@ -317,6 +351,78 @@ def complete_workout(session_id):
     db.session.commit()
     
     return jsonify({'success': True, 'completed_at': session.completed_at.isoformat()})
+
+
+@bp.route('/api/session/<int:session_id>/skip-exercise', methods=['POST'])
+@login_required
+def skip_exercise(session_id):
+    """Mark an exercise as skipped in the current session"""
+    from app.models import SkippedExercise
+    
+    session = WorkoutSession.query.filter_by(
+        id=session_id,
+        user_id=current_user.id
+    ).first_or_404()
+    
+    data = request.json
+    exercise_id = data.get('exercise_id')
+    reason = data.get('reason', '')
+    
+    if not exercise_id:
+        return jsonify({'success': False, 'error': 'exercise_id is required'}), 400
+    
+    # Check if already skipped
+    existing_skip = SkippedExercise.query.filter_by(
+        workout_session_id=session_id,
+        exercise_id=exercise_id
+    ).first()
+    
+    if existing_skip:
+        return jsonify({'success': False, 'error': 'Exercise already skipped'}), 400
+    
+    # Create skip record
+    skip = SkippedExercise(
+        workout_session_id=session_id,
+        exercise_id=exercise_id,
+        reason=reason if reason else None
+    )
+    
+    db.session.add(skip)
+    db.session.commit()
+    
+    return jsonify({'success': True, 'skipped_at': skip.skipped_at.isoformat()})
+
+
+@bp.route('/api/session/<int:session_id>/unskip-exercise', methods=['POST'])
+@login_required
+def unskip_exercise(session_id):
+    """Remove skip status from an exercise"""
+    from app.models import SkippedExercise
+    
+    session = WorkoutSession.query.filter_by(
+        id=session_id,
+        user_id=current_user.id
+    ).first_or_404()
+    
+    data = request.json
+    exercise_id = data.get('exercise_id')
+    
+    if not exercise_id:
+        return jsonify({'success': False, 'error': 'exercise_id is required'}), 400
+    
+    # Find and delete skip record
+    skip = SkippedExercise.query.filter_by(
+        workout_session_id=session_id,
+        exercise_id=exercise_id
+    ).first()
+    
+    if not skip:
+        return jsonify({'success': False, 'error': 'Exercise is not skipped'}), 400
+    
+    db.session.delete(skip)
+    db.session.commit()
+    
+    return jsonify({'success': True})
 
 
 @bp.route('/api/exercises/search')
@@ -376,19 +482,38 @@ def _get_workout_structure(scheduled_day):
 
 
 def _get_previous_sets(user_id, exercise_id, limit=5):
-    """Get previous workout sets for an exercise"""
-    previous_sets = WorkoutSet.query\
-        .join(WorkoutSession)\
+    """Get previous workout sets for an exercise from the most recent completed session (excluding skipped)"""
+    from app.models import SkippedExercise
+    
+    # First, find the most recent completed workout session that has this exercise and was NOT skipped
+    most_recent_session = WorkoutSession.query\
+        .join(WorkoutSet)\
+        .outerjoin(SkippedExercise, 
+                   db.and_(SkippedExercise.workout_session_id == WorkoutSession.id,
+                           SkippedExercise.exercise_id == exercise_id))\
         .filter(
             WorkoutSession.user_id == user_id,
             WorkoutSet.exercise_id == exercise_id,
-            WorkoutSession.is_completed == True
+            WorkoutSession.is_completed == True,
+            SkippedExercise.id == None  # Exercise was NOT skipped
         )\
-        .order_by(WorkoutSet.completed_at.desc())\
-        .limit(limit)\
+        .order_by(WorkoutSession.completed_at.desc())\
+        .first()
+    
+    if not most_recent_session:
+        return []
+    
+    # Get all sets from that session for this exercise
+    previous_sets = WorkoutSet.query\
+        .filter(
+            WorkoutSet.workout_session_id == most_recent_session.id,
+            WorkoutSet.exercise_id == exercise_id
+        )\
+        .order_by(WorkoutSet.set_number)\
         .all()
     
     return [{
+        'set_number': s.set_number,
         'date': s.completed_at.strftime('%Y-%m-%d'),
         'reps': s.reps,
         'weight': s.weight,
