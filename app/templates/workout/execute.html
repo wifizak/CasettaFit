@@ -2454,12 +2454,13 @@ function showPreviousSets(exerciseId) {
     
     let html = `<h6>${exercise.exercise_name}</h6>`;
     html += `<table class="table table-sm">`;
-    html += `<thead><tr><th>Date</th><th>Weight</th><th>Reps</th><th>RPE</th></tr></thead>`;
+    html += `<thead><tr><th>Date</th><th>Set</th><th>Weight</th><th>Reps</th><th>RPE</th></tr></thead>`;
     html += `<tbody>`;
     
     exercise.previous_sets.forEach(set => {
         html += `<tr>`;
         html += `<td>${set.date}</td>`;
+        html += `<td>${set.set_number}</td>`;
         html += `<td>${set.weight} lbs</td>`;
         html += `<td>${set.reps}</td>`;
         html += `<td>${set.rpe || '-'}</td>`;
