@@ -10,7 +10,7 @@ This guide covers setting up HTTPS for your CasettaFit installation using differ
 
 ## Option 1: Let's Encrypt (Recommended)
 
-**Automated Setup for fit.casettacloud.com:**
+**Automated Setup for fit.domain.com:**
 
 1. Ensure DNS is configured to point to your server:
    ```bash
@@ -18,11 +18,11 @@ This guide covers setting up HTTPS for your CasettaFit installation using differ
    hostname -I
    
    # Verify DNS points to your server
-   host fit.casettacloud.com
+   host fit.domain.com
    ```
 
 2. Update DNS if needed:
-   - Create an A record: `fit.casettacloud.com` → `YOUR_SERVER_IP`
+   - Create an A record: `fit.domain.com` → `YOUR_SERVER_IP`
    - Wait for DNS propagation (can take a few minutes)
 
 3. Run the automated setup:
@@ -93,13 +93,13 @@ sudo /opt/CasettaFit/app/setup_ssl.sh
 
 ## Current Server Configuration
 
-**Server IP:** 143.244.184.105  
-**Domain:** fit.casettacloud.com  
+**Server IP:** 143.10.10.10  
+**Domain:** fit.domain.com  
 **DNS Status:** Currently points to 143.244.210.65 (needs update)
 
 ### To Set Up SSL for This Server:
 
-1. Update DNS A record to: `143.244.184.105`
+1. Update DNS A record to: `143.10.10.10`
 2. Wait for DNS propagation (5-15 minutes)
 3. Run: `sudo /opt/CasettaFit/app/setup_ssl_auto.sh`
 
@@ -132,9 +132,9 @@ sudo netstat -tlnp | grep -E ':(80|443)'
 
 After successful SSL setup:
 
-1. Access your site: `https://fit.casettacloud.com`
+1. Access your site: `https://fit.domain.com`
 2. Verify HTTPS is working (green padlock in browser)
-3. Test HTTP redirect: `http://fit.casettacloud.com` should redirect to HTTPS
+3. Test HTTP redirect: `http://fit.domain.com` should redirect to HTTPS
 
 ## Security Best Practices
 
@@ -168,6 +168,6 @@ sudo certbot renew --force-renewal
 ## Scripts Available
 
 1. **setup_ssl.sh** - Interactive SSL setup with all options
-2. **setup_ssl_auto.sh** - Automated Let's Encrypt for fit.casettacloud.com
+2. **setup_ssl_auto.sh** - Automated Let's Encrypt for fit.domain.com
 
 Both scripts are located in `/opt/CasettaFit/app/`

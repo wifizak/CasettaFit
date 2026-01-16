@@ -66,10 +66,13 @@ instance/
 .webassets-cache
 
 # CasettaFit specific
-app/casettafit.db*
+app/*.db
+app/**/*.db
+*.db
 app/migrations/
 app/logs/
 app/static/uploads/*
+app/app/static/uploads/*
 !app/static/uploads/.gitkeep
 !app/static/uploads/gyms/.gitkeep
 !app/static/uploads/profiles/.gitkeep
