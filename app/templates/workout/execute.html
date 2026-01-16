@@ -1679,7 +1679,7 @@ function renderExerciseCard(exercise, label, color, seriesIndex) {
             dateDisplay = `Last (${date.getMonth() + 1}/${date.getDate()})`;
         }
         html += `<div class="col-auto text-center" style="min-width: 100px;">`;
-        html += `<div style="color: #6c757d; font-size: 0.75rem; margin-bottom: 0.25rem;">${dateDisplay}</div>`;
+        html += `<div class="carousel-input-label mb-2">${dateDisplay}</div>`;
         html += `<div style="display: inline-block; font-weight: 700; color: ${prevRpeColor}; font-size: 2.5rem; line-height: 1;">${exercise.previous_overall_rpe}</div>`;
         html += `</div>`;
     }
