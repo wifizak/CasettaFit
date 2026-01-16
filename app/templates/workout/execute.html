@@ -1270,7 +1270,10 @@ function renderCarouselSet(exercise, setNumber, logged) {
         const prevDate = previousSet.date ? new Date(previousSet.date) : null;
         const dateStr = prevDate ? `${prevDate.getMonth() + 1}/${prevDate.getDate()}:` : 'Last:';
         html += `${dateStr} <strong>${previousSet.weight}</strong> lbs × <strong>${previousSet.reps}</strong> reps (Set ${setNumber})`;
-        if (previousSet.rpe) html += ` @ RPE <span style="font-size: 1.2em; font-weight: 700;">${previousSet.rpe}</span>`;
+        if (previousSet.rpe) {
+            const rpeColor = previousSet.rpe === '-' ? '#dc3545' : previousSet.rpe === '=' ? '#198754' : '#0d6efd';
+            html += ` @ RPE <span style="font-size: 1.2em; font-weight: 700; color: ${rpeColor};">${previousSet.rpe}</span>`;
+        }
         html += `</div>`;
         html += `</div>`;
     }    
@@ -1428,7 +1431,10 @@ function renderExerciseCard(exercise, label, color, seriesIndex) {
         if (previousSet && !isCompleted) {
             html += `<br><small class="previous-indicator" style="font-weight: normal;">`;
             html += `${previousSet.weight}×${previousSet.reps}`;
-            if (previousSet.rpe) html += ` @${previousSet.rpe}`;
+            if (previousSet.rpe) {
+                const rpeColor = previousSet.rpe === '-' ? '#dc3545' : previousSet.rpe === '=' ? '#198754' : '#0d6efd';
+                html += ` @<span style="font-weight: 700; color: ${rpeColor};">${previousSet.rpe}</span>`;
+            }
             html += `</small>`;
         }
         html += `</th>`;
@@ -1543,7 +1549,10 @@ function renderExerciseCard(exercise, label, color, seriesIndex) {
             const prevDate = previousSet.date ? new Date(previousSet.date) : null;
             const dateStr = prevDate ? `${prevDate.getMonth() + 1}/${prevDate.getDate()}:` : 'Last:';
             html += `${dateStr} <strong>${previousSet.weight}</strong> lbs × <strong>${previousSet.reps}</strong> reps (Set ${setNum})`;
-            if (previousSet.rpe) html += ` @ RPE <span style="font-size: 1.2em; font-weight: 700;">${previousSet.rpe}</span>`;
+            if (previousSet.rpe) {
+                const rpeColor = previousSet.rpe === '-' ? '#dc3545' : previousSet.rpe === '=' ? '#198754' : '#0d6efd';
+                html += ` @ RPE <span style="font-size: 1.2em; font-weight: 700; color: ${rpeColor};">${previousSet.rpe}</span>`;
+            }
             html += `</div>`;
         }
         html += `</div>`;
