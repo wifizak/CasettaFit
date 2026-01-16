@@ -1267,7 +1267,9 @@ function renderCarouselSet(exercise, setNumber, logged) {
     } else if (previousSet) {
         html += `<div class="carousel-set-header">`;
         html += `<div class="carousel-set-subtitle previous-indicator">`;
-        html += `Last: <strong>${previousSet.weight}</strong> lbs × <strong>${previousSet.reps}</strong> reps`;
+        const prevDate = previousSet.date ? new Date(previousSet.date) : null;
+        const dateStr = prevDate ? `${prevDate.getMonth() + 1}/${prevDate.getDate()}:` : 'Last:';
+        html += `${dateStr} <strong>${previousSet.weight}</strong> lbs × <strong>${previousSet.reps}</strong> reps`;
         if (previousSet.rpe) html += ` @ RPE <span style="font-size: 1.2em; font-weight: 700;">${previousSet.rpe}</span>`;
         html += `</div>`;
         html += `</div>`;
@@ -1538,7 +1540,9 @@ function renderExerciseCard(exercise, label, color, seriesIndex) {
             html += `</div>`;
         } else if (previousSet) {
             html += `<div class="set-accordion-summary previous-indicator">`;
-            html += `Last: <strong>${previousSet.weight}</strong> lbs × <strong>${previousSet.reps}</strong> reps`;
+            const prevDate = previousSet.date ? new Date(previousSet.date) : null;
+            const dateStr = prevDate ? `${prevDate.getMonth() + 1}/${prevDate.getDate()}:` : 'Last:';
+            html += `${dateStr} <strong>${previousSet.weight}</strong> lbs × <strong>${previousSet.reps}</strong> reps`;
             if (previousSet.rpe) html += ` @ RPE <span style="font-size: 1.2em; font-weight: 700;">${previousSet.rpe}</span>`;
             html += `</div>`;
         }
