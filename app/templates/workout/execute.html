@@ -881,6 +881,13 @@ div.exercise-col div.exercise-card {
     }
 }
 
+/* Landscape phone: make RPE buttons wider */
+@media (orientation: landscape) and (max-width: 1023px) {
+    .carousel-rpe-buttons button {
+        min-width: 60px;
+    }
+}
+
 /* Desktop: hide mobile accordion */
 @media (min-width: 1024px) {
     .mobile-sets-accordion {
@@ -1307,7 +1314,7 @@ function renderCarouselSet(exercise, setNumber, logged) {
         html += `<button type="button" class="btn btn-custom-teal carousel-log-btn" `;    
         html += `onclick="logSetCarousel(${exercise.exercise_id}, ${setNumber}, ${exercise.rest_time_seconds || 0})" `;    
         html += `id="log-btn-carousel-${exercise.exercise_id}-${setNumber}">`;    
-        html += `<i class="bi bi-check-lg"></i> Log Set`;    
+        html += `<i class="bi bi-check-lg"></i> Log`;    
         html += `</button>`;    
     }
     html += `</div>`;    
@@ -1586,7 +1593,7 @@ function renderExerciseCard(exercise, label, color, seriesIndex) {
             html += `<button type="button" class="btn btn-custom-teal mobile-save-set-btn" `;
             html += `id="log-btn-mobile-${exercise.exercise_id}-${setNum}" `;
             html += `onclick="logSingleSetMobile(${exercise.exercise_id}, ${setNum}, ${exercise.rest_time_seconds || 0})">`;
-            html += `<i class="bi bi-check-lg"></i> Log Set ${setNum}`;
+            html += `<i class="bi bi-check-lg"></i> Log${setNum}`;
             html += `</button>`;
         }
         
