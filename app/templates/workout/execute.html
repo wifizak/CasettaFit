@@ -1651,17 +1651,10 @@ function renderExerciseCard(exercise, label, color, seriesIndex) {
     const overallRpe = logged.find(s => s.overall_rpe)?.overall_rpe || '';
     
     html += `<div class="border-top pt-3 px-3 pb-2">`;
-    html += `<div class="row align-items-center">`;
-    html += `<div class="col-auto">`;
-    html += `<div class="carousel-input-label">Overall RPE: <span class="text-danger">*</span>`;
-    // Show previous overall RPE if available
-    if (exercise.previous_overall_rpe) {
-        const prevRpeColor = exercise.previous_overall_rpe === '-' ? '#dc3545' : exercise.previous_overall_rpe === '=' ? '#198754' : '#0d6efd';
-        html += ` <span style="color: #6c757d; font-size: 0.75rem;">(Last: <span style="display: inline-block; font-weight: 700; color: ${prevRpeColor}; transform: scale(1.3); position: relative; top: -1px;">${exercise.previous_overall_rpe}</span>)</span>`;
-    }
-    html += `</div>`;
-    html += `</div>`;
-    html += `<div class="col-auto">`;
+    html += `<div class="row">`;
+    // Left column: Label and buttons
+    html += `<div class="col">`;
+    html += `<div class="carousel-input-label mb-2">Overall RPE: <span class="text-danger">*</span></div>`;
     html += `<div class="overall-rpe-buttons">`;
     html += `<button type="button" class="btn ${overallRpe === '-' ? 'btn-danger' : 'btn-outline-danger'}" `;
     html += `onclick="setOverallRpe(${exercise.exercise_id}, '-')" `;
@@ -1675,6 +1668,21 @@ function renderExerciseCard(exercise, label, color, seriesIndex) {
     html += `</div>`;
     html += `<input type="hidden" id="overall-rpe-${exercise.exercise_id}" value="${overallRpe}">`;
     html += `</div>`;
+    // Right column: Previous overall RPE if available
+    if (exercise.previous_overall_rpe) {
+        const prevRpeColor = exercise.previous_overall_rpe === '-' ? '#dc3545' : exercise.previous_overall_rpe === '=' ? '#198754' : '#0d6efd';
+        // Get the date from previous_sets if available
+        const prevDate = exercise.previous_sets && exercise.previous_sets.length > 0 ? exercise.previous_sets[0].date : null;
+        let dateDisplay = 'Last';
+        if (prevDate) {
+            const date = new Date(prevDate);
+            dateDisplay = `Last (${date.getMonth() + 1}/${date.getDate()})`;
+        }
+        html += `<div class="col-auto text-center" style="min-width: 100px;">`;
+        html += `<div style="color: #6c757d; font-size: 0.75rem; margin-bottom: 0.25rem;">${dateDisplay}</div>`;
+        html += `<div style="display: inline-block; font-weight: 700; color: ${prevRpeColor}; font-size: 2.5rem; line-height: 1;">${exercise.previous_overall_rpe}</div>`;
+        html += `</div>`;
+    }
     html += `</div>`;
     html += `</div>`;
     html += `</div>`;
