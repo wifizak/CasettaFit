@@ -152,6 +152,7 @@ def get_session_data(session_id):
                 
                 # Get previous workout history for this exercise
                 previous_sets = _get_previous_sets(current_user.id, prog_ex.exercise_id)
+                previous_overall_rpe = _get_previous_overall_rpe(current_user.id, prog_ex.exercise_id)
                 
                 exercises_data.append({
                     'exercise_id': prog_ex.exercise_id,
@@ -160,7 +161,8 @@ def get_session_data(session_id):
                     'reps': prog_ex.reps,
                     'suggested_weights': suggested_weights,
                     'rest_time_seconds': prog_ex.rest_time_seconds,
-                    'previous_sets': previous_sets
+                    'previous_sets': previous_sets,
+                    'previous_overall_rpe': previous_overall_rpe
                 })
             
             series_data.append({
@@ -519,3 +521,29 @@ def _get_previous_sets(user_id, exercise_id, limit=5):
         'weight': s.weight,
         'rpe': s.rpe
     } for s in previous_sets]
+
+
+def _get_previous_overall_rpe(user_id, exercise_id):
+    """Get overall exercise RPE from the most recent completed session (excluding skipped)"""
+    from app.models import SkippedExercise
+    
+    # Find the most recent completed workout session that has this exercise with overall_rpe set and was NOT skipped
+    most_recent_set_with_overall_rpe = WorkoutSet.query\
+        .join(WorkoutSession)\
+        .outerjoin(SkippedExercise, 
+                   db.and_(SkippedExercise.workout_session_id == WorkoutSession.id,
+                           SkippedExercise.exercise_id == exercise_id))\
+        .filter(
+            WorkoutSession.user_id == user_id,
+            WorkoutSet.exercise_id == exercise_id,
+            WorkoutSession.is_completed == True,
+            WorkoutSet.overall_rpe != None,
+            SkippedExercise.id == None  # Exercise was NOT skipped
+        )\
+        .order_by(WorkoutSession.completed_at.desc())\
+        .first()
+    
+    if not most_recent_set_with_overall_rpe:
+        return None
+    
+    return most_recent_set_with_overall_rpe.overall_rpe
