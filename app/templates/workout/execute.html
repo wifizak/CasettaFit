@@ -1233,8 +1233,11 @@ function renderWorkout() {
                 exercisesHtml += `</div>`;
             });
         } else {
-            // Regular exercise - one column
+            // Regular exercise - one column with empty badge spacer for consistent spacing
             const exercise = series.exercises[0];
+            exercisesHtml += `<div class="exercise-col superset-badge-col">`;
+            exercisesHtml += `<div class="mb-1" style="height: 28px;"></div>`;
+            exercisesHtml += `</div>`;
             exercisesHtml += `<div class="exercise-col">`;
             exercisesHtml += renderExerciseCard(exercise, null, color, seriesIndex);
             exercisesHtml += `</div>`;
