@@ -69,6 +69,8 @@ instance/
 app/*.db
 app/**/*.db
 *.db
+*.db-shm
+*.db-wal
 app/migrations/
 app/logs/
 app/static/uploads/*
