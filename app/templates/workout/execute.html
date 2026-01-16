@@ -971,7 +971,7 @@ function updateExerciseCompletionUI(exerciseId) {
     if (progressBadge) {
         const nextSet = logged.length + 1;
         const setNumber = nextSet > exercise.sets ? exercise.sets : nextSet;
-        progressBadge.textContent = `Set ${setNumber} of ${exercise.sets}`;
+        progressBadge.innerHTML = `Set <span style="font-size: 1.6em; font-weight: 900;">${setNumber}</span> of ${exercise.sets}`;
         // Update colors based on set number
         const colors = getSetProgressColor(setNumber);
         progressBadge.style.backgroundColor = colors.bg;
@@ -1363,7 +1363,7 @@ function renderExerciseCard(exercise, label, color, seriesIndex) {
         const progressColors = getSetProgressColor(firstIncompleteSet);
         html += `<span class="badge mobile-only" id="set-progress-badge-${exercise.exercise_id}" `;
         html += `style="font-size: 0.875rem; background-color: ${progressColors.bg}; color: ${progressColors.text};">`;
-        html += `Set ${firstIncompleteSet} of ${numSets}</span>`;
+        html += `Set <span style="font-size: 1.6em; font-weight: 900;">${firstIncompleteSet}</span> of ${numSets}</span>`;
         if (logged.length > 0 && logged.length === numSets) {
             html += `<span class="badge bg-custom-teal me-2" id="logged-badge-${exercise.exercise_id}">✓ Logged</span>`;
         }
@@ -2081,7 +2081,7 @@ function navigateCarousel(exerciseId, setNumber) {
         // Update the set progress badge in the card header
         const progressBadge = document.getElementById(`set-progress-badge-${exerciseId}`);
         if (progressBadge) {
-            progressBadge.textContent = `Set ${setNumber} of ${exercise.sets}`;
+            progressBadge.innerHTML = `Set <span style="font-size: 1.6em; font-weight: 900;">${setNumber}</span> of ${exercise.sets}`;
             // Update colors based on set number
             const colors = getSetProgressColor(setNumber);
             progressBadge.style.backgroundColor = colors.bg;
