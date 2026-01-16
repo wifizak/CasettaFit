@@ -1269,7 +1269,7 @@ function renderCarouselSet(exercise, setNumber, logged) {
         html += `<div class="carousel-set-subtitle previous-indicator">`;
         const prevDate = previousSet.date ? new Date(previousSet.date) : null;
         const dateStr = prevDate ? `${prevDate.getMonth() + 1}/${prevDate.getDate()}:` : 'Last:';
-        html += `${dateStr} <strong>${previousSet.weight}</strong> lbs × <strong>${previousSet.reps}</strong> reps`;
+        html += `${dateStr} <strong>${previousSet.weight}</strong> lbs × <strong>${previousSet.reps}</strong> reps (Set ${setNumber})`;
         if (previousSet.rpe) html += ` @ RPE <span style="font-size: 1.2em; font-weight: 700;">${previousSet.rpe}</span>`;
         html += `</div>`;
         html += `</div>`;
@@ -1542,7 +1542,7 @@ function renderExerciseCard(exercise, label, color, seriesIndex) {
             html += `<div class="set-accordion-summary previous-indicator">`;
             const prevDate = previousSet.date ? new Date(previousSet.date) : null;
             const dateStr = prevDate ? `${prevDate.getMonth() + 1}/${prevDate.getDate()}:` : 'Last:';
-            html += `${dateStr} <strong>${previousSet.weight}</strong> lbs × <strong>${previousSet.reps}</strong> reps`;
+            html += `${dateStr} <strong>${previousSet.weight}</strong> lbs × <strong>${previousSet.reps}</strong> reps (Set ${setNum})`;
             if (previousSet.rpe) html += ` @ RPE <span style="font-size: 1.2em; font-weight: 700;">${previousSet.rpe}</span>`;
             html += `</div>`;
         }
