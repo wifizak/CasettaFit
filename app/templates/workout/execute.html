@@ -879,12 +879,27 @@ div.exercise-col div.exercise-card {
         font-weight: 600;
         margin-top: 1rem;
     }
+    
+    /* Overall RPE buttons styling to match per-set RPE */
+    .overall-rpe-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .overall-rpe-buttons button {
+        flex: 1;
+        min-height: 38px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        min-width: 50px;
+    }
 }
 
 /* Landscape phone: make RPE buttons wider */
 @media (orientation: landscape) and (max-width: 1023px) {
-    .carousel-rpe-buttons button {
-        min-width: 60px;
+    .carousel-rpe-buttons button,
+    .overall-rpe-buttons button {
+        min-width: 60px !important;
     }
 }
 
@@ -1613,16 +1628,16 @@ function renderExerciseCard(exercise, label, color, seriesIndex) {
     html += `<span class="carousel-input-label">Overall RPE:</span> <span class="text-danger">*</span>`;
     html += `</div>`;
     html += `<div class="col-auto">`;
-    html += `<div class="btn-group" role="group">`;
+    html += `<div class="overall-rpe-buttons">`;
     html += `<button type="button" class="btn ${overallRpe === '-' ? 'btn-danger' : 'btn-outline-danger'}" `;
     html += `onclick="setOverallRpe(${exercise.exercise_id}, '-')" `;
-    html += `id="overall-rpe-btn-${exercise.exercise_id}--" title="Too Heavy" style="min-width: 50px;">-</button>`;
+    html += `id="overall-rpe-btn-${exercise.exercise_id}--" title="Too Heavy">-</button>`;
     html += `<button type="button" class="btn ${overallRpe === '=' ? 'btn-success' : 'btn-outline-success'}" `;
     html += `onclick="setOverallRpe(${exercise.exercise_id}, '=')" `;
-    html += `id="overall-rpe-btn-${exercise.exercise_id}-=" title="Good Weight" style="min-width: 50px;">=</button>`;
+    html += `id="overall-rpe-btn-${exercise.exercise_id}-=" title="Good Weight">=</button>`;
     html += `<button type="button" class="btn ${overallRpe === '+' ? 'btn-primary' : 'btn-outline-primary'}" `;
     html += `onclick="setOverallRpe(${exercise.exercise_id}, '+')" `;
-    html += `id="overall-rpe-btn-${exercise.exercise_id}-+" title="Could Do More" style="min-width: 50px;">+</button>`;
+    html += `id="overall-rpe-btn-${exercise.exercise_id}-+" title="Could Do More">+</button>`;
     html += `</div>`;
     html += `<input type="hidden" id="overall-rpe-${exercise.exercise_id}" value="${overallRpe}">`;
     html += `</div>`;
