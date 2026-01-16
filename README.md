@@ -1,4 +1,4 @@
-# CasettaFit 💪
+# CasettaFit
 
 **A powerful, self-hosted workout tracking application for home gym enthusiasts**
 
@@ -8,15 +8,15 @@ CasettaFit is a comprehensive fitness tracking platform that helps you plan work
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Flask](https://img.shields.io/badge/flask-2.x-green.svg)](https://flask.palletsprojects.com/)
 
-## ✨ Features
+## Features
 
-### 📋 Program & Workout Planning
+### Program & Workout Planning
 - **Custom Programs**: Create multi-week training programs with progressive overload
 - **Workout Days**: Organize exercises by day with series and supersets
 - **Exercise Library**: Comprehensive exercise database with custom additions
 - **Smart Suggestions**: Auto-populate weights based on previous performance
 
-### 🏋️ Workout Execution
+### Workout Execution
 - **Live Workout Mode**: Execute workouts with real-time tracking
 - **Mobile-Optimized**: Responsive design works great on phones and tablets
 - **Previous Set History**: See your last performance for each exercise
@@ -24,29 +24,29 @@ CasettaFit is a comprehensive fitness tracking platform that helps you plan work
 - **Rest Timers**: Automatic rest period countdown between sets
 - **Skip Rest Option**: Toggle to skip rest timers when needed
 
-### 📊 Progress Tracking
+### Progress Tracking
 - **Workout History**: Complete log of all past workouts
 - **Exercise Analytics**: Track progress over time for each exercise
 - **Goal Setting**: Set and monitor fitness goals
 - **Visual Reports**: Charts and graphs showing your progress
 
-### 🏠 Gym Management
+### Gym Management
 - **Multiple Gyms**: Track different gym locations (home, commercial, etc.)
 - **Equipment Tracking**: Manage available equipment at each location
 - **Exercise-Gym Mapping**: Link exercises to specific gym equipment
 
-### 👥 User Management
+### User Management
 - **Admin Dashboard**: Manage multiple users
 - **User Profiles**: Personal settings and preferences
 - **Role-Based Access**: Admin and regular user roles
 
-### 🔒 Security & Deployment
+### Security & Deployment
 - **Self-Hosted**: Keep your fitness data private on your own server
 - **SSL/HTTPS Support**: Secure connections with Let's Encrypt or custom certificates
 - **Production Ready**: Gunicorn + NGINX setup included
 - **Systemd Service**: Auto-start on boot, easy management
 
-## 📸 Screenshots
+## Screenshots
 
 ### Dashboard & Calendar
 The main dashboard gives you an overview of your training schedule and upcoming workouts.
@@ -128,7 +128,7 @@ Plan and schedule your workouts with the mobile-friendly calendar interface.
   <br><em>Mobile Schedule Planning</em>
 </p>
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Installation
 
@@ -161,7 +161,7 @@ sudo bash setup_ssl.sh
 - **Username**: admin
 - **Password**: adminpass
 
-⚠️ **Change the admin password immediately after first login!**
+ **Change the admin password immediately after first login!**
 
 ## SSL/HTTPS Setup
 
@@ -328,7 +328,7 @@ sudo systemctl daemon-reload
 sudo systemctl restart casettafit.service
 ```
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Backend**: Flask (Python)
 - **Database**: SQLite with SQLAlchemy ORM
@@ -336,7 +336,7 @@ sudo systemctl restart casettafit.service
 - **Server**: Gunicorn + NGINX
 - **Deployment**: Systemd service management
 
-## 📱 Mobile Support
+## Mobile Support
 
 CasettaFit is fully responsive with dedicated mobile views:
 - One-at-a-time set logging for focused workouts
@@ -344,7 +344,7 @@ CasettaFit is fully responsive with dedicated mobile views:
 - Landscape mode optimization
 - Works offline once loaded (PWA-ready)
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
 
@@ -354,24 +354,24 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📝 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - Built for home gym enthusiasts who value data privacy
 - Inspired by the need for a self-hosted fitness tracking solution
 - Thanks to all contributors and users!
 
-## 📧 Support
+## Support
 
 If you encounter any issues or have questions:
 - Open an issue on GitHub
 - Check existing issues for solutions
 - See the troubleshooting section in [SSL_SETUP.md](SSL_SETUP.md)
 
-## 🗺️ Roadmap
+## Roadmap
 
 Future features planned:
 - [ ] Export workout data (CSV, JSON)
