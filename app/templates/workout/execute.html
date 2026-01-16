@@ -991,8 +991,20 @@ function updateExerciseCompletionUI(exerciseId) {
     // Update progress badge in carousel mode
     const progressBadge = document.getElementById(`set-progress-badge-${exerciseId}`);
     if (progressBadge) {
-        const nextSet = logged.length + 1;
-        const setNumber = nextSet > exercise.sets ? exercise.sets : nextSet;
+        // When all sets are logged, show the last set; otherwise show next incomplete set
+        let setNumber;
+        if (allSetsLogged) {
+            setNumber = exercise.sets; // Show last set when complete
+        } else {
+            // Find first incomplete set
+            setNumber = 1;
+            for (let i = 1; i <= exercise.sets; i++) {
+                if (!logged.find(s => s.set_number === i)) {
+                    setNumber = i;
+                    break;
+                }
+            }
+        }
         progressBadge.innerHTML = `Set <span style="font-size: 1.6em; font-weight: 900;">${setNumber}</span> of ${exercise.sets}`;
         // Update colors based on set number
         const colors = getSetProgressColor(setNumber);
@@ -1371,7 +1383,7 @@ function renderExerciseCard(exercise, label, color, seriesIndex) {
             break;
         }
         if (setNum === numSets && logged.find(s => s.set_number === setNum)) {
-            firstIncompleteSet = numSets + 1; // All complete
+            firstIncompleteSet = numSets; // All complete - show last set
         }
     }
     
