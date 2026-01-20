@@ -254,6 +254,11 @@ a:hover {
         width: 256px !important;
     }
     
+    /* Disable hover expansion when already expanded */
+    .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow):hover {
+        width: 256px !important;
+    }
+    
     .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow) .sidebar-brand {
         display: flex !important;
     }
@@ -264,6 +269,28 @@ a:hover {
     
     .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow) .nav-icon {
         margin-right: 0.5rem !important;
+    }
+    
+    /* Show section headers when expanded - always in normal position */
+    .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow) .nav-title {
+        display: block !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        padding: 0.75rem 1rem !important;
+        margin-top: 1rem !important;
+        font-size: 0.75rem !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        color: rgba(255, 255, 255, 0.6) !important;
+    }
+    
+    /* Prevent hover state changes when expanded */
+    .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow):hover .sidebar-brand,
+    .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow):hover .nav-link,
+    .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow):hover .nav-icon,
+    .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow):hover .nav-title {
+        /* Keep all properties the same on hover */
+        transition: none !important;
     }
 }
 
