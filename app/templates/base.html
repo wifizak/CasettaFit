@@ -5,8 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}CasettaFit{% endblock %}</title>
     
-    <!-- Favicon -->
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Track workouts, log sets, and monitor your fitness progress">
+    <meta name="theme-color" content="#321fdb">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CasettaFit">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="{{ url_for('main.manifest') }}">
+    
+    <!-- Favicon & PWA Icons -->
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo-white.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/icons/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/icons/icon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='images/icons/icon-192x192.png') }}">
     
     <!-- CoreUI CSS -->
     <link href="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.0.0/dist/css/coreui.min.css" rel="stylesheet">
@@ -259,6 +273,9 @@
     
     <!-- CasettaFit Common Utilities -->
     <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+    
+    <!-- PWA Registration -->
+    <script src="{{ url_for('static', filename='js/pwa.js') }}" defer></script>
     
     {% block extra_js %}{% endblock %}
 </body>

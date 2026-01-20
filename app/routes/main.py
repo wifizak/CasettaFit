@@ -1,9 +1,10 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, send_from_directory, current_app
 from flask_login import login_required, current_user
 from app.models import ScheduledDay, WorkoutSession, ProgramInstance
 from datetime import date, timedelta
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
+import os
 
 bp = Blueprint('main', __name__)
 
@@ -93,3 +94,27 @@ def index():
                          total_workouts=total_workouts,
                          active_programs=active_programs,
                          streak=streak)
+
+
+# ============================================
+# PWA Routes
+# ============================================
+
+@bp.route('/sw.js')
+def service_worker():
+    """Serve service worker with correct MIME type and no caching"""
+    return send_from_directory(
+        os.path.join(current_app.root_path, 'static'),
+        'sw.js',
+        mimetype='application/javascript'
+    )
+
+
+@bp.route('/manifest.json')
+def manifest():
+    """Serve PWA manifest with correct MIME type"""
+    return send_from_directory(
+        os.path.join(current_app.root_path, 'static'),
+        'manifest.json',
+        mimetype='application/manifest+json'
+    )
