@@ -18,9 +18,9 @@
     --cui-info: #497D74;
     --cui-info-rgb: 73, 125, 116;
     
-    /* Warning Color - Cream */
-    --cui-warning: #EFE9D5;
-    --cui-warning-rgb: 239, 233, 213;
+    /* Warning Color - Sandy Gold */
+    --cui-warning: #C9A961;
+    --cui-warning-rgb: 201, 169, 97;
     
     /* Danger Color - Deep Slate */
     --cui-danger: #30364F;
@@ -106,8 +106,8 @@
 }
 
 .btn-warning {
-    background-color: #EFE9D5 !important;
-    border-color: #EFE9D5 !important;
+    background-color: #C9A961 !important;
+    border-color: #C9A961 !important;
     color: #061E29 !important;
 }
 
@@ -126,7 +126,7 @@
 }
 
 .badge.bg-warning {
-    background-color: #EFE9D5 !important;
+    background-color: #C9A961 !important;
     color: #061E29 !important;
 }
 
@@ -187,7 +187,7 @@ a:hover {
 
 .avatar.bg-warning,
 .bg-warning:not(.badge) {
-    background-color: #EFE9D5 !important;
+    background-color: #C9A961 !important;
     color: #061E29 !important;
 }
 
@@ -225,6 +225,42 @@ a:hover {
 .modal-header.bg-warning {
     background-color: #EFE9D5 !important;
     color: #061E29 !important;
+}
+
+/* Mobile Modal Adjustments - Account for Bottom Nav */
+@media (max-width: 1023px) {
+    .modal-dialog {
+        max-height: calc(100vh - 140px);
+        margin: 1rem auto;
+    }
+    
+    .modal-content {
+        max-height: calc(100vh - 140px);
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .modal-body {
+        overflow-y: auto;
+        flex: 1;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .modal-footer {
+        flex-shrink: 0;
+    }
+}
+
+/* Landscape mode - account for side nav */
+@media (max-width: 1023px) and (orientation: landscape) {
+    .modal-dialog {
+        margin-left: calc(65px + 1rem);
+        max-height: calc(100vh - 2rem);
+    }
+    
+    .modal-content {
+        max-height: calc(100vh - 2rem);
+    }
 }
 
 /* Calendar Event Colors (if using CoreUI calendar) */
@@ -415,6 +451,7 @@ body {
 /* In landscape mode (wider than tall), move nav to left side */
 @media (max-width: 1023px) and (orientation: landscape) {
     .bottom-nav {
+        display: flex !important;
         top: 0 !important;
         bottom: 0 !important;
         left: 0 !important;
@@ -427,6 +464,7 @@ body {
         border-top: none;
         border-right: 1px solid #ACBAC4;
         box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        z-index: 10050 !important;
     }
     
     /* Add logo to top of nav in landscape */
@@ -463,8 +501,12 @@ body {
         padding-bottom: 0 !important;
     }
     
-    /* Keep mobile header visible in landscape with logo */
+    /* Hide mobile header and desktop header in landscape */
     .mobile-header {
+        display: none !important;
+    }
+    
+    .header.header-sticky {
         display: none !important;
     }
 }
@@ -535,17 +577,33 @@ body {
 /* Mobile slide-up menu */
 .mobile-menu {
     position: fixed;
-    bottom: 0;
+    bottom: 70px;
     left: 0;
     right: 0;
     background: #F3F4F4;
     border-radius: 1rem 1rem 0 0;
     z-index: 10001;
-    transform: translateY(100%);
+    transform: translateY(calc(100% + 70px));
     transition: transform 0.3s ease;
     max-height: 60vh;
     display: flex;
     flex-direction: column;
+}
+
+/* Landscape mode adjustments for mobile menu */
+@media (max-width: 1023px) and (orientation: landscape) {
+    .mobile-menu {
+        left: 65px;
+        bottom: 0;
+        max-width: 400px;
+        max-height: 80vh;
+        transform: translateY(100%);
+        border-radius: 0 1rem 0 0;
+    }
+    
+    .mobile-menu.active {
+        transform: translateY(0);
+    }
 }
 
 .mobile-menu.active {
@@ -567,8 +625,10 @@ body {
 }
 
 .mobile-menu-content {
-    overflow-y: auto;
+    overflow-y: scroll;
     padding: 0.5rem 0;
+    padding-bottom: 1.5rem;
+    -webkit-overflow-scrolling: touch;
 }
 
 .mobile-menu-item {

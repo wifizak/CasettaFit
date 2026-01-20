@@ -62,7 +62,7 @@ def create_app(config_name='default'):
     
     # Configure login
     login_manager.login_view = 'auth.login'
-    login_manager.login_message = 'Please log in to access this page.'
+    login_manager.login_message = None
     login_manager.session_protection = 'strong'
     
     # Register blueprints
