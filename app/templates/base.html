@@ -35,7 +35,7 @@
 <body>
     {% if current_user.is_authenticated %}
     <!-- Sidebar for desktop only (1024px+) -->
-    <div class="sidebar sidebar-dark sidebar-fixed border-end d-none d-lg-flex" id="sidebar">
+    <div class="sidebar sidebar-dark sidebar-fixed sidebar-narrow-unfoldable border-end d-none d-lg-flex" id="sidebar" data-coreui-theme="dark">
         <div class="sidebar-header border-bottom">
             <div class="sidebar-brand d-flex align-items-center justify-content-center py-3">
                 <img src="{{ url_for('static', filename='images/logo-white.png') }}" alt="CasettaFit" style="height: 40px; width: auto;">
@@ -270,6 +270,23 @@
     
     <!-- CoreUI and Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.0.0/dist/js/coreui.bundle.min.js"></script>
+    
+    <!-- Initialize CoreUI Components -->
+    <script>
+        // Initialize sidebar toggler
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) {
+                // CoreUI 5 should auto-initialize, but we can force it
+                const sidebarTogglers = document.querySelectorAll('.sidebar-toggler');
+                sidebarTogglers.forEach(toggler => {
+                    toggler.addEventListener('click', () => {
+                        sidebar.classList.toggle('sidebar-narrow');
+                    });
+                });
+            }
+        });
+    </script>
     
     <!-- CasettaFit Common Utilities -->
     <script src="{{ url_for('static', filename='js/common.js') }}"></script>

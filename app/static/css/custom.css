@@ -247,6 +247,26 @@ a:hover {
     color: #F3F4F4 !important;
 }
 
+/* Sidebar Responsive Behavior */
+/* On extra large screens (1400px+), expand sidebar by default */
+@media (min-width: 1400px) {
+    .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow) {
+        width: 256px !important;
+    }
+    
+    .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow) .sidebar-brand {
+        display: flex !important;
+    }
+    
+    .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow) .nav-link {
+        justify-content: flex-start !important;
+    }
+    
+    .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow) .nav-icon {
+        margin-right: 0.5rem !important;
+    }
+}
+
 /* ============================================
    END COLOR OVERRIDES
    ============================================ */
