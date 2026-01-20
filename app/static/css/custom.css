@@ -254,25 +254,33 @@ a:hover {
         width: 256px !important;
     }
     
-    /* Disable hover expansion when already expanded */
+    /* Lock sidebar width on hover to prevent expansion */
     .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow):hover {
         width: 256px !important;
     }
     
-    .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow) .sidebar-brand {
+    .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow) .sidebar-brand,
+    .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow):hover .sidebar-brand {
         display: flex !important;
+        padding: 1rem !important;
+        justify-content: center !important;
     }
     
-    .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow) .nav-link {
+    .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow) .nav-link,
+    .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow):hover .nav-link {
         justify-content: flex-start !important;
+        padding: 0.5rem 1rem !important;
     }
     
-    .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow) .nav-icon {
+    .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow) .nav-icon,
+    .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow):hover .nav-icon {
         margin-right: 0.5rem !important;
+        width: 1.5rem !important;
     }
     
-    /* Show section headers when expanded - always in normal position */
-    .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow) .nav-title {
+    /* Show section headers when expanded - lock position on hover too */
+    .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow) .nav-title,
+    .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow):hover .nav-title {
         display: block !important;
         opacity: 1 !important;
         visibility: visible !important;
@@ -284,13 +292,11 @@ a:hover {
         color: rgba(255, 255, 255, 0.6) !important;
     }
     
-    /* Prevent hover state changes when expanded */
-    .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow):hover .sidebar-brand,
-    .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow):hover .nav-link,
-    .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow):hover .nav-icon,
-    .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow):hover .nav-title {
-        /* Keep all properties the same on hover */
-        transition: none !important;
+    /* Ensure logo image doesn't change */
+    .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow) .sidebar-brand img,
+    .sidebar.sidebar-narrow-unfoldable:not(.sidebar-narrow):hover .sidebar-brand img {
+        height: 40px !important;
+        width: auto !important;
     }
 }
 

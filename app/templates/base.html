@@ -277,7 +277,28 @@
         document.addEventListener('DOMContentLoaded', function() {
             const sidebar = document.getElementById('sidebar');
             if (sidebar) {
-                // CoreUI 5 should auto-initialize, but we can force it
+                // Handle responsive sidebar behavior based on screen width
+                function handleSidebarResponsive() {
+                    if (window.innerWidth >= 1400) {
+                        // Large screens: remove unfoldable class to disable hover expansion
+                        sidebar.classList.remove('sidebar-narrow-unfoldable');
+                        sidebar.classList.remove('sidebar-narrow');
+                    } else if (window.innerWidth >= 1024) {
+                        // Medium screens: add unfoldable class for hover expansion
+                        sidebar.classList.add('sidebar-narrow-unfoldable');
+                        if (!sidebar.classList.contains('sidebar-narrow')) {
+                            sidebar.classList.add('sidebar-narrow');
+                        }
+                    }
+                }
+                
+                // Run on load
+                handleSidebarResponsive();
+                
+                // Run on resize
+                window.addEventListener('resize', handleSidebarResponsive);
+                
+                // Sidebar toggle button
                 const sidebarTogglers = document.querySelectorAll('.sidebar-toggler');
                 sidebarTogglers.forEach(toggler => {
                     toggler.addEventListener('click', () => {
