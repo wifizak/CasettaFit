@@ -1,8 +1,259 @@
 /* CasettaFit Custom Styles */
 
+/* ============================================
+   COLOR BRANDING OVERRIDES - CoreUI Framework
+   ============================================ */
+
+/* Override CoreUI CSS Variables */
+:root {
+    /* Primary Brand Color - Ocean Blue */
+    --cui-primary: #1D546D;
+    --cui-primary-rgb: 29, 84, 109;
+    
+    /* Success Color - Seafoam Teal */
+    --cui-success: #5F9598;
+    --cui-success-rgb: 95, 149, 152;
+    
+    /* Info Color - Darker Teal (Better Contrast) */
+    --cui-info: #497D74;
+    --cui-info-rgb: 73, 125, 116;
+    
+    /* Warning Color - Cream */
+    --cui-warning: #EFE9D5;
+    --cui-warning-rgb: 239, 233, 213;
+    
+    /* Danger Color - Deep Slate */
+    --cui-danger: #30364F;
+    --cui-danger-rgb: 48, 54, 79;
+    
+    /* Dark - Deep Navy */
+    --cui-dark: #061E29;
+    --cui-dark-rgb: 6, 30, 41;
+    
+    /* Body Background - Off-White */
+    --cui-body-bg: #F3F4F4;
+    --cui-body-color: #061E29;
+    
+    /* Link Color - Ocean Blue */
+    --cui-link-color: #1D546D;
+    --cui-link-hover-color: #27445D;
+    
+    /* Border Color - Soft Blue-Gray */
+    --cui-border-color: #ACBAC4;
+}
+
+/* Button Overrides */
+.btn-primary {
+    background-color: #1D546D !important;
+    border-color: #1D546D !important;
+    color: #F3F4F4 !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+    background-color: #27445D !important;
+    border-color: #27445D !important;
+    color: #F3F4F4 !important;
+}
+
+.btn-outline-primary {
+    color: #1D546D !important;
+    border-color: #1D546D !important;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:active {
+    background-color: #1D546D !important;
+    border-color: #1D546D !important;
+    color: #F3F4F4 !important;
+}
+
+.btn-success {
+    background-color: #5F9598 !important;
+    border-color: #5F9598 !important;
+    color: #F3F4F4 !important;
+}
+
+.btn-outline-success {
+    color: #5F9598 !important;
+    border-color: #5F9598 !important;
+}
+
+.btn-outline-success:hover,
+.btn-outline-success:active {
+    background-color: #5F9598 !important;
+    border-color: #5F9598 !important;
+    color: #F3F4F4 !important;
+}
+
+.btn-info {
+    background-color: #497D74 !important;
+    border-color: #497D74 !important;
+    color: #F3F4F4 !important;
+}
+
+.btn-outline-info {
+    color: #497D74 !important;
+    border-color: #497D74 !important;
+}
+
+.btn-outline-info:hover,
+.btn-outline-info:active {
+    background-color: #497D74 !important;
+    border-color: #497D74 !important;
+    color: #F3F4F4 !important;
+}
+
+.btn-warning {
+    background-color: #EFE9D5 !important;
+    border-color: #EFE9D5 !important;
+    color: #061E29 !important;
+}
+
+/* Badge Overrides */
+.badge.bg-primary {
+    background-color: #1D546D !important;
+}
+
+.badge.bg-success {
+    background-color: #5F9598 !important;
+}
+
+.badge.bg-info {
+    background-color: #497D74 !important;
+    color: #F3F4F4 !important;
+}
+
+.badge.bg-warning {
+    background-color: #EFE9D5 !important;
+    color: #061E29 !important;
+}
+
+.badge.bg-danger {
+    background-color: #30364F !important;
+    color: #F3F4F4 !important;
+}
+
+/* Text Color Overrides */
+.text-primary {
+    color: #1D546D !important;
+}
+
+.text-success {
+    color: #5F9598 !important;
+}
+
+.text-info {
+    color: #497D74 !important;
+}
+
+.text-warning {
+    color: #947A44 !important;
+}
+
+/* Link Overrides */
+a {
+    color: #1D546D;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #27445D;
+}
+
+/* Avatar/Circle Backgrounds */
+.avatar.bg-primary,
+.bg-primary {
+    background-color: #1D546D !important;
+}
+
+.avatar.bg-success,
+.bg-success:not(.badge) {
+    background-color: #5F9598 !important;
+}
+
+.avatar.bg-info,
+.bg-info:not(.badge) {
+    background-color: #497D74 !important;
+    color: #F3F4F4 !important;
+}
+
+.avatar.bg-warning,
+.bg-warning:not(.badge) {
+    background-color: #EFE9D5 !important;
+    color: #061E29 !important;
+}
+
+/* Card & Border Colors */
+.card {
+    border-color: #ACBAC4 !important;
+}
+
+.border-primary {
+    border-color: #1D546D !important;
+}
+
+.border-success {
+    border-color: #5F9598 !important;
+}
+
+.border-info {
+    border-color: #497D74 !important;
+}
+
+/* Modal Header Colors */
+.modal-header.bg-primary {
+    background-color: #1D546D !important;
+}
+
+.modal-header.bg-success {
+    background-color: #5F9598 !important;
+}
+
+.modal-header.bg-info {
+    background-color: #497D74 !important;
+    color: #F3F4F4 !important;
+}
+
+.modal-header.bg-warning {
+    background-color: #EFE9D5 !important;
+    color: #061E29 !important;
+}
+
+/* Calendar Event Colors (if using CoreUI calendar) */
+.calendar-event-primary,
+.fc-event-primary {
+    background-color: #1D546D !important;
+    border-color: #1D546D !important;
+}
+
+.calendar-event-success,
+.fc-event-success {
+    background-color: #5F9598 !important;
+    border-color: #5F9598 !important;
+}
+
+/* Form Controls Focus */
+.form-control:focus,
+.form-select:focus {
+    border-color: #1D546D !important;
+    box-shadow: 0 0 0 0.25rem rgba(29, 84, 109, 0.25) !important;
+}
+
+/* Sidebar Active Link (Desktop) */
+.sidebar .nav-link.active {
+    background-color: #1D546D !important;
+    color: #F3F4F4 !important;
+}
+
+/* ============================================
+   END COLOR OVERRIDES
+   ============================================ */
+
 /* Mobile header with logo */
 .mobile-header {
-    background: #292D3A;
+    background: #061E29;
     padding: 1rem;
     position: sticky;
     top: 0;
@@ -91,8 +342,8 @@ body {
     left: 0 !important;
     right: 0 !important;
     width: 100% !important;
-    background: #fff;
-    border-top: 1px solid #d8dbe0;
+    background: #F3F4F4;
+    border-top: 1px solid #ACBAC4;
     display: flex;
     justify-content: space-around;
     padding: 0.5rem 0;
@@ -115,7 +366,7 @@ body {
         justify-content: flex-start;
         padding: 0.75rem 0 1rem 0;
         border-top: none;
-        border-right: 1px solid #d8dbe0;
+        border-right: 1px solid #ACBAC4;
         box-shadow: 2px 0 10px rgba(0,0,0,0.1);
     }
     
@@ -170,7 +421,7 @@ body {
     flex: 1;
     text-align: center;
     padding: 0.5rem;
-    color: #768192;
+    color: #5F9598;
     text-decoration: none;
     display: flex !important;
     flex-direction: column;
@@ -195,7 +446,7 @@ body {
 }
 
 .bottom-nav-item.active {
-    color: #321fdb;
+    color: #1D546D;
 }
 
 .bottom-nav-item i {
@@ -228,7 +479,7 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    background: #fff;
+    background: #F3F4F4;
     border-radius: 1rem 1rem 0 0;
     z-index: 10001;
     transform: translateY(100%);
@@ -247,7 +498,7 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 1rem 1.5rem;
-    border-bottom: 1px solid #d8dbe0;
+    border-bottom: 1px solid #ACBAC4;
 }
 
 .mobile-menu-header h5 {
@@ -265,15 +516,15 @@ body {
     display: flex;
     align-items: center;
     padding: 1rem 1.5rem;
-    color: #333;
+    color: #061E29;
     text-decoration: none;
     transition: background-color 0.2s ease;
 }
 
 .mobile-menu-item:hover,
 .mobile-menu-item:active {
-    background-color: #f8f9fa;
-    color: #321fdb;
+    background-color: #EFE9D5;
+    color: #1D546D;
 }
 
 .mobile-menu-item i {
@@ -289,7 +540,7 @@ body {
 
 .mobile-menu-divider {
     height: 1px;
-    background: #d8dbe0;
+    background: #ACBAC4;
     margin: 0.5rem 1.5rem;
 }
 
@@ -314,7 +565,7 @@ body {
 
 /* Mobile header with logo - visible on all mobile/tablet sizes */
 .mobile-header {
-    background: #292D3A;
+    background: #061E29;
     padding: 1rem;
     position: sticky;
     top: 0;
