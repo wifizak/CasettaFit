@@ -163,6 +163,12 @@ a:hover {
 }
 
 /* Avatar/Circle Backgrounds */
+.avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
 .avatar.bg-primary,
 .bg-primary {
     background-color: #1D546D !important;

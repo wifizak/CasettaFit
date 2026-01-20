@@ -36,9 +36,14 @@
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <div class="avatar avatar-sm me-2">
+                                            {% if user.profile and user.profile.profile_picture %}
+                                            <img src="{{ url_for('static', filename='uploads/profiles/' + user.profile.profile_picture) }}" 
+                                                 class="avatar-img rounded-circle" alt="{{ user.username }}">
+                                            {% else %}
                                             <span class="avatar-initial rounded-circle bg-secondary">
                                                 {{ user.username[0].upper() }}
                                             </span>
+                                            {% endif %}
                                         </div>
                                         {{ user.username }}
                                     </div>

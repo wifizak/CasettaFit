@@ -9,7 +9,7 @@ from app.utils import save_uploaded_file, delete_uploaded_file
 bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 # File upload configuration
-UPLOAD_FOLDER = 'app/static/uploads/profiles'
+UPLOAD_FOLDER = 'static/uploads/profiles'
 
 
 def admin_required(f):
