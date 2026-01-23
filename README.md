@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="app/static/images/logos/TRANSPRNCY 1.png" alt="CasettaFit Logo" width="300">
+</p>
+
 # CasettaFit
 
 **A powerful, self-hosted workout tracking application for home gym enthusiasts**

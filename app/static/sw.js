@@ -1,14 +1,16 @@
-// CasettaFit Service Worker - v1.1.6
-const CACHE_VERSION = 'casettafit-v1.1.6';
-const STATIC_CACHE = 'casettafit-static-v1.1.6';
-const DYNAMIC_CACHE = 'casettafit-dynamic-v1.1.6';
+// CasettaFit Service Worker - v1.1.7
+const CACHE_VERSION = 'casettafit-v1.1.7';
+const STATIC_CACHE = 'casettafit-static-v1.1.7';
+const DYNAMIC_CACHE = 'casettafit-dynamic-v1.1.7';
 
 // Assets to cache immediately on install (conservative approach)
 const CRITICAL_ASSETS = [
   '/',
   '/static/css/custom.css',
   '/static/js/common.js',
-  '/static/images/logo-white.png',
+  '/static/images/logos/TRANSPRNCY 1.png',
+  '/static/images/logos/TRANSPRNCY 2.png',
+  '/static/images/logos/TRANSPRNCY 3.png',
   '/static/images/icons/icon-192x192.png',
   '/static/images/icons/icon-512x512.png',
 ];

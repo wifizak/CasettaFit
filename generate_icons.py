@@ -5,7 +5,7 @@ from PIL import Image
 import os
 
 # Source logo
-SOURCE_LOGO = 'app/static/images/logo-white.png'
+SOURCE_LOGO = 'app/static/images/logos/TRANSPRNCY 2.png'
 OUTPUT_DIR = 'app/static/images/icons'
 
 # Icon sizes to generate
